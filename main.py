@@ -10,10 +10,10 @@ from fastapi.responses import FileResponse
 
 # Import API routes
 try:
-    from app.api.v1.routes import sessions, users, auth, google_oauth
-except ImportError:
-    print("Warning: Could not import API routes. Please ensure app directory structure is correct.")
-    sessions = users = auth = google_oauth = None
+    from app.api.v1.routes import sessions, users, auth, google_oauth, health
+except ImportError as e:
+    print(f"Warning: Could not import API routes: {e}")
+    sessions = users = auth = google_oauth = health = None
 
 # Create FastAPI app
 app = FastAPI(
@@ -32,12 +32,14 @@ app.add_middleware(
 )
 
 # Include API routes if available
-if sessions:
-    app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
-if users:
-    app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+if health:
+    app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 if auth:
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+if users:
+    app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+if sessions:
+    app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
 if google_oauth:
     app.include_router(google_oauth.router, prefix="/api/v1/auth/google", tags=["google-auth"])
 
