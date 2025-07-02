@@ -1,0 +1,5 @@
+{
+  "Positive": ["hopeful", "content", "inspired", "determined", "grateful", "peaceful"],
+  "Negative": ["anxious", "fearful", "frustrated", "disconnected", "insecure", "doubtful"],
+  "Generic": ["generic"]
+}

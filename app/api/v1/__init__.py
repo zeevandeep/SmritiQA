@@ -1,3 +1,3 @@
 """
-API v1 package.
+API v1 routes for the Smriti application.
 """

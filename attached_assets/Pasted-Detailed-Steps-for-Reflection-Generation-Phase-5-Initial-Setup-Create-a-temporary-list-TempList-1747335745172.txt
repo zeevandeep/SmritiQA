@@ -1,0 +1,64 @@
+Detailed Steps for Reflection Generation (Phase 5)
+Initial Setup
+Create a temporary list (TempList1) by selecting all records from the edges table where is_processed = false, ordered by user_id and timestamp in descending order.
+Process for Each User
+For each unique user_id in TempList1:
+Filter TempList1 to create TempList2 containing only records for the current user_id.
+Process for Each Unprocessed Edge
+For each unprocessed edge in TempList2:
+Select the current record as the starting point for building a chain.
+Initialize a ReflectionNodes list and add the to_node of the current record.
+Set temprecord = current record (the starting unprocessed edge).
+Chain Building
+Begin chain building process:
+
+Fetch all edges from the database where user_id equals the current user's ID to create TempList3.
+Save the from_node of temprecord to the ReflectionNodes list.
+Find edges in TempList3 where the to_node matches the from_node of temprecord to create TempList4.
+For edge selection when multiple edges have the same to_node:
+
+Calculate a combined score: combined_score = match_strength + (recency_factor * decay_value)
+Where decay_value = 1.0 / (1.0 + (days_since_creation / 7.0))
+Select the edge with the highest combined score, or if tied, the most recent one.
+If matching edges are found in TempList4:
+
+Update temprecord to the selected edge from TempList4.
+Continue the chain building process from step 4.
+Stop when either no more connections are found or the chain reaches 5 nodes.
+If no matching edges are found:
+
+End the chain building process for this starting edge.
+Reflection Generation
+When chain building is complete for an edge:
+
+Query the nodes table to retrieve complete information for all nodes in the ReflectionNodes list.
+Sort the nodes by created_at in ascending order to maintain chronological sequence.
+Prepare the GPT prompt:
+
+Include the sequence of node texts.
+Include relevant attributes: cognition types, themes, emotions.
+Include edge types if available.
+Send the prepared prompt to the OpenAI API for reflection generation.
+
+Process the API response:
+
+Extract the generated reflection text.
+Extract the confidence score.
+Save to the database:
+
+Create a new record in the reflections table.
+Include the user_id, node_ids, edge_ids, generated text, and confidence score.
+Set is_reflected = false (this would be updated to true when user views the reflection).
+Clear the ReflectionNodes list and return to step 3 to process the next unprocessed edge.
+
+Process Completion
+After processing all unprocessed edges for all users:
+Update all edges in the database to set is_processed = true.
+Clear all temporary lists and tables.
+Additional Details
+This process only considers edges where is_processed = false as starting points.
+These would be new edges formed after Phase 3.25 (Edge Post-processing).
+The recency factor is a fixed weight (e.g., 0.3) to balance importance between match_strength and recency.
+No minimum number of nodes is required to generate a reflection.
+All reflections are stored regardless of confidence score.
+This is designed to be a batch process triggered manually after Phase 3.25.

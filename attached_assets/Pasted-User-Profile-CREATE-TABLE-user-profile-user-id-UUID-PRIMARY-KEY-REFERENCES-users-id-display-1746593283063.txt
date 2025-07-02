@@ -1,0 +1,108 @@
+User_Profile
+
+CREATE TABLE user_profile (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  display_name TEXT,              -- Optional: name/nickname user chooses
+  birthdate DATE,                 -- For age-based insights or life stage reflections
+  gender TEXT,                    -- Optional, self-identified
+  language TEXT DEFAULT 'en',     -- For multilingual support in future
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+   
+  );
+
+
+
+
+1️⃣ sessions
+Each session represents one recorded entry (e.g., a day’s journaling).
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  duration_seconds INTEGER,
+  raw_transcript TEXT,
+  created_at TIMESTAMP DEFAULT now()
+  is_processed BOOLEAN DEFAULT false
+);
+
+
+2️⃣ nodes
+Each emotional segment within a session becomes a node. (For every theme and emotion pair detected, a new node is created.)
+
+
+CREATE TABLE nodes (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  session_id UUID REFERENCES sessions(id),
+ text TEXT, -- raw user text (specific to this node)          
+
+ -- Emotional layer (Smriti)                                        
+  emotion TEXT, -- e.g., "angry", "shame", "hopeful"
+  theme TEXT, -- e.g. "work", "relationship", etc.
+
+-- Cognitive layer (Sutra)
+  cognition_type TEXT,    -- "decision_intent", "belief", "justification", "self_doubt", etc.
+  belief_value TEXT,                -- e.g., "freedom", "peace", "competence"
+  contradiction_flag BOOLEAN DEFAULT false,
+
+-- Shared
+ embedding VECTOR(1536), -- OpenAI/other semantic embedding
+  created_at TIMESTAMP DEFAULT now()
+  is_processed BOOLEAN DEFAULT false
+);
+
+3️⃣ edges
+Edges represent transitions between nodes — both within and across sessions.
+CREATE TABLE edges (
+  id UUID PRIMARY KEY,
+  from_node UUID REFERENCES nodes(id),
+  to_node UUID REFERENCES nodes(id),
+  user_id UUID REFERENCES users(id),
+  edge_type TEXT CHECK (edge_type IN (
+    'thought_progression',
+    'emotion_shift',
+    'belief_mutation',
+    'contradiction_loop',
+    'mixed_transition',
+    'avoidance_drift',
+    'recurrence_theme',
+    'recurrence_emotion',
+    'recurrence_belief'
+  )),
+match_strength FLOAT,  
+session_relation TEXT CHECK (session_relation IN ('intra_session', 'cross_session')),
+explanation TEXT, -- GPT-generated description
+  created_at TIMESTAMP DEFAULT now()
+is_processed BOOLEAN DEFAULT false                 ..for chains
+ );
+
+
+edge_chains
+Edge_chains connects various edges.
+CREATE TABLE edge_chains (
+id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  node_ids UUID[],         -- Ordered sequence of connected nodes
+  edge_ids UUID[],         -- Ordered edge sequence
+  edge_count INTEGER,      -- Number of edges in chain
+  edge_types TEXT[],       -- Edge types in the chain
+--    time_span_days INTEGER,  -- Span between first and last node
+  created_at TIMESTAMP DEFAULT now()
+is_processed BOOLEAN DEFAULT false                 ..for reflections
+
+ );
+
+
+🔄 reflections
+Each time Smriti generates a reflection from a cluster:
+CREATE TABLE reflections (
+  id UUID PRIMARY KEY,
+   user_id UUID REFERENCES users(id),
+  -- Reflection content
+  generated_text TEXT,
+  generated_at TIMESTAMP DEFAULT now(),
+  -- Feedback and status
+  is_Reflected BOOLEAN,     – Whether this has been displayed to the user
+ feedback BOOLEAN,              -- Whether user marked this as helpful
+confidence_score FLOAT         -- Optional: confidence in reflection based on match strength
+);

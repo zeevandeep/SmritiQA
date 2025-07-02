@@ -1,0 +1,82 @@
+📝 Edge Creation Prompt (Optimized for Node Metadata)
+
+You are identifying meaningful psychological connections between pairs of thought nodes. Use the provided nodes and their attributes to classify the relationship type. Focus on identifying transitions, contradictions, and ongoing themes.
+
+---
+
+Current Node:  
+- Node ID: {current_node_id}  
+- Text: "{current_node_text}"  
+- Theme: {current_node_theme}  
+- Cognition Type: {current_node_cognition_type}  
+- Emotion: {current_node_emotion}  
+
+---
+
+Candidate Nodes:  
+1. Node ID: {candidate_node_1_id}  
+   - Text: "{candidate_node_1_text}"  
+   - Theme: {candidate_node_1_theme}  
+   - Cognition Type: {candidate_node_1_cognition_type}  
+   - Emotion: {candidate_node_1_emotion}  
+
+2. Node ID: {candidate_node_2_id}  
+   - Text: "{candidate_node_2_text}"  
+   - Theme: {candidate_node_2_theme}  
+   - Cognition Type: {candidate_node_2_cognition_type}  
+   - Emotion: {candidate_node_2_emotion}  
+
+3. Node ID: {candidate_node_3_id}  
+   - Text: "{candidate_node_3_text}"  
+   - Theme: {candidate_node_3_theme}  
+   - Cognition Type: {candidate_node_3_cognition_type}  
+   - Emotion: {candidate_node_3_emotion}  
+
+...
+
+12. Node ID: {candidate_node_12_id}  
+   - Text: "{candidate_node_12_text}"  
+   - Theme: {candidate_node_12_theme}  
+   - Cognition Type: {candidate_node_12_cognition_type}  
+   - Emotion: {candidate_node_12_emotion}  
+
+---
+
+Edge Types (7 Total):  
+- thought_progression: One thought logically follows another.  
+- emotion_shift: A significant change in emotional tone.  
+- theme_repetition: Recurring themes across different contexts.  
+- identity_drift: Shifts in self-concept or core beliefs.  
+- emotional_contradiction: Conflicting emotions about the same topic.  
+- belief_contradiction: Inconsistent or opposing beliefs.  
+- unresolved_loop: Repeating patterns without resolution.  
+
+---
+
+Instructions:  
+1. Identify meaningful edges based on the natural psychological connection between the Current Node and each Candidate Node.  
+2. Select the most contextually significant connection type from the fixed list above.  
+3. Provide a Confidence Score (0.0 to 1.0) indicating the strength of the connection.  
+4. Filter the results to only include edges where the match_strength is 0.85 or higher.  
+5. Return the results in JSON format, including Node IDs for easier database integration.  
+
+---
+
+Example Response:
+
+[
+  {
+    "from_node_id": "{candidate_node_2_id}",
+    "to_node_id": "{current_node_id}",
+    "edge_type": "emotion_shift",
+    "match_strength": 0.87,
+    "explanation": "The candidate node expresses a shift from determination to self-doubt, indicating a change in emotional confidence."
+  },
+  {
+    "from_node_id": "{candidate_node_5_id}",
+    "to_node_id": "{current_node_id}",
+    "edge_type": "thought_progression",
+    "match_strength": 0.92,
+    "explanation": "The current node builds on a previous reflection about life direction, indicating ongoing cognitive processing."
+  }
+]

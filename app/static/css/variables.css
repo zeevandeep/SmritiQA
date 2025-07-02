@@ -1,0 +1,29 @@
+/* Shared CSS Variables for Smriti */
+:root {
+    /* Primary Colors */
+    --primary-color: #e67e22;
+    --primary-light: #f39c12;
+    --primary-gradient: linear-gradient(45deg, #e67e22, #f39c12);
+    
+    /* Background Colors */
+    --background-light: #fffaf7;
+    --background-card: #ffffff;
+    --bg-light: #fffaf7;
+    
+    /* Text Colors */
+    --text-color: #2d3748;
+    --text-light: #6c757d;
+    
+    /* Border and Shadow */
+    --border-color: #dee2e6;
+    --shadow-light: 0 2px 10px rgba(0,0,0,0.05);
+    --shadow-medium: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Global Body Styling for Fixed Navbar */
+body {
+    padding-top: 70px;
+    background-color: var(--background-light);
+    color: var(--text-color);
+}
+

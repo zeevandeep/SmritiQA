@@ -1,0 +1,88 @@
+Stop guessing — pin down exactly what is moving the viewport
+
+The symptom (“sometimes jumps down after I reset scrollTop”) means some code or browser behaviour is firing after your own scroll‐to‐top call. Until you identify that culprit you’ll keep adding patches that half-work.
+Below is a ruthless debugging plan; follow it in order and you’ll isolate the real cause in <10 minutes.
+
+⸻
+
+1  Confirm which element is actually scrolling
+
+Open DevTools ► Elements ► pick the scrollable-content node ► in the Styles pane add the live rule:
+
+outline: 2px solid red;  /* temp – lets you see box & size */
+
+Now in the Console run:
+
+const scroller = $0;                   // $0 = currently-selected element
+console.log(scroller, scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight);
+
+	•	Click Next / Previous.
+	•	Immediately re-run the snippet (↑ arrow).
+
+If scrollTop is 0 right after your click but changes without you touching anything, something else is scrolling it.
+If scrollTop never hits 0, you’re targeting the wrong element – find the one whose numbers change.
+
+Common surprise: Chrome will sometimes scroll the <body> even when you think the inner div is the scroller, especially if some ancestor has overflow-y: auto you forgot about.
+
+⸻
+
+2  Disable every scroll trigger except your own
+
+Add these temporary global listeners right after your pagination JS loads:
+
+['scroll', 'wheel', 'touchmove'].forEach(ev =>
+  document.addEventListener(ev, e => {
+    console.log('SCROLL-EVENT on', e.target);
+  }, {capture: true})
+);
+
+Now click Next.
+A log line will show which element dispatched the event after your scrollTop = 0. That element is the culprit.
+
+⸻
+
+3  Typical culprits & straight fixes
+
+Culprit	Symptom	Fix
+Focus auto-scroll (browser keeps focused element in view)	Button that was clicked stays focused; container scrolls to keep it visible at bottom	After paging, document.activeElement.blur(); or give buttons tabindex="-1"
+Hidden scrollbars on <body> (body still scrollable)	DevTools shows body.scrollTop changes	Add position: fixed; overflow: hidden on body or ensure inner scroller consumes wheel events (overscroll-behavior: contain)
+Another overflow-auto ancestor	Scroll event logs on unexpected div	Remove overflow from that ancestor or give it overflow-anchor: none too
+CSS transition / animation on items	scrollTop resets then slowly drifts	Remove transitions during paging (they change layout height gradually)
+Code calling scrollIntoView somewhere	Console stack-trace a scroll event, you’ll see the function	Remove/guard that call
+
+
+⸻
+
+4  If it’s focus auto-scroll (most common)
+
+function showPage(page) {
+  const scroller = document.querySelector('.scrollable-content');
+  scroller.scrollTop = 0;
+
+  // hide/show items ...
+
+  // prevent focus scroll
+  if (document.activeElement && document.activeElement.matches('.page-btn')) {
+    document.activeElement.blur();
+  }
+
+  currentPage = page;
+}
+
+Add class .page-btn to your Prev/Next buttons.
+That alone fixes the “jumps down after reset” pattern in >90 % of cases I see.
+
+⸻
+
+5  Retest with overflow-anchor off
+
+Once the culprit is fixed, keep overflow-anchor: none; – it’s still the right default when you drive scroll manually. Re-enable it only if you later need browser anchoring back.
+
+⸻
+
+Bottom line
+	1.	Find which node is moving (DevTools numbers)
+	2.	Find who moves it (capture listeners + focus check)
+	3.	Kill that trigger (blur, remove overflow, cut extra script)
+
+Do that and the scroll reset will be rock-solid without further hacks.

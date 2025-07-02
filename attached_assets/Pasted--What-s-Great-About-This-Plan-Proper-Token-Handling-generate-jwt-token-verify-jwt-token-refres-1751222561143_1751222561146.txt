@@ -1,0 +1,55 @@
+✅ What’s Great About This Plan
+Proper Token Handling
+
+✅ generate_jwt_token, verify_jwt_token, refresh_jwt_token are essential and well-separated.
+
+✅ Using SESSION_SECRET as the signing key is pragmatic — no need to introduce more secrets for now.
+
+Secure Cookie Storage
+
+✅ Using HTTP-only cookies over localStorage avoids common XSS risks.
+
+✅ Including SameSite, Secure, and expiration settings is absolutely correct.
+
+Stateless Architecture
+
+✅ Moving from session-based to stateless JWT auth means the system can scale to mobile, web, APIs without shared memory.
+
+Non-Destructive Migration
+
+✅ Keeping the DB schema intact means no risk of breaking users.
+
+✅ Mapping JWT user_id to existing DB ensures compatibility.
+
+🛠️ Recommended Improvements
+1. Split Access vs Refresh Tokens
+🔁 Current plan mentions token renewal but doesn’t define refresh tokens.
+
+Why important: Refresh tokens allow silent login renewal without forcing users to re-login after 24h.
+
+✅ Fix: Add generate_refresh_token(user_id) function, store it in DB or Redis with expiry, and issue new access tokens securely.
+
+2. Replay Attack Protection
+❗ JWTs are stateless, so revocation is tricky.
+
+✅ Fix: Consider adding a jti (JWT ID) and storing active tokens in a short-lived cache (like Redis). This allows revoking tokens on logout or password change.
+
+3. Cookie Scope Configuration
+🚨 Ensure cookie_path and cookie_domain are explicitly set, especially when testing on subdomains or mobile vs web clients.
+
+✅ SameSite=Lax is usually good, but confirm compatibility with Google OAuth in next phase (which may require SameSite=None; Secure).
+
+4. Time Sync Handling
+🔄 JWTs rely on client/server clock sync. Add a 1-2 minute leeway (leeway parameter in PyJWT decode) to avoid false “expired” errors.
+
+5. Development Mode Behavior
+🧪 In development, allow a fallback mode where token expiry is longer or renewal is easier, but never leak these settings to prod.
+
+✅ Use FLASK_ENV to switch behaviors.
+
+📦 Final Suggestions for Production Readiness
+✅ Blacklist refresh tokens on logout
+
+✅ Rotate secrets periodically if long-term sessions are allowed
+
+✅ Audit logging for login, token generation, and refresh events

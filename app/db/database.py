@@ -1,36 +1,36 @@
 """
-Database configuration and session management for Smriti application.
+PostgreSQL database connection module for Smriti.
+
+This module provides SQLAlchemy session and engine setup.
 """
-import os
+from typing import Generator
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
-# Get database URL from environment
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is required")
+from app.config import settings
 
-# Create SQLAlchemy engine
+# Create SQLAlchemy engine with connection pool settings
 engine = create_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_recycle=300,
+    settings.DATABASE_URL,
     pool_pre_ping=True,
-    echo=False  # Set to True for SQL logging
+    pool_recycle=300,
 )
 
-# Create SessionLocal class
+# Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create Base class for models
+# Declarative base for models
 Base = declarative_base()
 
-def get_db():
+
+def get_db() -> Generator:
     """
-    Database dependency for FastAPI routes.
-    Yields a database session and ensures it's closed after use.
+    Get a database session.
+    
+    Yields:
+        Session: A SQLAlchemy session.
     """
     db = SessionLocal()
     try:
@@ -38,16 +38,11 @@ def get_db():
     finally:
         db.close()
 
-def create_tables():
+
+def init_db() -> None:
     """
-    Create all database tables.
-    This should be called after all models are imported.
+    Initialize database by creating all tables.
+    
+    This should be called at application startup.
     """
     Base.metadata.create_all(bind=engine)
-
-def drop_tables():
-    """
-    Drop all database tables.
-    Use with caution - this will delete all data!
-    """
-    Base.metadata.drop_all(bind=engine)

@@ -1,0 +1,86 @@
+1. Request Host Detection Timing
+Recommendation:
+✅ Move redirect URI determination into get_authorization_url(request) and pass request explicitly.
+
+python
+Copy
+Edit
+def get_authorization_url(self, request: Request) -> Tuple[str, str]:
+    redirect_uri = self._resolve_redirect_uri(request)
+    ...
+Why this is best:
+
+Keeps the __init__() clean and stateless.
+
+Ensures you're working with live request context.
+
+Makes unit testing easier (you can mock request objects directly).
+
+✅ 2. Environment Variable Names
+Recommendation:
+✅ Use GOOGLE_REDIRECT_URI_DEV and GOOGLE_REDIRECT_URI_PROD
+
+Why:
+
+Clear and predictable.
+
+Aligns with ENV=development/production
+
+Mirrors standard naming conventions (easy for others to understand)
+
+Alternative like GOOGLE_OAUTH_DEV_CALLBACK is fine but more verbose with no added benefit.
+
+✅ 3. Dev Domain Detection Logic
+Recommendation:
+✅ Match all three patterns:
+
+localhost (for local testing)
+
+*.replit.dev (Replit workspace/dev)
+
+*.replit.app with --dev in subdomain (Replit preview/dev mode)
+
+Suggested logic:
+
+python
+Copy
+Edit
+host = request.headers.get("host", "")
+if "localhost" in host or ".replit.dev" in host or "--dev" in host:
+    return os.getenv("GOOGLE_REDIRECT_URI_DEV")
+else:
+    return os.getenv("GOOGLE_REDIRECT_URI_PROD")
+✅ 4. ENV Variable Usage
+Recommendation:
+Use ENV environment variable if set, but also support domain auto-detection fallback.
+
+Best of both worlds:
+
+python
+Copy
+Edit
+env = os.getenv("ENV", None)
+if env == "production":
+    return os.getenv("GOOGLE_REDIRECT_URI_PROD")
+elif env == "development":
+    return os.getenv("GOOGLE_REDIRECT_URI_DEV")
+else:
+    # fallback to domain-based detection
+Why:
+
+Lets you override in edge cases (e.g., staging, CI/CD)
+
+Still works if ENV isn’t set (i.e., no surprises)
+
+✅ 5. Error Handling
+Recommendation:
+✅ Yes, include a clear actionable message in the error if detection fails.
+
+python
+Copy
+Edit
+raise RuntimeError(
+    "OAuth redirect URI could not be determined.\n"
+    "Set ENV=production or ENV=development in your Replit secrets, "
+    "and ensure GOOGLE_REDIRECT_URI_DEV / PROD are set accordingly."
+)

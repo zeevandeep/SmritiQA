@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!-- Navbar uses shared partial: navbar.html. No navbar CSS should exist here. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smriti - Settings</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI-powered emotional intelligence voice journaling app">
+    <meta name="theme-color" content="#f39c12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smriti">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Shared CSS Variables -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- Shared Navbar Styles -->
+    <link rel="stylesheet" href="/static/css/navbar.css">
+    <!-- Bottom Navigation Styles -->
+    <link rel="stylesheet" href="/static/css/bottom_nav.css">
+    
+    <style>
+        body {
+            padding-top: 70px;
+            padding-bottom: 2rem;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .settings-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 0 10px;
+                margin: 15px auto;
+            }
+        }
+
+        .settings-scrollable-content {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 3px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info h6 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+        .setting-info small {
+            color: #718096;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .form-check-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+        }
+        
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #e67e22;
+            border-color: #e67e22;
+        }
+        
+        .btn-primary:focus {
+            background-color: #e67e22;
+            border-color: #e67e22;
+            box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            width: 150px;
+        }
+
+        .btn-outline-danger {
+            border-radius: 8px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-header i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <div class="container settings-container">
+        <h1 class="mb-4 text-center" style="color: var(--primary-color); font-weight: 700;">Settings</h1>
+    </div>
+
+    <!-- Scrollable Content Container -->
+    <div class="settings-scrollable-content">
+        <div class="container">
+            <!-- Profile Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="bi bi-person-circle"></i>
+                    <h5 class="mb-0">Profile</h5>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Display Name</h6>
+                        <small>How you'd like to be addressed in reflections</small>
+                    </div>
+                    <input type="text" class="form-control" style="width: 150px;" placeholder="Your name" value="{{ user.display_name if user.display_name else '' }}">
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Language</h6>
+                        <small>Preferred language for reflections</small>
+                    </div>
+                    <select class="form-select">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="bi bi-bell"></i>
+                    <h5 class="mb-0">Notifications</h5>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Daily Journal Reminders</h6>
+                        <small>Get reminded to journal daily</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="dailyReminders" checked>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>New Reflection Alerts</h6>
+                        <small>Notify when new insights are available</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="reflectionAlerts" checked>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="bi bi-shield-lock"></i>
+                    <h5 class="mb-0">Privacy & Data</h5>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Data Processing</h6>
+                        <small>Allow AI analysis of journal entries</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="dataProcessing" checked>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Analytics</h6>
+                        <small>Help improve Smriti with usage analytics</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="analytics">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journal Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="bi bi-journal"></i>
+                    <h5 class="mb-0">Journal</h5>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Auto-save Drafts</h6>
+                        <small>Automatically save unfinished entries</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoSave" checked>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Recording Quality</h6>
+                        <small>Audio quality for voice recordings</small>
+                    </div>
+                    <select class="form-select">
+                        <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Account Actions -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="bi bi-gear"></i>
+                    <h5 class="mb-0">Account</h5>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Export Data</h6>
+                        <small>Download all your journal entries and insights</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">Export</button>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h6>Delete Account</h6>
+                        <small>Permanently delete your account and all data</small>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm">Delete</button>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary btn-lg">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    {% include 'partials/bottom_nav.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

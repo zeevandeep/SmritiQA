@@ -1,0 +1,174 @@
+✅ Finalized PostgreSQL Schema for Smriti (MVP)
+
+Yes, the schema for the PostgreSQL tables is finalized based on the latest design. Here are the complete field definitions, data types, and constraints for each table:
+
+⸻
+
+🗂️ User Profile (Basic User Metadata)
+
+CREATE TABLE user_profile (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  display_name TEXT,             
+  birthdate DATE,                
+  gender TEXT,                   
+  language TEXT DEFAULT 'en',    
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+Key Constraints:
+	•	Primary Key: user_id (UUID, references the main users table)
+	•	Language Default: Defaults to ‘en’ for future multilingual support
+	•	Consistency: Consistent use of UUIDs for scalability
+
+⸻
+
+📝 Sessions (Each Voice/Journal Entry)
+
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  duration_seconds INTEGER,
+  raw_transcript TEXT,
+  created_at TIMESTAMP DEFAULT now(),
+  is_processed BOOLEAN DEFAULT false
+);
+
+Key Constraints:
+	•	Primary Key: id (UUID)
+	•	Foreign Key: References users table for user linkage
+	•	Default Values: Auto-generated UUID and timestamps
+
+Indexing Recommendations:
+	•	Index on user_id for fast user-session lookups.
+	•	Consider a composite index on (user_id, created_at) for time-ordered session retrieval.
+
+⸻
+
+🧠 Nodes (Atomic Emotional/Cognitive Units)
+
+CREATE TABLE nodes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  session_id UUID REFERENCES sessions(id),
+  text TEXT NOT NULL,
+  emotion TEXT,                
+  theme TEXT,                  
+  cognition_type TEXT,         
+  belief_value TEXT,           
+  contradiction_flag BOOLEAN DEFAULT false,
+  embedding VECTOR(1536),      
+  created_at TIMESTAMP DEFAULT now(),
+  is_processed BOOLEAN DEFAULT false
+);
+
+Key Constraints:
+	•	Primary Key: id (UUID)
+	•	Foreign Keys: user_id, session_id
+	•	Vector Column: embedding for fast semantic search (ensure the vector extension is enabled)
+
+Indexing Recommendations:
+	•	Vector Index: Use pgvector for the embedding column to support fast semantic search.
+	•	Composite Index: (user_id, session_id, created_at) for efficient node retrieval.
+
+⸻
+
+🔗 Edges (Node-to-Node Connections)
+
+CREATE TABLE edges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_node UUID REFERENCES nodes(id),
+  to_node UUID REFERENCES nodes(id),
+  user_id UUID REFERENCES users(id),
+  edge_type TEXT CHECK (edge_type IN (
+    'thought_progression',
+    'emotion_shift',
+    'belief_mutation',
+    'contradiction_loop',
+    'mixed_transition',
+    'avoidance_drift',
+    'recurrence_theme',
+    'recurrence_emotion',
+    'recurrence_belief'
+  )),
+  match_strength FLOAT CHECK (match_strength >= 0 AND match_strength <= 1),  
+  session_relation TEXT CHECK (session_relation IN ('intra_session', 'cross_session')),
+  explanation TEXT, 
+  created_at TIMESTAMP DEFAULT now(),
+  is_processed BOOLEAN DEFAULT false
+);
+
+Key Constraints:
+	•	Primary Key: id (UUID)
+	•	Foreign Keys: from_node, to_node, user_id
+	•	Type Restrictions: Strong checks on edge_type and session_relation for data integrity
+
+Indexing Recommendations:
+	•	Composite Index: (user_id, from_node, to_node) for efficient graph traversal
+	•	Match Strength Index: Consider an index on match_strength for performance tuning
+
+⸻
+
+🪢 Edge Chains (Connected Edge Sequences)
+
+CREATE TABLE edge_chains (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  node_ids UUID[] NOT NULL,     
+  edge_ids UUID[] NOT NULL,     
+  edge_count INTEGER NOT NULL CHECK (edge_count > 0),   
+  edge_types TEXT[] NOT NULL,   
+  created_at TIMESTAMP DEFAULT now(),
+  is_processed BOOLEAN DEFAULT false
+);
+
+Key Constraints:
+	•	Primary Key: id (UUID)
+	•	Foreign Key: user_id
+	•	Array Length: Enforces non-empty node and edge lists
+
+Indexing Recommendations:
+	•	GIN Index: Use a GIN index on node_ids and edge_ids for fast set-based lookups
+	•	Composite Index: (user_id, created_at) for time-ordered chain retrieval
+
+⸻
+
+🔄 Reflections (AI-Generated Insights)
+
+CREATE TABLE reflections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  generated_text TEXT NOT NULL,
+  generated_at TIMESTAMP DEFAULT now(),
+  is_reflected BOOLEAN DEFAULT false,
+  feedback BOOLEAN,
+  confidence_score FLOAT CHECK (confidence_score >= 0 AND confidence_score <= 1)
+);
+
+Key Constraints:
+	•	Primary Key: id (UUID)
+	•	Foreign Key: user_id
+	•	Score Validation: Confidence score restricted to 0-1 range
+
+Indexing Recommendations:
+	•	Composite Index: (user_id, generated_at) for chronological ordering
+	•	Partial Index: On (user_id, is_reflected) for quick filtering of unreflected items
+
+⸻
+
+🚀 Performance Optimization and Indexing Strategy
+	1.	Vector Search (Nodes Table):
+	•	Use pgvector for the embedding column to enable fast semantic searches.
+	2.	Graph Traversal (Edges Table):
+	•	Composite indexes on (user_id, from_node, to_node) for efficient path finding.
+	3.	Chain Retrieval (Edge Chains Table):
+	•	GIN indexes for quick array searches in node_ids and edge_ids.
+	4.	Batch Processing (Reflections Table):
+	•	Partial indexes for faster lookup of unprocessed reflections.
+
+⸻
+
+🛠️ Additional Notes:
+	•	Foreign Key Integrity: Every UUID field is linked to its parent, ensuring referential integrity.
+	•	Scalability: Designed to scale horizontally by user, allowing partitioning if needed.
+	•	Batch Processing Friendly: Each table has is_processed flags for efficient batching.

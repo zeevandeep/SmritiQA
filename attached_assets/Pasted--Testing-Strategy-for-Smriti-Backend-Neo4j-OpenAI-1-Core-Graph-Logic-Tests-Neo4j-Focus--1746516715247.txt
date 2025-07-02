@@ -1,0 +1,123 @@
+✅ Testing Strategy for Smriti Backend (Neo4j + OpenAI)
+🔍 1. 
+Core Graph Logic Tests (Neo4j)
+Focus: Validate graph construction, traversal, and mutation logic
+Test Cases to Cover:
+Node creation:
+
+
+✅ New node gets inserted with correct labels + properties
+
+
+✅ Proper user/session linkage exists
+
+
+Edge creation:
+
+
+✅ Correct relationship type is added (e.g., BELIEF_MUTATION)
+
+
+✅ Direction of edges is valid (past ➝ present)
+
+
+Edge chain creation:
+
+
+✅ Chain contains valid node and edge sequences
+
+
+✅ Max length (7 nodes) is respected
+
+
+✅ Deep edge types are detected correctly
+
+
+Backtracking:
+
+
+✅ Given a new node, backtrack to correct historical chain
+
+
+✅ Detect multiple parent paths
+
+
+Tools:
+Unit tests using pytest or unittest
+
+
+Neo4j test container (optional, for isolated test DB)
+
+
+
+🧠 2. 
+OpenAI Prompt Response Tests
+Focus: Validate structure, coherence, and consistency of GPT responses
+Test Cases to Cover:
+Node creation:
+
+
+✅ Response contains emotion, theme, belief, cognition type
+
+
+✅ JSON is well-formed, all required fields present
+
+
+Edge detection:
+
+
+✅ Edges contain proper type, explanation, and confidence score
+
+
+✅ Self-referential or duplicate edges are excluded
+
+
+Reflection generation:
+
+
+✅ Reflection text is within token limits
+
+
+✅ Chain summary logic matches themes and edge context
+
+
+Tools:
+Mock GPT responses using static JSON for CI/CD
+
+
+Real GPT tests only in staging environment (with logging)
+
+
+
+⚙️ 3. 
+End-to-End Functional Tests
+Focus: Verify the full pipeline works from session ➝ node ➝ edge ➝ reflection
+Scenarios:
+A single journal entry creates multiple nodes
+
+
+New node triggers edge matching with prior thoughts
+
+
+Edge chains are formed and saved
+
+
+Valid edge chains trigger reflection generation
+
+
+Reflection is saved and marked unshown
+
+
+Optional:
+Add tests for rate limit handling and GPT failure fallback
+
+
+
+🧪 Testing Guidelines
+Run core logic tests on every commit (GitHub Actions or Replit’s test tab)
+
+
+Isolate OpenAI calls unless explicitly testing them
+
+
+Maintain test coverage ≥ 80% for business logic (excluding GPT)

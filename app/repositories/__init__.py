@@ -1,3 +1,3 @@
 """
-Repository layer for database operations.
+Repositories package for the Smriti application.
 """

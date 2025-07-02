@@ -1,0 +1,104 @@
+1. Token Architecture
+Do you want access + refresh tokens now, or just access?
+
+✅ Answer:
+Yes, implement both access and refresh tokens from the start.
+
+Access token: short-lived (15–30 min)
+
+Refresh token: long-lived (7–14 days), stored securely in an HTTP-only cookie
+
+This gives users a smooth experience without re-logging every 30 minutes, which would frustrate journalers.
+
+Rationale:
+Your app isn't just a one-click login — users will return daily, and seamless re-auth matters. Refresh token support will also make Google OAuth smoother later.
+
+2. Token Storage Strategy
+Do you want Redis/token blacklisting now?
+
+✅ Answer:
+No, not in Phase 1. Keep it stateless for now.
+
+You can defer blacklisting/token revocation until you have:
+
+Log out functionality
+
+Admin controls (like forced logouts)
+
+Multiple devices per user
+
+Rationale:
+Stateless JWTs are scalable and simple to deploy. Redis introduces infra complexity and isn’t needed until you need fine-grained control over token invalidation.
+
+3. Migration Approach
+Migrate users to JWT immediately or run both systems in parallel?
+
+✅ Answer:
+Migrate on next login. No need for parallel systems.
+
+When a user logs in, issue JWT and stop using Flask session.
+
+Keep login logic backward-compatible (same password hash, same DB schema).
+
+This avoids managing two auth systems at once.
+
+Rationale:
+Your current user base is small and adaptable — seamless transition is fine. The Flask session system can be safely deprecated once JWT is in.
+
+4. Security Level
+Full production security (jti, blacklist) now, or just basic JWT?
+
+✅ Answer:
+Start with secure JWT implementation but skip blacklisting/jti tracking for now.
+
+Use secure, HttpOnly, SameSite cookies
+
+Validate expiry + signature on every request
+
+Skip jti or token revocation — not critical until logout or password-reset flows exist.
+
+Rationale:
+You need secure-by-default, not overbuilt. Advanced features like jti tracking are only needed when your app has sessions that must be forcibly expired.
+
+5. Dev vs Production Config
+Different token expiry in dev/prod and env-based config?
+
+✅ Answer:
+Yes — set up .env-based config now.
+
+Example:
+
+env
+Copy
+Edit
+ACCESS_TOKEN_EXPIRY=1800   # 30 mins
+REFRESH_TOKEN_EXPIRY=1209600  # 14 days
+FLASK_ENV=development
+Then in config:
+
+python
+Copy
+Edit
+import os
+ACCESS_EXP = int(os.getenv("ACCESS_TOKEN_EXPIRY", 1800))
+Rationale:
+Clean separation now will avoid messy rework later. Also helps when you deploy to different environments (e.g., staging vs prod).
+
+🔧 Final Recommendation for Phase 1
+Implement:
+
+✅ Access + refresh token setup
+
+✅ JWT stored in secure HTTP-only cookies
+
+✅ Environment-based token expiry config
+
+❌ No Redis or blacklisting yet
+
+❌ No session-based auth fallback
+
+✅ Migrate users to JWT on next login
+
+✅ Use simple DB model: user_id → token metadata (optional)
+
+This balances speed, security, and future extensibility — and is a great Phase 1.

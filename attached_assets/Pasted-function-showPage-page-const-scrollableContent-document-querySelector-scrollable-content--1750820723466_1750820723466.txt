@@ -1,0 +1,173 @@
+function showPage(page) {
+    const scrollableContent = document.querySelector('.scrollable-content');
+    const reflectionItems = document.querySelectorAll('.reflection-item');
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    
+    // 1. IMMEDIATE: Disable all scrolling and reset position
+    scrollableContent.style.overflow = 'hidden';
+    scrollableContent.scrollTop = 0;
+    window.scrollTo(0, 0);
+    
+    // 2. PREVENT: Disable smooth scrolling globally during transition
+    const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+    scrollableContent.style.scrollBehavior = 'auto';
+    
+    // 3. BLOCK: Prevent any scroll events during transition
+    let isTransitioning = true;
+    const preventScroll = (e) => {
+        if (isTransitioning) {
+            e.preventDefault();
+            e.stopPropagation();
+            scrollableContent.scrollTop = 0;
+            return false;
+        }
+    };
+    
+    // Add comprehensive scroll event blocking
+    ['scroll', 'wheel', 'touchmove', 'keydown'].forEach(event => {
+        scrollableContent.addEventListener(event, preventScroll, { passive: false, capture: true });
+        document.addEventListener(event, preventScroll, { passive: false, capture: true });
+    });
+    
+    // 4. BLUR: Remove focus from any active elements
+    if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+    }
+    
+    // 5. FORCE: Reset scroll position multiple times with different methods
+    const forceScrollReset = () => {
+        scrollableContent.scrollTop = 0;
+        scrollableContent.scrollTo(0, 0);
+        if (scrollableContent.scrollTop !== 0) {
+            scrollableContent.style.transform = 'translateY(0)';
+        }
+    };
+    
+    // 6. IMMEDIATE: Force reset before DOM changes
+    forceScrollReset();
+    
+    // 7. DEFER: Make DOM changes after next frame to avoid layout shifts
+    requestAnimationFrame(() => {
+        forceScrollReset();
+        
+        // Show/hide items with immediate visibility to prevent layout shifts
+        reflectionItems.forEach((item, index) => {
+            if (index >= startIndex && index < endIndex) {
+                item.style.display = 'block';
+                item.style.visibility = 'visible';
+                item.style.opacity = '1';
+            } else {
+                item.style.display = 'none';
+                item.style.visibility = 'hidden';
+            }
+        });
+        
+        forceScrollReset();
+        
+        // 8. UPDATE: Pagination UI after content is shown
+        requestAnimationFrame(() => {
+            forceScrollReset();
+            
+            document.getElementById('page-info').textContent = `Page ${page} of ${totalPages}`;
+            document.getElementById('prev-btn').disabled = (page === 1);
+            document.getElementById('next-btn').disabled = (page === totalPages);
+            currentPage = page;
+            
+            // 9. MONITOR: Extended monitoring with exponential backoff
+            let attempts = 0;
+            const maxAttempts = 50; // 500ms total
+            
+            const monitorAndReset = () => {
+                forceScrollReset();
+                attempts++;
+                
+                if (attempts < maxAttempts) {
+                    // Exponential backoff: more frequent checks initially, then less frequent
+                    const delay = attempts < 10 ? 10 : attempts < 20 ? 25 : 50;
+                    setTimeout(monitorAndReset, delay);
+                }
+            };
+            
+            monitorAndReset();
+            
+            // 10. CLEANUP: Re-enable scrolling after extended period
+            setTimeout(() => {
+                isTransitioning = false;
+                
+                // Remove event listeners
+                ['scroll', 'wheel', 'touchmove', 'keydown'].forEach(event => {
+                    scrollableContent.removeEventListener(event, preventScroll, { capture: true });
+                    document.removeEventListener(event, preventScroll, { capture: true });
+                });
+                
+                // Final reset before re-enabling
+                forceScrollReset();
+                
+                // Re-enable scrolling
+                scrollableContent.style.overflow = 'auto';
+                
+                // Restore original scroll behavior
+                if (originalScrollBehavior) {
+                    document.documentElement.style.scrollBehavior = originalScrollBehavior;
+                } else {
+                    document.documentElement.style.scrollBehavior = '';
+                }
+                
+                // One final reset after re-enabling
+                setTimeout(() => forceScrollReset(), 10);
+                
+            }, 500); // Extended to 500ms
+        });
+    });
+}
+
+// OPTIONAL: Add this CSS for additional prevention
+const additionalCSS = `
+.scrollable-content {
+    /* Prevent any scroll restoration */
+    overscroll-behavior: none !important;
+    /* Disable any momentum scrolling */
+    -webkit-overflow-scrolling: auto !important;
+    /* Ensure no scroll padding/margin */
+    scroll-padding: 0 !important;
+    scroll-margin: 0 !important;
+}
+
+/* Prevent focus rings from causing scroll */
+.scrollable-content *:focus {
+    scroll-margin: 0 !important;
+    scroll-padding: 0 !important;
+}
+
+/* Disable transitions during pagination */
+.scrollable-content.transitioning * {
+    transition: none !important;
+    animation: none !important;
+}
+`;
+
+// Add the CSS if it doesn't exist
+if (!document.getElementById('scroll-fix-css')) {
+    const style = document.createElement('style');
+    style.id = 'scroll-fix-css';
+    style.textContent = additionalCSS;
+    document.head.appendChild(style);
+}
+
+// ENHANCED VERSION: Add transitioning class for extra control
+function showPageEnhanced(page) {
+    const scrollableContent = document.querySelector('.scrollable-content');
+    
+    // Add transitioning class to disable any CSS transitions/animations
+    scrollableContent.classList.add('transitioning');
+    
+    // Call the main function
+    showPage(page);
+    
+    // Remove transitioning class after everything is done
+    setTimeout(() => {
+        scrollableContent.classList.remove('transitioning');
+    }, 600);
+}

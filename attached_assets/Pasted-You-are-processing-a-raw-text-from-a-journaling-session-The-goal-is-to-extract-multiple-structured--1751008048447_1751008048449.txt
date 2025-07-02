@@ -1,0 +1,54 @@
+You are processing a raw text from a journaling session. The goal is to extract multiple structured nodes, each representing a distinct theme or cognitive-emotional pattern. Use the controlled lists of themes, cognition types, and emotions provided. Each node must represent a **single theme**, a **dominant cognitive frame**, and a **dominant emotional tone**.
+
+---
+Session Text:
+"{transcript}"
+---
+Themes (Max 1 node per theme):  
+["relationships", "career", "self-worth", "family", "health", "purpose", "money", "identity", "growth", "change", "conflict", "spirituality", "creativity", "freedom", "generic"]
+
+Cognition Types:  
+["decision_intent", "self_reflection", "emotion_insight", "identity_question", "future_projection", "regret", "justification", "resignation", "generic"]
+
+Emotions:  
+["hopeful", "content", "inspired", "determined", "grateful", "peaceful", "anxious", "fearful", "frustrated", "disconnected", "insecure", "doubtful", "generic"]
+
+---
+
+### Instructions
+
+1. **Node Segmentation:**  
+   Break the journal into distinct, coherent **nodes**, each centered on a **single theme**. A node may span multiple sentences if they express a unified thought.
+
+2. **Theme Deduplication:**  
+   Each theme should appear **only once**. If multiple passages relate to the same theme, choose the **most emotionally significant or contextually rich** segment.
+
+3. **Emotion Inference:**  
+   Assign the **dominant emotional tone** of the node based on the entire segment. Do not rely on surface words — infer emotion from context and meaning. Use only the emotions listed.
+
+4. **Cognition Type Assignment:**  
+   Assign the cognition type that best describes the mental function of the passage:
+   - Why is this being said?
+   - What kind of reflection, intent, or insight is happening?
+
+5. **No Redundancy:**  
+   - A sentence should belong to **only one node**
+   - No duplicate theme nodes
+   - Avoid breaking the same thought into different nodes even if parts match different themes
+
+6. **Fallback Handling:**  
+   If a passage is too ambiguous to match a known theme, cognition type, or emotion, use **"generic"** — but only when truly unavoidable.
+
+7. **Output Format:**  
+   Return your output in this **exact JSON format**:
+```json
+{
+  "nodes": [
+    {
+      "text": "...",
+      "theme": "...",
+      "cognition_type": "...",
+      "emotion": "..."
+    }
+  ]
+}

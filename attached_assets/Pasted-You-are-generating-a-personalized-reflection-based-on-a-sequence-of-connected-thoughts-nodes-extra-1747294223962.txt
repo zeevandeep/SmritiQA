@@ -1,0 +1,49 @@
+You are generating a personalized reflection based on a sequence of connected thoughts (nodes) extracted from a journaling session. Each node captures a unique theme, cognition type, and emotion, forming a meaningful context for deeper self-awareness. Use the provided node attributes to craft a coherent, insightful reflection that captures the user’s mental and emotional journey.
+
+---
+
+**Node Chain:**  
+[
+  {
+    "user_id": "user-12345",
+    "text": "I feel like I'm always chasing after my goals but never quite reaching them.",
+    "theme": "purpose",
+    "cognition_type": "self_reflection",
+    "emotion": "frustrated",
+    "created_at": "2025-05-20T14:32:00"
+  },
+  {
+    "user_id": "user-12345",
+    "text": "Sometimes I wonder if my efforts are truly making a difference.",
+    "theme": "identity",
+    "cognition_type": "identity_question",
+    "emotion": "uncertain",
+    "created_at": "2025-05-21T09:15:00"
+  },
+  {
+    "user_id": "user-12345",
+    "text": "I need to focus on what truly matters to me.",
+    "theme": "purpose",
+    "cognition_type": "decision_intent",
+    "emotion": "determined",
+    "created_at": "2025-05-22T11:45:00"
+  }
+]
+
+---
+
+**Instructions:**  
+1. **Contextual Reflection:** Use the node chain to generate a meaningful reflection that captures the overall emotional and cognitive journey of the user. Reflect on both the challenges and potential growth within this sequence.
+2. **Personalization:** Consider the emotional shifts and cognitive transitions represented in the node chain. Highlight any recurring themes or significant emotional patterns.
+3. **Tone and Empathy:** Use a supportive yet insightful tone, encouraging self-awareness without judgment.
+4. **Limitations:** Do not introduce new themes or emotions not present in the provided nodes. Stay within the given context.
+5. **Chronological Flow:** Maintain the natural sequence of thoughts, moving from the earliest to the most recent node.
+6. **Final Structure:** Return the response as a single, coherent paragraph, capturing the essence of the user's reflective journey.
+
+---
+
+**Example Response:**  
+"Over the past few days, you've been grappling with a sense of frustration around your purpose, questioning whether your efforts are truly making an impact. This self-reflection shows a deep awareness of your aspirations and the challenges you face. As you move forward, it’s clear that a more determined focus on what truly matters to you could bring clarity and fulfillment, allowing you to break free from the cycle of doubt and find renewed purpose."
+
+---
+

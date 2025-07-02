@@ -1,0 +1,199 @@
+🗂️ Neo4j Graph Model for Smriti (MVP)
+Here’s a detailed outline of the planned node labels, relationship types, constraints, and indexing for the Neo4j graph model, which is the core of the memory graph architecture for Smriti.
+
+🔹 Node Labels
+User (Root Entity)
+
+
+Represents individual users with unique IDs.
+
+
+Contains basic metadata for personalization and analytics.
+
+
+Example:
+CREATE (u:User {user_id: "1234-5678-9101-1121", display_name: "Jeevandeep", language: "en", created_at: datetime()})
+
+Session (High-Level Context)
+
+
+Each session is a journaling instance or conversation chunk.
+
+
+Connected to multiple nodes.
+
+
+Example:
+CREATE (s:Session {session_id: "abcd-efgh-ijkl-mnop", duration_seconds: 3600, created_at: datetime(), is_processed: false})
+
+Node (Atomic Thought Unit)
+
+
+Core memory units with emotional and cognitive context.
+
+
+Represents specific thoughts, reflections, or emotional moments.
+
+
+Properties:
+id (UUID, primary key)
+
+
+text (raw user text)
+
+
+emotion (e.g., “angry”, “hopeful”)
+
+
+theme (e.g., “work”, “relationship”)
+
+
+cognition_type (e.g., “decision_intent”, “self_doubt”)
+
+
+belief_value (e.g., “freedom”, “competence”)
+
+
+embedding (1536-D vector for semantic search)
+
+
+Example:
+CREATE (n:Node {
+  id: "1111-2222-3333-4444",
+  text: "I feel stuck at my job.",
+  emotion: "frustrated",
+  theme: "career",
+  cognition_type: "self_doubt",
+  belief_value: "freedom",
+  created_at: datetime(),
+  is_processed: false
+})
+
+Reflection (AI-Generated Insights)
+
+
+Represents reflections generated from chains or clusters.
+
+
+Stores generated text, feedback, and confidence score.
+
+
+Example:
+CREATE (r:Reflection {
+  id: "5555-6666-7777-8888",
+  generated_text: "You often feel torn between stability and freedom.",
+  generated_at: datetime(),
+  is_reflected: false,
+  feedback: null,
+  confidence_score: 0.92
+})
+
+🔗 Relationship Types
+HAS_SESSION
+
+
+Links User to Session
+
+
+Direction: (User) -[:HAS_SESSION]-> (Session)
+
+
+Example:
+MATCH (u:User {user_id: "1234-5678-9101-1121"})
+MATCH (s:Session {session_id: "abcd-efgh-ijkl-mnop"})
+MERGE (u)-[:HAS_SESSION]->(s)
+
+HAS_NODE
+
+
+Links Session to multiple Node entities
+
+
+Direction: (Session) -[:HAS_NODE]-> (Node)
+
+
+Example:
+MATCH (s:Session {session_id: "abcd-efgh-ijkl-mnop"})
+MATCH (n:Node {id: "1111-2222-3333-4444"})
+MERGE (s)-[:HAS_NODE]->(n)
+
+EDGE
+
+
+Connects two nodes based on emotional or cognitive transitions
+
+
+Directional, captures the progression of thoughts
+
+
+Properties:
+edge_type (e.g., “thought_progression”, “emotion_shift”)
+
+
+match_strength (0-1 float)
+
+
+session_relation (e.g., “intra_session”, “cross_session”)
+
+
+explanation (GPT-generated context)
+
+
+Example:
+MATCH (n1:Node {id: "1111-2222-3333-4444"})
+MATCH (n2:Node {id: "2222-3333-4444-5555"})
+MERGE (n1)-[:EDGE {
+  edge_type: "thought_progression",
+  match_strength: 0.85,
+  session_relation: "intra_session",
+  explanation: "The thought builds on a prior realization about freedom."
+}]->(n2)
+
+GENERATES_REFLECTION
+
+
+Links Edge to Reflection after meaningful insight is generated
+
+
+Direction: (Edge) -[:GENERATES_REFLECTION]-> (Reflection)
+
+
+Example:
+MATCH (e:Edge {id: "6666-7777-8888-9999"})
+MATCH (r:Reflection {id: "5555-6666-7777-8888"})
+MERGE (e)-[:GENERATES_REFLECTION]->(r)
+
+🔍 Indexing and Constraints
+Node Constraints:
+CREATE CONSTRAINT user_id_unique IF NOT EXISTS
+FOR (u:User) REQUIRE u.user_id IS UNIQUE;
+
+CREATE CONSTRAINT node_id_unique IF NOT EXISTS
+FOR (n:Node) REQUIRE n.id IS UNIQUE;
+
+CREATE CONSTRAINT session_id_unique IF NOT EXISTS
+FOR (s:Session) REQUIRE s.session_id IS UNIQUE;
+
+CREATE CONSTRAINT reflection_id_unique IF NOT EXISTS
+FOR (r:Reflection) REQUIRE r.id IS UNIQUE;
+Relationship Indexes (Recommended):
+CREATE INDEX edge_index IF NOT EXISTS FOR ()-[e:EDGE]->() ON (e.edge_type, e.match_strength);
+CREATE INDEX reflection_index IF NOT EXISTS FOR ()-[r:GENERATES_REFLECTION]->() ON (r.confidence_score);
+Vector Indexing:
+Use HNSW or Approximate Nearest Neighbor algorithms for fast semantic searches on embedding fields (requires Neo4j 5.0+).
+
+
+
+🛠️ Additional Optimization Suggestions:
+Lazy Loading Reflections: Only fetch reflections when explicitly required to reduce overhead.
+
+
+Batch Edge Creation: Process edges in bulk where possible to avoid Neo4j transaction overhead.
+
+
+Caching Frequently Accessed Nodes: Consider in-memory caching for popular nodes or frequently traversed paths.
+
+
+
+
+

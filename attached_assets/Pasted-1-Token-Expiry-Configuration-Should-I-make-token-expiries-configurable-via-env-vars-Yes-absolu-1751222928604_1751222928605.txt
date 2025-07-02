@@ -1,0 +1,106 @@
+1. Token Expiry Configuration
+Should I make token expiries configurable via env vars?
+
+✅ Yes, absolutely.
+
+env
+Copy
+Edit
+ACCESS_TOKEN_EXPIRY_SECONDS=1800        # 30 minutes
+REFRESH_TOKEN_EXPIRY_SECONDS=1209600    # 14 days
+Why:
+This gives flexibility in dev/staging vs prod without hardcoded values. Also helpful when testing longer sessions.
+
+2. Database Changes
+Refresh tokens in new table or existing users table?
+
+✅ Use a new refresh_tokens table.
+
+Structure Example:
+
+sql
+Copy
+Edit
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    token TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    issued_at TIMESTAMP DEFAULT NOW(),
+    is_valid BOOLEAN DEFAULT TRUE
+);
+Why:
+
+Avoids bloating the users table.
+
+Supports multiple tokens per user (e.g., login from web + phone).
+
+Makes future revocation/blacklisting clean and traceable.
+
+3. Cookie Configuration
+SameSite=Lax or Strict for Replit? Separate cookies?
+
+✅ SameSite=Lax for now
+
+Works well with Replit and avoids CSRF in most standard use cases
+
+SameSite=Strict can block valid cross-site flows (like redirect from Google OAuth later)
+
+In Phase 2 (Google login), you’ll likely need SameSite=None; Secure
+
+✅ Separate cookies for access and refresh tokens
+
+access_token: short-lived, for route validation
+
+refresh_token: longer-lived, only used for refreshing
+
+Cookie Flags:
+
+HttpOnly, Secure, SameSite=Lax
+
+Consider naming:
+
+smriti_access_token
+
+smriti_refresh_token
+
+4. Backward Compatibility
+Should session-based routes be maintained temporarily?
+
+✅ No need to maintain both. Switch all protected routes to JWT.
+
+Why:
+
+Cleaner code
+
+Session state won't be needed anymore
+
+Fewer edge cases to test
+
+Users will migrate automatically upon next login
+
+✅ Just make sure your @jwt_required decorator returns friendly error messages if token is missing or expired (see #5).
+
+5. Error Handling
+What should happen when tokens expire?
+
+✅ Ideal Behavior:
+
+If access token is expired but refresh token is valid:
+
+Use a silent /refresh endpoint to issue a new access token.
+
+This can be triggered client-side (via JS fetch) or server-side on middleware fail.
+
+If refresh token is expired or invalid:
+
+Redirect to login page
+
+Optional: show toast/snackbar message like "Session expired, please sign in again."
+
+✅ This gives both:
+
+Security
+
+Seamless UX
+
