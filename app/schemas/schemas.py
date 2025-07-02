@@ -221,7 +221,7 @@ class Reflection(ReflectionInDB):
 # Feedback schemas
 class FeedbackBase(BaseModel):
     """Base feedback data."""
-    feedback_type: str = Field(..., regex="^(suggestion|bug|compliment)$")
+    feedback_type: str = Field(..., pattern="^(suggestion|bug|compliment)$")
     subject: str = Field(..., max_length=200)
     message: str
     rating: Optional[int] = Field(None, ge=1, le=5)
