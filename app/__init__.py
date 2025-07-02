@@ -1,0 +1,3 @@
+"""
+Smriti application package.
+"""
