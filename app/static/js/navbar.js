@@ -1,44 +1,47 @@
 /**
  * Hamburger Menu Click-Outside-to-Close Functionality
  * 
- * This script adds click-outside behavior to the hamburger menu.
- * When the menu is open, clicking anywhere outside the menu or hamburger button
- * will close the menu. Menu links continue to work as expected.
+ * This script adds click-outside behavior to the hamburger menu using Bootstrap's
+ * official Collapse API to ensure consistent smooth animations.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get navbar elements
-    const navbarMenu = document.getElementById('navbarMenu');
-    const navbarToggler = document.querySelector('.navbar-toggler');
-    
-    // Only proceed if both elements exist
+document.addEventListener('DOMContentLoaded', () => {
+    const navbarMenu = document.getElementById('navbarMenu');  // This is your collapsible menu
+    const navbarToggler = document.querySelector('.navbar-toggler'); // The hamburger button
+
     if (!navbarMenu || !navbarToggler) {
         console.warn('Navbar elements not found - click-outside functionality disabled');
         return;
     }
-    
-    // Add click event listener to document
-    document.addEventListener('click', function(event) {
-        // Only proceed if menu is currently open
-        if (!navbarMenu.classList.contains('show')) {
-            return;
-        }
-        
-        // Check if click was outside both the menu and the hamburger button
+
+    document.addEventListener('click', (event) => {
+        const isMenuOpen = navbarMenu.classList.contains('show');
         const clickedInsideMenu = navbarMenu.contains(event.target);
-        const clickedHamburgerButton = navbarToggler.contains(event.target);
-        
-        // Close menu if clicked outside both elements
-        if (!clickedInsideMenu && !clickedHamburgerButton) {
-            navbarMenu.classList.remove('show');
+        const clickedToggler = navbarToggler.contains(event.target);
+
+        // Only collapse if menu is open and the click was outside both the menu and the hamburger
+        if (isMenuOpen && !clickedInsideMenu && !clickedToggler) {
+            const collapseInstance = bootstrap.Collapse.getInstance(navbarMenu);
+
+            if (collapseInstance) {
+                collapseInstance.hide();  // ✅ Triggers smooth Bootstrap collapse animation
+            } else {
+                // Optional: fallback if Collapse instance not initialized (shouldn't happen if Bootstrap JS loaded)
+                navbarMenu.classList.remove('show');
+            }
         }
     });
-    
-    // Optional: Close menu when clicking on navigation links (maintains current behavior)
+
+    // Close menu when clicking on navigation links (maintains current behavior)
     const menuLinks = navbarMenu.querySelectorAll('.nav-link');
     menuLinks.forEach(function(link) {
         link.addEventListener('click', function() {
-            navbarMenu.classList.remove('show');
+            const collapseInstance = bootstrap.Collapse.getInstance(navbarMenu);
+            if (collapseInstance) {
+                collapseInstance.hide();  // Use Bootstrap API for consistent animation
+            } else {
+                navbarMenu.classList.remove('show');
+            }
         });
     });
 });
