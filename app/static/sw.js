@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smriti-v2';
+const CACHE_NAME = 'smriti-v3-no-dark-theme';
 const urlsToCache = [
   '/',
   '/journal',
@@ -36,17 +36,20 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Activate service worker
+// Activate service worker and force clear all caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
+      // Clear ALL caches to remove any dark theme remnants
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+          console.log('Deleting cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
+    }).then(() => {
+      // Force clients to use the new service worker immediately
+      return self.clients.claim();
     })
   );
 });
