@@ -110,21 +110,54 @@ function handleBackPress(event) {
 function initializeExitPrompt() {
     debugLog('Initializing exit prompt');
     
-    // Method 1: Standard popstate event
-    history.pushState(null, null, location.href);
+    // Method 1: More aggressive popstate handling
+    let initialState = { page: 'current' };
+    history.replaceState(initialState, null, location.href);
+    
+    // Push multiple dummy states to create a "buffer"
+    for (let i = 0; i < 3; i++) {
+        history.pushState({ page: 'exit-buffer-' + i }, null, location.href);
+    }
+    
     window.addEventListener('popstate', function(event) {
-        debugLog('Popstate event triggered');
-        handleBackPress(event);
-        history.pushState(null, null, location.href); // Re-push state
+        debugLog('Popstate event triggered with state:', event.state);
+        
+        // Always handle as exit attempt
+        if (handleBackPress(event) === false) {
+            // Re-push buffer states
+            for (let i = 0; i < 3; i++) {
+                history.pushState({ page: 'exit-buffer-' + i }, null, location.href);
+            }
+        }
     });
     
-    // Method 2: Android back button (for Cordova/PhoneGap apps)
+    // Method 2: Beforeunload event (catches browser back/close)
+    window.addEventListener('beforeunload', function(event) {
+        debugLog('Beforeunload event triggered');
+        if (!backPressedOnce) {
+            event.preventDefault();
+            event.returnValue = 'Press back again to exit Smriti';
+            showExitToast();
+            backPressedOnce = true;
+            
+            // Reset after 2 seconds
+            backPressTimer = setTimeout(() => {
+                debugLog('Timer expired - resetting state');
+                backPressedOnce = false;
+                removeExitToast();
+            }, 2000);
+            
+            return 'Press back again to exit Smriti';
+        }
+    });
+    
+    // Method 3: Android back button (for Cordova/PhoneGap apps)
     document.addEventListener('backbutton', function(event) {
         debugLog('Android backbutton event triggered');
         handleBackPress(event);
     }, false);
     
-    // Method 3: Keyboard back (ESC key as fallback)
+    // Method 4: Keyboard back (ESC key as fallback)
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' || event.keyCode === 27) {
             debugLog('Escape key pressed - treating as back');
@@ -132,16 +165,15 @@ function initializeExitPrompt() {
         }
     });
     
-    // Method 4: Hash change detection (additional fallback)
-    window.addEventListener('hashchange', function(event) {
-        debugLog('Hash change detected');
-        if (location.hash === '#exit') {
-            handleBackPress(event);
-            history.replaceState(null, null, location.pathname); // Remove hash
+    // Method 5: Page visibility change (detect when user navigates away)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            debugLog('Page visibility changed - hidden');
+            // Don't prevent this, but log it
         }
     });
     
-    debugLog('Exit prompt initialized successfully');
+    debugLog('Exit prompt initialized successfully with enhanced methods');
 }
 
 // Initialize when DOM loads
