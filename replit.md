@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **iOS PWA Installation Fix**: Fixed iOS device detection and unified installation instructions for both Safari and Chrome browsers. Enhanced platform detection to properly identify iPhone, iPad, and iPad Pro devices. Updated installation steps to correctly show "Share" button instructions since both iOS browsers use the same installation method through the Share menu
 - **Hamburger Menu Toggle Fix**: Resolved hamburger menu not closing issue on reflections page by removing duplicate Bootstrap JavaScript loading that caused collapse functionality conflicts. Menu now properly toggles open and close as expected
 - **Email-Validator Dependency Resolution**: Fixed deployment crashes caused by missing email-validator dependency required for Pydantic EmailStr validation. Issue was triggered when Git integration enabled fresh dependency resolution from pyproject.toml, exposing the implicit dependency. Added email-validator>=2.1.0 to dependencies ensuring consistent deployments across all environments
 - **Google OAuth Database Schema Fix Complete**: Resolved critical user creation failure during Google OAuth signup by adding missing `updated_at` field to User model. Successfully executed database migration and updated API schemas. New user Google OAuth signup now works seamlessly in both development and production environments

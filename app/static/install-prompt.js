@@ -242,13 +242,10 @@ class PWAInstallManager {
         const browserName = this.platform.browserName;
         const isSafari = this.platform.isIOSSafari;
         
-        const instructionSteps = isSafari ? [
-            { step: 1, text: 'Tap the Share button', icon: '⬆️', detail: 'Look for the share icon at the bottom of Safari' },
-            { step: 2, text: 'Scroll down and tap "Add to Home Screen"', icon: '➕', detail: 'Find this option in the share menu' },
-            { step: 3, text: 'Tap "Add" to confirm', icon: '✅', detail: 'Smriti will be added to your home screen' }
-        ] : [
-            { step: 1, text: 'Tap the menu button (⋯)', icon: '⋯', detail: 'Look for three dots in the browser' },
-            { step: 2, text: 'Tap "Add to Home Screen"', icon: '➕', detail: 'Find this option in the menu' },
+        // Both Safari and Chrome on iOS use the Share menu
+        const instructionSteps = [
+            { step: 1, text: 'Tap the Share button', icon: '📤', detail: 'Look for the square with arrow up' },
+            { step: 2, text: 'Tap "Add to Home Screen"', icon: '➕', detail: 'Find this option in the share menu' },
             { step: 3, text: 'Tap "Add" to confirm', icon: '✅', detail: 'Smriti will be added to your home screen' }
         ];
         
@@ -276,7 +273,7 @@ class PWAInstallManager {
                             `).join('')}
                         </div>
                         <div class="ios-instruction-footer">
-                            <p><strong>Using ${browserName} on iOS?</strong> ${isSafari ? 'These steps work in Safari.' : 'Try opening this page in Safari for easier installation.'}</p>
+                            <p><strong>Using ${browserName} on iOS?</strong> These steps work in both Safari and Chrome.</p>
                         </div>
                     </div>
                     <div class="ios-instruction-actions">
