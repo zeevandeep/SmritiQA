@@ -14,6 +14,18 @@ window.addEventListener('load', () => {
     console.log('[Exit Prompt] Initializing exit prompt on page load');
     history.pushState(null, '', location.href);
     console.log('[Exit Prompt] Exit prompt initialized successfully');
+    
+    // Add visual indicator for PWA mode debugging
+    const debugMode = localStorage.getItem('smriti-debug') === 'true';
+    if (debugMode) {
+        const indicator = document.createElement('div');
+        indicator.innerText = 'Exit Prompt Active';
+        indicator.style.cssText = `
+            position: fixed; top: 10px; right: 10px; background: red; 
+            color: white; padding: 5px; font-size: 12px; z-index: 10000;
+        `;
+        document.body.appendChild(indicator);
+    }
 });
 
 window.addEventListener('popstate', (event) => {
