@@ -1,0 +1,83 @@
+Great — here's a full implementation scaffold for the "Press back again to exit Smriti" behavior using the History API in a PWA context.
+
+This approach:
+
+Shows a toast: "Press back again to exit Smriti"
+
+Waits 2 seconds for the second back press
+
+If second back press occurs → triggers exit (or fallback)
+
+Applies only when user is on the app's home/root page (optional check)
+
+📁 /static/js/exit-prompt.js
+js
+Copy
+Edit
+let exitPromptActive = false;
+let exitPromptTimeout = null;
+
+function showExitToast() {
+  // Create toast if it doesn't exist
+  if (!document.getElementById('exit-toast')) {
+    const toast = document.createElement('div');
+    toast.id = 'exit-toast';
+    toast.innerText = 'Press back again to exit Smriti';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 9999;
+      transition: opacity 0.3s ease-in-out;
+      opacity: 0;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = 1; }, 50);
+  }
+
+  exitPromptActive = true;
+
+  // Remove toast and reset after 2 seconds
+  exitPromptTimeout = setTimeout(() => {
+    exitPromptActive = false;
+    const toast = document.getElementById('exit-toast');
+    if (toast) {
+      toast.style.opacity = 0;
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 2000);
+}
+
+function tryExitApp() {
+  // Try to close the app/tab
+  window.close(); // Works in standalone PWA mode on Android
+  // Fallback: Navigate to a goodbye page or let browser handle
+  history.back(); // This will still exit or go to previous if exists
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Push a dummy state so we can catch the first back press
+  history.pushState(null, null, location.href);
+
+  window.addEventListener('popstate', (event) => {
+    if (exitPromptActive) {
+      tryExitApp();
+    } else {
+      showExitToast();
+      // Re-push the dummy state to prevent real navigation
+      history.pushState(null, null, location.href);
+    }
+  });
+});
+✅ Integration in Your Template
+Option A: Include in partials/navbar.html (if all pages inherit this)
+html
+Copy
+Edit
+<script src="/static/js/exit-prompt.js"></script>
