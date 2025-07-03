@@ -11,12 +11,16 @@ let backToastTimer = null;
 
 // Push dummy history state when page loads
 window.addEventListener('load', () => {
+    console.log('[Exit Prompt] Initializing exit prompt on page load');
     history.pushState(null, '', location.href);
+    console.log('[Exit Prompt] Exit prompt initialized successfully');
 });
 
 window.addEventListener('popstate', (event) => {
+    console.log('[Exit Prompt] Back button pressed, backPressedOnce:', backPressedOnce);
     if (backPressedOnce) {
         // Second back press within timeout
+        console.log('[Exit Prompt] Second back press - attempting to exit');
         if (window.matchMedia('(display-mode: standalone)').matches) {
             window.close(); // For PWA mode (Android only)
         } else {
@@ -24,12 +28,14 @@ window.addEventListener('popstate', (event) => {
         }
     } else {
         backPressedOnce = true;
+        console.log('[Exit Prompt] First back press - showing toast');
         showExitToast();
 
         history.pushState(null, '', location.href); // Re-push dummy state
 
         backToastTimer = setTimeout(() => {
             backPressedOnce = false;
+            console.log('[Exit Prompt] Timer expired - reset backPressedOnce');
         }, 2000); // 2 seconds to tap again
     }
 });
