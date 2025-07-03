@@ -270,73 +270,8 @@
             }
         }
         
-        // DEBUG: Hamburger menu click behavior
-        function debugHamburgerMenu() {
-            const hamburger = document.querySelector('.navbar-toggler');
-            const collapse = document.querySelector('#navbarMenu');
-            
-            console.log('=== HAMBURGER MENU DEBUG ===');
-            console.log('Hamburger button found:', !!hamburger);
-            console.log('Collapse element found:', !!collapse);
-            
-            if (hamburger) {
-                console.log('Hamburger button attributes:', {
-                    'data-bs-toggle': hamburger.getAttribute('data-bs-toggle'),
-                    'data-bs-target': hamburger.getAttribute('data-bs-target'),
-                    'aria-expanded': hamburger.getAttribute('aria-expanded')
-                });
-            }
-            
-            if (collapse) {
-                const style = window.getComputedStyle(collapse);
-                console.log('Collapse element initial state:', {
-                    'display': style.display,
-                    'visibility': style.visibility,
-                    'height': style.height,
-                    'overflow': style.overflow,
-                    'position': style.position,
-                    'top': style.top,
-                    'left': style.left,
-                    'right': style.right
-                });
-                console.log('Collapse element classes:', collapse.className);
-                console.log('Collapse element has .show class:', collapse.classList.contains('show'));
-                console.log('Collapse element getBoundingClientRect:', collapse.getBoundingClientRect());
-            }
-        }
-        
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Debug hamburger menu on page load
-            debugHamburgerMenu();
-            
-            // Add click listener to hamburger for debugging
-            const hamburger = document.querySelector('.navbar-toggler');
-            if (hamburger) {
-                hamburger.addEventListener('click', function() {
-                    console.log('=== HAMBURGER CLICKED ===');
-                    // Delay to allow Bootstrap animation to start
-                    setTimeout(() => {
-                        const collapse = document.querySelector('#navbarMenu');
-                        if (collapse) {
-                            const style = window.getComputedStyle(collapse);
-                            console.log('Collapse element after click:', {
-                                'display': style.display,
-                                'visibility': style.visibility,
-                                'height': style.height,
-                                'overflow': style.overflow,
-                                'position': style.position,
-                                'top': style.top,
-                                'left': style.left,
-                                'right': style.right
-                            });
-                            console.log('Collapse element classes after click:', collapse.className);
-                            console.log('Collapse element has .show class:', collapse.classList.contains('show'));
-                            console.log('Collapse element getBoundingClientRect after click:', collapse.getBoundingClientRect());
-                        }
-                    }, 100);
-                });
-            }
             // Mark reflections as viewed
             const reflectionElements = document.querySelectorAll('.reflection-item');
             reflectionElements.forEach(element => {
