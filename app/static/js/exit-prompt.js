@@ -1,89 +1,79 @@
 /**
  * Press Back Again to Exit Functionality for Smriti PWA
  * 
- * Implements native mobile app-like exit behavior where pressing back button
- * shows a toast "Press back again to exit Smriti" and exits on second press.
+ * Intercepts ALL back button presses on ANY page to show exit prompt first.
+ * No navigation happens on first back press - only shows toast.
+ * Second back press within 2 seconds exits the app.
  */
 
-let exitPromptActive = false;
-let exitPromptTimeout = null;
+let backPressedOnce = false;
+let backPressTimer = null;
 
-function showExitToast() {
-    // Create toast if it doesn't exist
-    if (!document.getElementById('exit-toast')) {
-        const toast = document.createElement('div');
-        toast.id = 'exit-toast';
-        toast.innerText = 'Press back again to exit Smriti';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--primary-color, #e67e22);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 9999;
-            transition: opacity 0.3s ease-in-out;
-            opacity: 0;
-            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        `;
-        document.body.appendChild(toast);
+// Push a dummy state to trap back presses
+history.pushState(null, null, location.href);
+
+// Listen for back/forward navigation
+window.addEventListener("popstate", function (event) {
+    if (backPressedOnce) {
+        // Second back press - exit the app
+        clearTimeout(backPressTimer);
+        removeExitToast();
         
-        // Fade in the toast
-        setTimeout(() => { 
-            toast.style.opacity = 1; 
-        }, 50);
-    }
-
-    exitPromptActive = true;
-
-    // Remove toast and reset after 2 seconds
-    exitPromptTimeout = setTimeout(() => {
-        exitPromptActive = false;
-        const toast = document.getElementById('exit-toast');
-        if (toast) {
-            toast.style.opacity = 0;
-            setTimeout(() => toast.remove(), 300);
+        // Try to close the app (works in PWA standalone mode)
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            window.close(); // For PWA
+        } else {
+            history.go(-2); // Browser fallback
         }
-    }, 2000);
+    } else {
+        // First back press - show toast and prevent navigation
+        showExitToast();
+        backPressedOnce = true;
+
+        // Prevent navigation by pushing dummy state again
+        history.pushState(null, null, location.href);
+
+        // Reset after 2 seconds
+        backPressTimer = setTimeout(() => {
+            backPressedOnce = false;
+            removeExitToast();
+        }, 2000);
+    }
+});
+
+// Display exit toast with Smriti orange theme
+function showExitToast() {
+    if (document.getElementById('exit-toast')) return;
+
+    const toast = document.createElement('div');
+    toast.id = 'exit-toast';
+    toast.textContent = 'Press back again to exit Smriti';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--primary-color, #e67e22);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 15px;
+        font-weight: 500;
+        z-index: 9999;
+        transition: opacity 0.3s ease-in-out;
+        opacity: 1;
+        box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    document.body.appendChild(toast);
 }
 
-function tryExitApp() {
-    // Clear any existing timeout
-    if (exitPromptTimeout) {
-        clearTimeout(exitPromptTimeout);
-    }
-    
-    // Remove toast immediately
+// Remove exit toast
+function removeExitToast() {
     const toast = document.getElementById('exit-toast');
     if (toast) {
-        toast.remove();
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
     }
-    
-    // Try to close the app/tab (works in standalone PWA mode)
-    window.close();
-    
-    // Fallback: Navigate back if window.close() doesn't work
-    history.back();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Push a dummy state so we can catch the first back press
-    history.pushState(null, null, location.href);
-
-    window.addEventListener('popstate', (event) => {
-        if (exitPromptActive) {
-            // Second back press within 2 seconds - exit the app
-            tryExitApp();
-        } else {
-            // First back press - show exit prompt
-            showExitToast();
-            // Re-push the dummy state to prevent real navigation
-            history.pushState(null, null, location.href);
-        }
-    });
-});
