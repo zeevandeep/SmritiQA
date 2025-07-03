@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **New Brain Network Logo Implementation**: Replaced app logo with beautiful neural network brain design featuring interconnected nodes and brain silhouettes. Created SVG version and generated PWA-compliant icon sizes (192x192, 512x512, Apple touch icon, favicon). Updated all templates to reference new brain logo that perfectly represents Smriti's AI-powered thought connection capabilities
 - **iOS PWA Installation Fix**: Fixed iOS device detection and unified installation instructions for both Safari and Chrome browsers. Enhanced platform detection to properly identify iPhone, iPad, and iPad Pro devices. Updated installation steps to correctly show "Share" button instructions since both iOS browsers use the same installation method through the Share menu
 - **Hamburger Menu Toggle Fix**: Resolved hamburger menu not closing issue on reflections page by removing duplicate Bootstrap JavaScript loading that caused collapse functionality conflicts. Menu now properly toggles open and close as expected
 - **Email-Validator Dependency Resolution**: Fixed deployment crashes caused by missing email-validator dependency required for Pydantic EmailStr validation. Issue was triggered when Git integration enabled fresh dependency resolution from pyproject.toml, exposing the implicit dependency. Added email-validator>=2.1.0 to dependencies ensuring consistent deployments across all environments
