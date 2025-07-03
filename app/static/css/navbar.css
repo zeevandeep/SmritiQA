@@ -58,11 +58,15 @@
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(230, 126, 34, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
-/* Mobile collapse menu styling - simplified to not interfere with Bootstrap */
-@media (max-width: 991.98px) {
-    #smriti-navbar .navbar-collapse {
-        background-color: white !important;
-        border-top: 1px solid #dee2e6 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-    }
+/* Mobile collapse menu styling */
+#smriti-navbar .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white !important;
+    border-top: 1px solid #dee2e6 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
 }
