@@ -1,52 +1,26 @@
 <!-- Unified Mobile-Only Navigation Bar -->
-<nav id="smriti-navbar" class="navbar navbar-expand-lg fixed-top" role="navigation" aria-label="Main navigation">
+<nav id="smriti-navbar" class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/" aria-label="Smriti home page">Smriti</a>
+        <a class="navbar-brand" href="/">Smriti</a>
         
-        <button class="navbar-toggler" 
-                type="button" 
-                data-bs-toggle="collapse" 
-                data-bs-target="#navbarMenu"
-                aria-controls="navbarMenu"
-                aria-expanded="false"
-                aria-label="Toggle navigation menu">
-            <span class="navbar-toggler-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Menu</span>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+            <span class="navbar-toggler-icon"></span>
         </button>
         
-        <div class="collapse navbar-collapse" id="navbarMenu" aria-labelledby="navbarMenu-label">
-            <!-- Screen reader label for menu -->
-            <span id="navbarMenu-label" class="visually-hidden">Navigation menu</span>
-            
+        <div class="collapse navbar-collapse" id="navbarMenu">
             <!-- Mobile navigation menu -->
-            <ul class="navbar-nav mt-2" role="list">
-                <li class="nav-item" role="listitem">
-                    <a class="nav-link" 
-                       href="/how-to-use" 
-                       aria-label="How to use Smriti - Learn about app features">
-                        <span aria-hidden="true">ℹ️</span> How to use Smriti
-                    </a>
+            <ul class="navbar-nav mt-2">
+                <li class="nav-item">
+                    <a class="nav-link" href="/how-to-use">ℹ️ How to use Smriti</a>
                 </li>
-                <li class="nav-item" role="listitem">
-                    <a class="nav-link" 
-                       href="/feedback" 
-                       aria-label="Share feedback - Send suggestions or report issues">
-                        <span aria-hidden="true">💬</span> Share feedback
-                    </a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/feedback">💬 Share feedback</a>
                 </li>
-                <li class="nav-item" role="listitem">
-                    <a class="nav-link" 
-                       href="/settings" 
-                       aria-label="Settings - Manage your account preferences">
-                        <span aria-hidden="true">⚙️</span> Settings
-                    </a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/settings">⚙️ Settings</a>
                 </li>
-                <li class="nav-item" role="listitem">
-                    <a class="nav-link" 
-                       href="/logout" 
-                       aria-label="Sign out of your account">
-                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign Out
-                    </a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
                 </li>
             </ul>
         </div>
