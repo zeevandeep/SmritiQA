@@ -1,36 +1,36 @@
 """
-PostgreSQL database connection module for Smriti.
-
-This module provides SQLAlchemy session and engine setup.
+Database configuration and session management for Smriti application.
 """
-from typing import Generator
-
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
-from app.config import settings
+# Get database URL from environment
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
-# Create SQLAlchemy engine with connection pool settings
+# Create SQLAlchemy engine
 engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
+    DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
     pool_recycle=300,
+    pool_pre_ping=True,
+    echo=False  # Set to True for SQL logging
 )
 
-# Create session factory
+# Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Declarative base for models
+# Create Base class for models
 Base = declarative_base()
 
-
-def get_db() -> Generator:
+def get_db():
     """
-    Get a database session.
-    
-    Yields:
-        Session: A SQLAlchemy session.
+    Database dependency for FastAPI routes.
+    Yields a database session and ensures it's closed after use.
     """
     db = SessionLocal()
     try:
@@ -38,11 +38,16 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-
-def init_db() -> None:
+def create_tables():
     """
-    Initialize database by creating all tables.
-    
-    This should be called at application startup.
+    Create all database tables.
+    This should be called after all models are imported.
     """
     Base.metadata.create_all(bind=engine)
+
+def drop_tables():
+    """
+    Drop all database tables.
+    Use with caution - this will delete all data!
+    """
+    Base.metadata.drop_all(bind=engine)

@@ -1,22 +1,38 @@
 """
-Health check routes for API v1.
+Health check API routes.
 """
 from fastapi import APIRouter
-
-from app.schemas.schemas import HealthCheck
+from datetime import datetime
 
 router = APIRouter()
 
-
-@router.get("/", response_model=HealthCheck)
-def health_check():
-    """
-    Check API health status.
-    
-    Returns:
-        HealthCheck: API health status information
-    """
+@router.get("/")
+async def health_check():
+    """Basic health check endpoint."""
     return {
         "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "service": "Smriti API",
         "version": "1.0.0"
     }
+
+@router.get("/db")
+async def database_health():
+    """Database connectivity health check."""
+    try:
+        from app.db.database import engine
+        with engine.connect() as connection:
+            from sqlalchemy import text
+            connection.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy", 
+            "database": "disconnected",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }

@@ -1,3 +1,3 @@
 """
-Routes package for API v1.
+API v1 routes package.
 """

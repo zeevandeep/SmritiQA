@@ -10,6 +10,21 @@ from uuid import UUID
 from pydantic import BaseModel, Field, EmailStr
 
 
+# Authentication schemas
+class Token(BaseModel):
+    """JWT token response."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class TokenData(BaseModel):
+    """Token data for JWT validation."""
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+
+
 # User schemas
 class UserBase(BaseModel):
     """Base user data."""
@@ -169,12 +184,11 @@ class Edge(EdgeInDB):
     pass
 
 
-
 # Reflection schemas
 class ReflectionBase(BaseModel):
     """Base reflection data."""
     generated_text: str
-    confidence_score: float = Field(ge=0.0, le=1.0)
+    confidence_score: Optional[float] = Field(None, ge=0.0, le=1.0)
 
 
 class ReflectionCreate(ReflectionBase):
@@ -189,10 +203,11 @@ class ReflectionInDB(ReflectionBase):
     id: UUID
     user_id: UUID
     node_ids: List[UUID]
-    edge_ids: Optional[List[UUID]] = None
+    edge_ids: Optional[List[UUID]]
     generated_at: datetime
     is_reflected: bool
-    feedback: Optional[int] = None  # 1 for thumbs up, -1 for thumbs down
+    is_viewed: bool
+    feedback: Optional[int] = None
     
     class Config:
         from_attributes = True
@@ -203,41 +218,33 @@ class Reflection(ReflectionInDB):
     pass
 
 
-# Feedback schema
-class FeedbackRequest(BaseModel):
-    """Request data for providing feedback on a reflection.
-    
-    The feedback value is an integer:
-    - 1 for thumbs up (positive)
-    - -1 for thumbs down (negative)
-    - NULL for no feedback yet (handled by Optional)
-    """
-    feedback: int = Field(description="Feedback value: 1 for thumbs up, -1 for thumbs down", ge=-1, le=1)
-    
+# Feedback schemas
+class FeedbackBase(BaseModel):
+    """Base feedback data."""
+    feedback_type: str = Field(..., pattern="^(suggestion|bug|compliment)$")
+    subject: str = Field(..., max_length=200)
+    message: str
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    contact_email: Optional[EmailStr] = None
 
-# User Feedback schemas
-class UserFeedbackCreate(BaseModel):
-    """Schema for creating user feedback."""
-    feedback_type: str = Field(description="Type of feedback: suggestion, bug, or compliment")
-    subject: str = Field(max_length=200, description="Brief description of the feedback")
-    message: str = Field(description="Detailed feedback message")
-    rating: Optional[int] = Field(None, ge=1, le=5, description="Optional rating from 1-5")
-    contact_email: Optional[EmailStr] = Field(None, description="Optional contact email")
 
-class UserFeedbackInDB(UserFeedbackCreate):
-    """Schema for feedback stored in database."""
+class FeedbackCreate(FeedbackBase):
+    """Data required to create new feedback."""
+    pass
+
+
+class FeedbackInDB(FeedbackBase):
+    """Feedback data as stored in the database."""
     id: UUID
     user_id: UUID
     status: str = "new"
     created_at: datetime
     updated_at: datetime
+    
+    class Config:
+        from_attributes = True
 
-class UserFeedback(UserFeedbackInDB):
-    """Schema for feedback returned in API responses."""
+
+class Feedback(FeedbackInDB):
+    """Feedback data returned in API responses."""
     pass
-
-# Health check response
-class HealthCheck(BaseModel):
-    """Response data for health check endpoint."""
-    status: str
-    version: str = "1.0.0"

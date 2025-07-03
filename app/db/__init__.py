@@ -1,3 +1,3 @@
 """
-Database package for Smriti application.
+Database configuration and connection management.
 """

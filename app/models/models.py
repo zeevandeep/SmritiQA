@@ -23,7 +23,7 @@ class User(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False)
-    password_hash = Column(String(256), nullable=True)  # Adding password hash
+    password_hash = Column(String(256), nullable=True)  # Nullable for OAuth-only users
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
@@ -110,12 +110,6 @@ class Edge(Base):
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            "edge_type IN ('thought_progression', 'emotion_shift', 'belief_mutation', "
-            "'contradiction_loop', 'mixed_transition', 'avoidance_drift', "
-            "'recurrence_theme', 'recurrence_emotion', 'recurrence_belief')",
-            name="check_edge_type"
-        ),
-        CheckConstraint(
             "match_strength >= 0 AND match_strength <= 1",
             name="check_match_strength"
         ),
@@ -131,7 +125,6 @@ class Edge(Base):
     to_node_rel = relationship("Node", foreign_keys=[to_node], back_populates="to_edges")
 
 
-
 class Reflection(Base):
     """AI-generated insight based on nodes and edges for a user."""
     __tablename__ = "reflections"
@@ -144,7 +137,7 @@ class Reflection(Base):
     generated_at = Column(DateTime, default=func.now())
     is_reflected = Column(Boolean, default=False)
     is_viewed = Column(Boolean, default=False)
-    feedback = Column(Integer, nullable=True)
+    feedback = Column(Integer, nullable=True)  # 1 for positive, -1 for negative, NULL for no feedback
     confidence_score = Column(Float)
     
     # Constraints
@@ -152,6 +145,10 @@ class Reflection(Base):
         CheckConstraint(
             "confidence_score >= 0 AND confidence_score <= 1",
             name="check_confidence_score"
+        ),
+        CheckConstraint(
+            "feedback IN (-1, 1)",
+            name="check_feedback_values"
         ),
     )
     

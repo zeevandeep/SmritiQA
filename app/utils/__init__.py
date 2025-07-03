@@ -1,1 +1,3 @@
-# JWT utilities package
+"""
+Utility functions and helpers.
+"""
