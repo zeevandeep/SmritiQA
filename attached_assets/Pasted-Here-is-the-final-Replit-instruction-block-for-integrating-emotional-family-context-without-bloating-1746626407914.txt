@@ -1,0 +1,69 @@
+Here is the final Replit instruction block for integrating emotional family context without bloating the edge creation prompt:
+
+⸻
+
+📌 Replit Instruction Block: Emotional Family Integration for Edge Creation
+	1.	Emotional Family File Setup
+	•	Create a JSON file named emotional_families.json in the app/utils/ directory to store predefined emotional families.
+	•	The file should have the following structure:
+
+{
+  "Fear": ["anxious", "terrified", "worried", "scared", "panic", "nervous"],
+  "Anger": ["frustrated", "irritated", "furious", "enraged", "resentful"],
+  "Sadness": ["disappointed", "depressed", "hopeless", "miserable", "guilty"],
+  "Joy": ["happy", "excited", "content", "proud", "grateful"],
+  "Surprise": ["shocked", "astonished", "startled", "amazed", "confused"],
+  "Trust": ["confident", "assured", "secure", "faithful", "reliable"],
+  "Anticipation": ["hopeful", "curious", "expectant", "eager", "optimistic"],
+  "Disgust": ["repulsed", "revolted", "disdainful", "contemptuous", "nauseated"]
+}
+
+
+⸻
+
+	2.	Update Node Preprocessing Logic
+	•	Add a preprocessing step to assign an emotional family to each node before edge creation.
+	•	This should NOT modify the PostgreSQL schema or add additional fields to the database, but instead enrich the node object passed to the GPT prompt.
+	•	Implement this in a separate utility function, get_emotional_family, in app/utils/openai_utils.py.
+
+import json
+from typing import Optional
+
+def get_emotional_family(emotion: str) -> Optional[str]:
+    # Load emotional families from the JSON file
+    with open("app/utils/emotional_families.json", "r") as f:
+        emotional_families = json.load(f)
+    
+    # Find the matching emotional family
+    for family, emotions in emotional_families.items():
+        if emotion.lower() in [e.lower() for e in emotions]:
+            return family
+    return None
+
+
+⸻
+
+	3.	Integrate Emotional Family in Node Processing
+	•	Modify the node processing logic to add the emotional family context before calling the create_edges_between_nodes function.
+	•	This should not add the emotional family to the database but only to the in-memory node object.
+
+⸻
+
+	4.	No Changes to Edge Creation Prompt
+	•	Do not modify the prompt in create_edges_between_nodes.
+	•	The prompt should remain as defined in app/utils/openai_utils.py to avoid token overhead.
+
+⸻
+
+	5.	Testing and Verification
+	•	Test the integration by creating a few sample nodes and verifying that emotional families are being correctly assigned in the logs without changing the final edge creation prompt.
+	•	Ensure the emotional family assignment is efficient and does not increase the overall token count for the edge prompt.
+
+⸻
+
+	6.	Review and Confirm
+	•	Double-check that this integration only adds context without affecting the core database schema or increasing API call costs.
+
+⸻
+
+Would you like me to include a few test cases to verify if this integration is working correctly?

@@ -1,0 +1,73 @@
+💬 Key Questions and Answers for Replit (Phase 3: Edge and Edge Chain Creation)
+
+⸻
+
+1. Emotional Family Context Setup (New Update)
+Q: How should we handle emotional context without bloating the edge creation prompt?
+A: We will use a separate emotional_families.json file to map each emotion to a broader emotional family. This reduces token count by avoiding repetitive context in the edge creation prompt. The node preprocessing logic will assign these emotional families dynamically without altering the database schema.
+
+⸻
+
+2. Edge Creation Logic
+Q: Should the edge creation prompt be updated with emotional family information?
+A: No, the edge creation prompt should remain as is to minimize token usage. Emotional families will be assigned during node preprocessing, adding context without modifying the prompt.
+
+⸻
+
+3. Batch Processing for Edge Creation
+Q: Should edges be created in real-time or through batch processing?
+A: Edge creation should follow the same batch processing approach as node embeddings. This approach reduces API costs and allows for efficient debugging.
+
+⸻
+
+4. Node Processing Check
+Q: How do we identify nodes that need edge processing?
+A: Use the is_processed flag in the edges table or check for missing entries in the edges table to identify unprocessed nodes. This avoids redundant processing and keeps the database efficient.
+
+⸻
+
+5. Edge Chain Formation
+Q: How should edge chains be formed from processed edges?
+A: Use the newly created edges to identify sequences of connected nodes. This can be based on match_strength thresholds or specific patterns like contradiction loops. Store these chains in the edge_chains table.
+
+⸻
+
+6. Prompt for Edge Creation (Existing)
+Q: What is the current edge creation prompt, and should it be modified?
+A: The current prompt in app/utils/openai_utils.py is well-structured and should not be modified for now, as it already includes edge type classification and confidence scoring.
+
+⸻
+
+7. Embedding Handling
+Q: How should node embeddings be handled to avoid performance bottlenecks?
+A: Use a separate API call for batch embedding generation, only processing nodes with blank embedding fields. Avoid real-time embedding to reduce API costs.
+
+⸻
+
+8. Database Optimization
+Q: Are there any specific indexing requirements for performance optimization?
+A: Yes, ensure user_id, session_id, and node_id fields are indexed in the PostgreSQL tables for efficient querying. Additionally, consider indexing the embedding vector if frequent similarity searches are planned.
+
+⸻
+
+9. Neo4j vs PostgreSQL for Edge Storage
+Q: Why use both Neo4j and PostgreSQL for edge and node storage?
+A: PostgreSQL provides robust structured storage, while Neo4j is optimized for graph traversal and relationship analysis. This hybrid approach allows for efficient querying and flexible relationship modeling.
+
+⸻
+
+10. Directory Structure Confirmation
+Q: Should the directory structure be modified for these changes?
+A: No, maintain the existing directory structure as defined, including separate directories for models, repositories, services, and utilities.
+
+⸻
+
+11. Testing and Verification
+Q: Should we implement test cases for this integration?
+A: Yes, basic unit tests should be included to verify emotional family assignment and edge chain formation without modifying the prompt logic.
+
+⸻
+
+12. API Versioning Strategy
+Q: Should we include API versioning from the start?
+A: Yes, it is recommended to use a versioned API structure (e.g., /api/v1/) to support future scalability and backward compatibility.

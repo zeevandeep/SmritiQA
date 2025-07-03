@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!-- Navbar uses shared partial: navbar.html. No navbar CSS should exist here. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smriti - Share Feedback</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI-powered emotional intelligence voice journaling app">
+    <meta name="theme-color" content="#f39c12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smriti">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Shared CSS Variables -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- Shared Navbar Styles -->
+    <link rel="stylesheet" href="/static/css/navbar.css">
+    <!-- Bottom Navigation Styles -->
+    <link rel="stylesheet" href="/static/css/bottom_nav.css">
+    
+    <style>
+        body {
+            padding-top: 70px;
+            padding-bottom: 2rem;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .feedback-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        @media (max-width: 768px) {
+            .feedback-container {
+                padding: 0 10px;
+                margin: 15px auto;
+            }
+        }
+
+        .feedback-scrollable-content {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .feedback-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 3px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .feedback-form {
+            margin-top: 20px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.3);
+        }
+
+        .feedback-type {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-type label {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-type input[type="radio"]:checked + label {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .feedback-type input[type="radio"] {
+            display: none;
+        }
+
+        /* Orange-themed rating stars */
+        .form-select option {
+            padding: 8px 12px;
+        }
+        
+        .rating-stars {
+            color: var(--primary-color);
+            font-size: 1.1em;
+        }
+
+        /* Custom alert styling */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: #8b4513;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <div class="container feedback-container">
+        <h1 class="mb-4 text-center" style="color: var(--primary-color); font-weight: 700;">Share Your Feedback</h1>
+    </div>
+
+    <!-- Scrollable Content Container -->
+    <div class="feedback-scrollable-content">
+        <div class="container">
+            <div class="feedback-card">
+                <div class="mb-4">
+                    <p class="text-muted">Help us improve Smriti by sharing your thoughts and suggestions</p>
+                </div>
+
+                <!-- Flash Messages -->
+                {% if flashes %}
+                    {% for category, message in flashes %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'danger' }} alert-dismissible fade show" role="alert">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% else %}
+                                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form class="feedback-form" method="POST" action="/feedback">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Feedback Type</label>
+                    <div class="feedback-type">
+                        <input type="radio" id="suggestion" name="feedback_type" value="suggestion">
+                        <label for="suggestion">
+                            <i class="bi bi-lightbulb"></i><br>
+                            Suggestion
+                        </label>
+                        
+                        <input type="radio" id="bug" name="feedback_type" value="bug">
+                        <label for="bug">
+                            <i class="bi bi-bug"></i><br>
+                            Bug Report
+                        </label>
+                        
+                        <input type="radio" id="compliment" name="feedback_type" value="compliment">
+                        <label for="compliment">
+                            <i class="bi bi-heart"></i><br>
+                            Compliment
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="subject" class="form-label fw-bold">Subject</label>
+                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Brief description of your feedback">
+                </div>
+
+                <div class="mb-3">
+                    <label for="message" class="form-label fw-bold">Message</label>
+                    <textarea class="form-control" id="message" name="message" rows="5" placeholder="Share your detailed feedback here..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="rating" class="form-label fw-bold">Overall Rating</label>
+                    <select class="form-select" id="rating" name="rating">
+                        <option value="">Choose a rating...</option>
+                        <option value="5"><span class="rating-stars">⭐⭐⭐⭐⭐</span> Excellent</option>
+                        <option value="4"><span class="rating-stars">⭐⭐⭐⭐</span> Good</option>
+                        <option value="3"><span class="rating-stars">⭐⭐⭐</span> Average</option>
+                        <option value="2"><span class="rating-stars">⭐⭐</span> Below Average</option>
+                        <option value="1"><span class="rating-stars">⭐</span> Poor</option>
+                    </select>
+                </div>
+
+
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-send"></i> Send Feedback
+                    </button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% include 'partials/bottom_nav.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

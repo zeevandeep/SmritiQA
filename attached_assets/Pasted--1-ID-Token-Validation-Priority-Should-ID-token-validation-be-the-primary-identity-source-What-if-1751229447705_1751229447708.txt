@@ -1,0 +1,104 @@
+✅ 1. ID Token Validation Priority
+Should ID token validation be the primary identity source? What if it fails?
+
+✅ Yes — ID token should be the only trusted identity source.
+
+ID token is a signed JWT issued by Google to prove user identity.
+
+If ID token validation fails, reject the entire login.
+
+Access tokens are meant for accessing Google APIs, not for user identity assertions.
+
+⚠️ Access tokens:
+
+Opaque (not always JWTs)
+
+Might not contain identity info
+
+Can't be validated offline reliably
+
+Conclusion:
+✅ Rely only on id_token for email/name/picture
+🚫 Do not trust access token for user identity
+🚫 Do not continue login if id_token validation fails
+
+✅ 2. Token Exchange Flow
+After exchanging the code, how should we use the tokens?
+
+Correct usage:
+Token	Purpose
+id_token ✅	Identity proof — get email, name, etc.
+access_token	Optional — use to fetch additional data if needed (e.g. userinfo endpoint)
+
+Recommended Practice:
+
+Use id_token for identity and core profile fields.
+
+Use access_token only if you need extended profile info (e.g. locale, birthday, Google Drive access — not required in your case).
+
+✅ 3. Error Handling Strategy
+If verify_oauth2_token() fails, how should the app respond?
+
+Recommended:
+
+❌ Fail hard on token verification errors — this is a security failure.
+
+✅ Show a generic but user-friendly error:
+“We couldn’t sign you in with Google. Please try again or use email login.”
+
+✅ Log the exception (for audit/debugging).
+
+✅ Do not fall back to access_token or retry without user intervention.
+
+Bonus:
+You can pass a query param back to /login like ?error=google_oauth_failed and show a custom error message on that page.
+
+✅ 4. User Info Source Priority
+Should we only trust id_info, or cross-check with userinfo endpoint?
+
+✅ Trust id_info from the ID token (after validation).
+
+It’s cryptographically signed by Google.
+
+It’s the canonical identity proof in OpenID Connect.
+
+You can optionally call the userinfo endpoint to enrich profile data, but:
+
+Field	Use id_info?	Use userinfo?
+Email	✅ Yes	Optionally
+Name	✅ Yes	Yes (if updated)
+Profile pic	✅ Yes	Yes
+Locale, etc.	❌ Not in id	✅ userinfo only
+
+If there’s a mismatch: Trust id_info for anything security-related.
+
+✅ 5. Client ID Validation
+What client ID should we use during verify_oauth2_token()?
+
+✅ Use your own GOOGLE_CLIENT_ID.
+
+This ensures:
+
+The token was intended for your app
+
+Prevents token replay attacks from other apps
+
+python
+Copy
+Edit
+id_info = google.oauth2.id_token.verify_oauth2_token(
+    id_token,
+    google.auth.transport.requests.Request(),
+    os.getenv("GOOGLE_CLIENT_ID")  # Must match what your app registered
+)
+✅ 6. Additional Security Measures
+Should we validate aud, exp, iss, etc.?
+
+✅ Yes — here’s what’s automatically handled and what you should confirm:
+Claim	Validate?	Notes
+aud	✅ Yes	Ensures the token is intended for your app
+exp	✅ Yes	Automatically validated by verify_oauth2_token()
+iss	✅ Yes	Should be one of:
+accounts.google.com or https://accounts.google.com
+email_verified	✅ Yes	Only accept identity if Google has verified the user’s email address
+

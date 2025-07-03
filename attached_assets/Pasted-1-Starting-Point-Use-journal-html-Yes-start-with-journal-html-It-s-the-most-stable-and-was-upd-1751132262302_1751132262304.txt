@@ -1,0 +1,79 @@
+1. Starting Point: Use journal.html
+Yes — start with journal.html.
+
+It’s the most stable and was updated first.
+
+Serves as your reference implementation for both HTML structure and styling.
+
+Once it's clean and working, copy its pattern.
+
+✅ Final Answer: Start with journal.html.
+
+✅ 2. CSS Specificity Strategy: Use ID
+Prefer the ID-based approach: #smriti-navbar
+
+Why:
+
+It ensures stronger specificity than class-based overrides.
+
+Prevents template-specific .navbar or .navbar-brand CSS from winning.
+
+Easier to read and apply across all templates.
+
+Example:
+
+html
+Copy
+Edit
+<nav id="smriti-navbar" class="navbar navbar-expand-lg fixed-top">
+css
+Copy
+Edit
+#smriti-navbar {
+  background-color: var(--background-card);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+✅ Final Answer: Use #smriti-navbar for consistency and override power.
+
+✅ 3. JavaScript Repair Priority
+Fix JavaScript errors as you encounter them, not all at once.
+
+Why:
+
+Some JS errors may be related to specific templates.
+
+Fixing them inline during template cleanup is more efficient than trying to fix everything upfront — especially since some of them may disappear after valid HTML is restored.
+
+✅ Final Answer: Fix JS errors while cleaning each template.
+
+✅ 4. Verification Method
+Test each template individually right after updating it.
+
+Why:
+
+You’ll catch regressions early.
+
+Faster feedback loop.
+
+Prevents multiple broken pages piling up.
+
+Use the feedback tool or browser console + visual check.
+
+✅ Final Answer: Test each template individually as you update.
+
+✅ 5. Rollback Consideration
+✅ Yes — rollback if the current state is too broken.
+
+Use this rule:
+
+If more than 2 templates are broken, with JS and CSS inconsistencies, it’s cleaner and faster to roll back to the last known working state.
+
+Then reapply changes manually and gradually, starting with journal.html.
+
+However, if only 1–2 templates are affected, and Replit is confident in resolving broken JS/CSS per page, working forward is fine.
+
+✅ Final Answer:
+
+Rollback if you’re facing more than 2 major broken templates.
+
+Otherwise, fix and proceed manually.

@@ -1,122 +1,168 @@
 """
-Session management API routes.
+Session management routes for API v1.
 """
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session as DBSession
+
+from fastapi import APIRouter, Depends, HTTPException, status, Body
+from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.schemas import Session, SessionCreate
-from app.models.models import Session as SessionModel, User
-from app.api.v1.routes.auth import get_current_user
+from app.repositories import session_repository, user_repository
+from app.schemas.schemas import (
+    Session as SessionSchema,
+    SessionCreate
+)
+from app.utils.api_auth import get_current_user_from_jwt, verify_user_access
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Session])
-async def get_user_sessions(
-    current_user: User = Depends(get_current_user),
-    db: DBSession = Depends(get_db),
-    skip: int = 0,
-    limit: int = 100
-):
-    """Get all sessions for the current user."""
-    sessions = db.query(SessionModel).filter(
-        SessionModel.user_id == current_user.id
-    ).offset(skip).limit(limit).all()
-    return sessions
-
-
-@router.post("/", response_model=Session)
-async def create_session(
-    session_data: SessionCreate,
-    current_user: User = Depends(get_current_user),
-    db: DBSession = Depends(get_db)
-):
-    """Create a new journal session."""
-    # Ensure the session is created for the current user
-    db_session = SessionModel(
-        user_id=current_user.id,
-        duration_seconds=session_data.duration_seconds,
-        raw_transcript=session_data.raw_transcript
-    )
+@router.post("/", response_model=SessionSchema, status_code=status.HTTP_201_CREATED)
+def create_session(session: SessionCreate, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_from_jwt)):
+    """
+    Create a new session.
     
-    db.add(db_session)
-    db.commit()
-    db.refresh(db_session)
+    Args:
+        session: Session data.
+        db: Database session.
+        
+    Returns:
+        Session: Created session data.
+        
+    Raises:
+        HTTPException: If the user does not exist or access is denied.
+    """
+    # Verify user has access to create sessions for this user ID
+    verify_user_access(str(session.user_id), current_user_id)
+    
+    # Log received session data for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Creating session with data: {session.model_dump()}")
+    
+    # Verify that the user exists
+    user = user_repository.get_user(db, user_id=session.user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Create the session and return it
+    created_session = session_repository.create_session(db=db, session=session)
+    logger.info(f"Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
+    return created_session
+
+
+@router.get("/user/{user_id}", response_model=List[SessionSchema])
+def read_user_sessions(
+    user_id: UUID,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    Get sessions for a user.
+    
+    Args:
+        user_id: ID of the user.
+        skip: Number of sessions to skip.
+        limit: Maximum number of sessions to return.
+        db: Database session.
+        
+    Returns:
+        List[Session]: List of sessions.
+        
+    Raises:
+        HTTPException: If the user does not exist.
+    """
+    # Verify that the user exists
+    user = user_repository.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Get the user's sessions
+    return session_repository.get_user_sessions(db, user_id=user_id, skip=skip, limit=limit)
+
+
+@router.get("/{session_id}", response_model=SessionSchema)
+def read_session(session_id: UUID, db: Session = Depends(get_db)):
+    """
+    Get a session by ID.
+    
+    Args:
+        session_id: ID of the session to retrieve.
+        db: Database session.
+        
+    Returns:
+        Session: Session data.
+        
+    Raises:
+        HTTPException: If the session is not found.
+    """
+    db_session = session_repository.get_session(db, session_id=session_id)
+    if db_session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
     return db_session
 
 
-@router.get("/{session_id}", response_model=Session)
-async def get_session(
+@router.put("/{session_id}/transcript", response_model=SessionSchema)
+def update_session_transcript(
     session_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: DBSession = Depends(get_db)
+    transcript_data: dict = Body(...),
+    db: Session = Depends(get_db)
 ):
-    """Get a specific session by ID."""
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
+    """
+    Update a session's transcript.
     
-    if not session:
+    Args:
+        session_id: ID of the session.
+        transcript_data: Dict containing the transcript text.
+        db: Database session.
+        
+    Returns:
+        Session: Updated session data.
+        
+    Raises:
+        HTTPException: If the session is not found.
+    """
+    db_session = session_repository.update_session_transcript(
+        db, session_id=session_id, transcript=transcript_data["transcript"]
+    )
+    if db_session is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
-    return session
+    return db_session
 
 
-@router.put("/{session_id}", response_model=Session)
-async def update_session(
-    session_id: UUID,
-    session_data: SessionCreate,
-    current_user: User = Depends(get_current_user),
-    db: DBSession = Depends(get_db)
-):
-    """Update a session."""
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
+@router.put("/{session_id}/process", response_model=SessionSchema)
+def mark_session_processed(session_id: UUID, db: Session = Depends(get_db)):
+    """
+    Mark a session as processed.
     
-    if not session:
+    Args:
+        session_id: ID of the session.
+        db: Database session.
+        
+    Returns:
+        Session: Updated session data.
+        
+    Raises:
+        HTTPException: If the session is not found.
+    """
+    db_session = session_repository.mark_session_processed(db, session_id=session_id)
+    if db_session is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
-    
-    # Update session fields
-    if session_data.duration_seconds is not None:
-        session.duration_seconds = session_data.duration_seconds
-    if session_data.raw_transcript is not None:
-        session.raw_transcript = session_data.raw_transcript
-    
-    db.commit()
-    db.refresh(session)
-    return session
-
-
-@router.delete("/{session_id}")
-async def delete_session(
-    session_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: DBSession = Depends(get_db)
-):
-    """Delete a session."""
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
-    
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
-    
-    db.delete(session)
-    db.commit()
-    return {"message": "Session deleted successfully"}
+    return db_session

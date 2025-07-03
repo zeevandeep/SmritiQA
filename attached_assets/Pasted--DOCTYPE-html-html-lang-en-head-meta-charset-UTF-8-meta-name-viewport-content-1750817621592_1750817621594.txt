@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smriti - Your Reflections</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI-powered emotional intelligence voice journaling app">
+    <meta name="theme-color" content="#f39c12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smriti">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #e67e22;
+            --primary-light: #f39c12;
+            --bg-light: #fffaf7;
+            --text: #2d3748;
+            --muted: #718096;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text);
+            padding-top: 70px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .container {
+            max-width: 800px;
+        }
+        
+        .reflection-card {
+            margin-bottom: 20px;
+            border-left: 3px solid var(--primary-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background-color: white;
+            transition: transform 0.2s;
+            overflow: hidden;
+        }
+        
+        .reflection-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .reflection-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        
+        .reflection-body {
+            padding: 20px;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+        
+        .reflection-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            background-color: rgba(243, 156, 18, 0.03);
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .thumbs-up.active {
+            color: #16a34a;
+        }
+        
+        .thumbs-down.active {
+            color: #dc2626;
+        }
+        
+        .feedback-btn {
+            background: none;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .feedback-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .feedback-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .reflection-item {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #pagination-controls {
+            margin-top: 2rem;
+            padding: 1rem 0;
+        }
+        
+        #pagination-controls .btn {
+            min-width: 100px;
+        }
+        
+        /* Override Bootstrap navigation styling with higher specificity */
+        .navbar.navbar-expand-lg .navbar-nav .nav-link {
+            color: #495057 !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.3s ease !important;
+            border-radius: 0 !important;
+        }
+        
+        .navbar.navbar-expand-lg .navbar-nav .nav-link:hover,
+        .navbar.navbar-expand-lg .navbar-nav .nav-link:focus {
+            color: #f39c12 !important;
+            background-color: rgba(243, 156, 18, 0.1) !important;
+            border-radius: 4px !important;
+        }
+        
+        .navbar.navbar-expand-lg .navbar-nav .nav-link.active {
+            color: #f39c12 !important;
+            font-weight: 600 !important;
+            background-color: rgba(243, 156, 18, 0.15) !important;
+            border-radius: 4px !important;
+        }
+        
+        .navbar.navbar-expand-lg .navbar-nav .nav-link i {
+            margin-right: 5px;
+        }
+        
+        .navbar.navbar-expand-lg .navbar-brand {
+            color: #f39c12 !important;
+            font-weight: bold !important;
+        }
+        
+        /* Mobile navigation styling */
+        .navbar-collapse {
+            position: fixed !important;
+            top: 70px !important;
+            left: 0 !important;
+            right: 0 !important;
+            background-color: white !important;
+            z-index: 9999 !important;
+            padding: 1rem !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+            max-height: calc(100vh - 70px) !important;
+            overflow-y: auto !important;
+        }
+        
+        .navbar-collapse .navbar-nav .nav-link {
+            color: #495057 !important;
+            font-weight: 500 !important;
+            padding: 0.75rem 1rem !important;
+            border-bottom: 1px solid #f8f9fa !important;
+        }
+        
+        .navbar-collapse .navbar-nav .nav-link:hover {
+            color: #f39c12 !important;
+            background-color: rgba(243, 156, 18, 0.1) !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top" style="background-color: var(--background-card); box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div class="container">
+            <a class="navbar-brand" href="#">Smriti</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Mobile menu -->
+                <div class="d-lg-none">
+                    <ul class="navbar-nav mt-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Journal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/entries">Journal Entries</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/reflections">Reflections</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/generate-reflection">Generate Reflection</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Desktop menu -->
+                <div class="d-none d-lg-block">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Journal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/entries">Journal Entries</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/reflections">Reflections</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/generate-reflection">Generate Reflection</a>
+                        </li>
+                    </ul>
+                    
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <h1 class="mb-4">Your Reflections</h1>
+        
+        
+            <p class="text-muted mb-4">Here are insights generated based on your journal entries.</p>
+            
+            <!-- Reflections container for pagination -->
+            <div id="reflections-container">
+                
+                    <div class="reflection-card reflection-item" id="reflection-807ea9c1-7e7f-44b3-8c9a-2651b965b9a9">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                June 18, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            Your sequence of thoughts reveals a positive progression and a strong sense of optimism about growth and change. Initially, you seem to be involved in evaluating your current creativity efforts, focusing on the differences and improvements, which indicates a mindful engagement with your work. This evaluation transitions into an acknowledgment of progress, highlighting contentment with the journey thus far. As you shift towards looking forward to new experiences and learnings, your excitement and inspiration become evident. This shift points to an alignment between your internal landscape and the possibilities the future holds.
+
+What stands out is a continuity in your thought process from evaluation to optimism, suggesting an underlying confidence in your ability to adapt and grow. The emotional shift from being content to inspired indicates a deep-seated hopefulness and readiness for change. It&#39;s wonderful to observe your openness to new experiences, as this mindset can be fertile ground for continual personal and creative development.
+
+For self-awareness, consider reflecting on how this mindset of welcoming change and progress might support or challenge you in achieving specific goals. Understanding this can help you harness your enthusiasm and channel it effectively into meaningful pursuits. Your attitude towards change and progress appears to be a strength that can serve you well.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('807ea9c1-7e7f-44b3-8c9a-2651b965b9a9', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('807ea9c1-7e7f-44b3-8c9a-2651b965b9a9', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-b72c2d93-aab5-48c5-bccb-0271eefa71bc">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 23, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In reflecting on your sequence of thoughts, there&#39;s a clear pattern of ongoing progress and a focus on growth. You&#39;re experimenting with new colors, which highlights your creative side, and you&#39;re assessing your progress positively. This indicates a contentment with the path you&#39;re on and an openness to continuous improvement. Emotional shifts from contentment to hopefulness and inspiration suggest you&#39;re eager for the future and the experiences it holds. It’s important to acknowledge and celebrate this growth-oriented mindset. Also, your creativity in trying new things is a significant asset. This process of reflection and experimentation seems to enhance your sense of progress and personal development. Embrace your hopeful outlook as a catalyst for new learnings and experiences. Overall, your thoughts reveal an inspiring pursuit of creativity and learning, reflecting a healthy balance between contentment with progress and enthusiasm for future growth.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('b72c2d93-aab5-48c5-bccb-0271eefa71bc', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('b72c2d93-aab5-48c5-bccb-0271eefa71bc', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-bf763885-b336-4def-ac3e-3d572bc39d4f">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            Your thought process reveals a focus on observation and growth, as seen in your attention to the new colors and acknowledgment of progress. There&#39;s an appreciation for the small changes while maintaining an overall sense of contentment with your progress. This mindset aligns well with your recent experience of traveling from India to the USA, which is a significant change filled with both physical movement and emotional comfort. There&#39;s a consistent theme of change and adaptation, showing your capability to embrace new experiences while maintaining a sense of satisfaction with your journey. It’s important to recognize this pattern as it may help you further appreciate the transformative aspects of your experiences. Balancing attentiveness to detail with an overarching sense of contentment could be key in nurturing your personal and creative growth. The reflection shows a harmonious progression with no evident contradictions in your emotional state, making it easier for you to adapt to changes without losing sight of your achievements.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('bf763885-b336-4def-ac3e-3d572bc39d4f', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down active" 
+                                    onclick="submitFeedback('bf763885-b336-4def-ac3e-3d572bc39d4f', -1)">
+                                <i class="bi bi-hand-thumbs-down-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-93a79c32-ad49-4b27-a967-2db1301d3265">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In exploring your thought sequence, it&#39;s clear that you are navigating a process with an analytical and progressive mindset. You begin by carefully considering changes (&#39;checking if the new colors look different&#39;), which shows a keen attention to detail crucial for creativity. This attention is accompanied by a positive reflection (&#39;good progress overall&#39;), indicating a balanced recognition of ongoing development. As you move forward, there is an underlying sense of optimism and readiness (&#39;here I am going to check if this is working&#39;), emphasizing hope and a willingness to engage further in your creative process. 
+
+It&#39;s interesting to note how your thoughts flow from careful observation to measuring progress, and then to preparing for further exploration. This progression showcases a pattern of thoughtful reflection and action, positioning you on a trajectory of continuous growth. No significant emotional contradictions appear; rather, there&#39;s a transition from generic evaluation to a content appreciation of progress, concluding with a hopeful outlook.
+
+For self-awareness, consider acknowledging this positive pattern as a strength in your creative endeavors. Embracing and reflecting on your journey may enhance your capacity for innovation and satisfaction with your accomplishments.
+
+Your approach seems methodical and growth-oriented. Celebrate these insights and consider how this framework of awareness can serve you in future projects.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up active" 
+                                    onclick="submitFeedback('93a79c32-ad49-4b27-a967-2db1301d3265', 1)">
+                                <i class="bi bi-hand-thumbs-up-fill"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('93a79c32-ad49-4b27-a967-2db1301d3265', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-530310aa-32b2-4281-ae6d-d52407924186">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In this sequence of thoughts, there is a noticeable pattern of methodical exploration and problem-solving. It seems you are working through a process, possibly related to software or data testing, as reflected in your determined and analytical approach. Initially, there is a focus on visual design (&#39;checking if the new colors look different&#39;), which suggests creativity and a willingness to engage with aesthetic details. This is followed by a decisive mindset (&#39;final try for today&#39;), indicating determination to reach a conclusion or stopping point in your exploration.
+
+However, there is a significant shift in emotions when uncertainty arises (&#39;I&#39;m not sure what is the 90-second duration&#39;), which introduces an element of doubt. Despite this doubt, you quickly pivot back to determination to figure it out (&#39;but let&#39;s explore&#39;). This demonstrates resilience and a readiness to delve deeper into unknown aspects of your project. 
+
+The latter part of your thought sequence remains focused on checking and verifying specific components (&#39;duration underscore seconds&#39; and &#39;Neuro-Shindro sequence&#39;), which indicates a structured approach towards problem-solving and a persistence to ensure processes are working correctly.
+
+From a self-awareness perspective, it&#39;s worth recognizing the interplay between your creativity and determination, as well as how you navigate through doubt. Embracing this pattern can enhance your confidence in handling uncertainty and complex problem-solving tasks.
+
+This thoughtful reflection acknowledges your conscientiousness and adaptability, and it’s presented with empathy for the challenges inherent in exploratory and iterative work.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('530310aa-32b2-4281-ae6d-d52407924186', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('530310aa-32b2-4281-ae6d-d52407924186', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-0698b476-10a0-42bd-b0ff-8fb7cbdcb3c7">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            It seems that you are navigating a creative process where you&#39;re closely examining and evaluating your work, and it&#39;s natural to experience fluctuations in your feelings. Initially, there&#39;s a sense of curiosity or openness as you explore the new colors, which quickly shifts to frustration when things don&#39;t work out as hoped. However, it&#39;s uplifting to notice that you transition to a more hopeful or problem-solving mindset, demonstrating resilience and adaptability. This progression highlights a pattern of moving from an initial trial to encountering setbacks, but then persevering with a mindset geared toward resolution. Acknowledging these shifts can foster self-awareness, validating your frustrations and celebrating your capacity to pivot towards solutions. This reflective understanding could empower you to compartmentalize frustrations, allowing you to maintain a balanced perspective as you continue your creative endeavors.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up active" 
+                                    onclick="submitFeedback('0698b476-10a0-42bd-b0ff-8fb7cbdcb3c7', 1)">
+                                <i class="bi bi-hand-thumbs-up-fill"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('0698b476-10a0-42bd-b0ff-8fb7cbdcb3c7', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-1d88ad3a-ee28-4906-9a25-7cf77e750768">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In reflecting on your thought sequence, a clear pattern emerges where you start with a focus on checking for changes (new colors versus previous ones). This suggests a detail-oriented mindset, eager to ensure quality and accuracy in your creative endeavors. As you notice improvements, there&#39;s an emotional shift from contemplative to recognizing the &#39;good progress overall,&#39; indicating a sense of contentment with your achievements thus far. However, this is juxtaposed with a feeling of frustration over the time-consuming nature of making seemingly small adjustments, particularly with tools like Replit.
+
+This blend of emotions and thoughts highlights a common contradiction faced in creative processes: balancing satisfaction with progress against the patience required for delicate, time-intensive tasks. Recognizing this duality is essential for your self-awareness. It might be helpful to acknowledge that growth often comes with small, slow steps and appreciate those incremental gains as much as the end result.
+
+Remember, it&#39;s natural to feel a mix of contentment and frustration in creative work. Embracing these emotions and being patient with the process could enhance your resilience and satisfaction over time.
+
+Overall, this reflection aims to support your understanding of the complex emotions involved in creativity and progress management, offering a gentle reminder to practice self-compassion.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up active" 
+                                    onclick="submitFeedback('1d88ad3a-ee28-4906-9a25-7cf77e750768', 1)">
+                                <i class="bi bi-hand-thumbs-up-fill"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('1d88ad3a-ee28-4906-9a25-7cf77e750768', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-137bab10-28b3-41c3-b703-d5e6532a0283">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 21, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In reviewing your sequence of thoughts, it&#39;s clear that you are methodically approaching a problem with a strong sense of determination and focus. You’re testing changes and improvements incrementally, which highlights a careful and creative mindset. Each thought builds logically on the previous one, indicating your thinking process involves a structured progression. The phrase &#39;final try for today&#39; suggests a balanced approach, where you recognize the importance of setting boundaries to prevent burnout. You seem to be maintaining a steady tone throughout, with determined emotions prevailing without significant fluctuation. This demonstrates your perseverance and resilience. Consider acknowledging the small victories within your process, even if they seem incremental, as they are significant steps forward. Remember to give yourself space to reflect on what these steps mean to you personally, as understanding their impact can foster deeper self-awareness.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up active" 
+                                    onclick="submitFeedback('137bab10-28b3-41c3-b703-d5e6532a0283', 1)">
+                                <i class="bi bi-hand-thumbs-up-fill"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('137bab10-28b3-41c3-b703-d5e6532a0283', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-e4cbc203-c0a1-45aa-aba8-4bce008a0bb7">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 19, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In this sequence of thoughts, the person seems to be in a creative process, testing and iterating their work to achieve a specific outcome. The progression from &#39;checking if the new colors look different&#39; to &#39;final try for today&#39; shows a commitment to thoroughness and a set boundary for effort, suggesting a balance between determination and self-awareness of limits. The pattern shows a methodical approach, where checking and reassessment are key components of their strategy. The language reflects determination with an underlying tone of acceptance, as they recognize when to conclude the day&#39;s efforts. This balance between perseverance and recognizing limits is a valuable skill that can prevent burnout and maintain enthusiasm for ongoing projects. This reflection aims to highlight the strength in their determined approach while acknowledging the importance of setting boundaries. The emotional consistency suggests a steady and pragmatic mindset toward task completion.
+
+This observation could help the person become more conscious of their work habits, encouraging them to celebrate their determination while also valuing moments of pause as part of a healthy creative process.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('e4cbc203-c0a1-45aa-aba8-4bce008a0bb7', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down active" 
+                                    onclick="submitFeedback('e4cbc203-c0a1-45aa-aba8-4bce008a0bb7', -1)">
+                                <i class="bi bi-hand-thumbs-down-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-549bd339-01f7-456d-88e9-bb0582aa5c7c">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 19, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            Reflecting on your thought process, it seems like you are navigating a creative process with openness and curiosity. Initially, there&#39;s a willingness to evaluate differences in the new colors compared to previous ones. This curiosity transitions into a sense of contentment and acknowledgment of progress, indicating a positive outlook on your growth and achievements.
+
+However, there&#39;s also a moment of doubt or uncertainty when you encounter something unclear regarding the &#39;90-second duration, fixed duration button.&#39; This uncertainty doesn&#39;t halt your progress; instead, you adopt a mindset of exploration—choosing to test and understand through action.
+
+The pattern here is one of consistent forward movement and exploration, even when faced with uncertainties. It&#39;s a testament to your ability to balance curiosity with progress, allowing yourself to explore unknowns without letting doubts overshadow your achievements. Recognizing this can be a powerful reminder of your adaptability and resilience, fostering even greater growth.
+
+This reflection highlights a shift from moments of doubt to action, which can actually empower your learning process by embracing the journey rather than focusing on immediate certainty. Consider this perspective as a way to enhance self-awareness and reinforce your positive approach to challenges.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('549bd339-01f7-456d-88e9-bb0582aa5c7c', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('549bd339-01f7-456d-88e9-bb0582aa5c7c', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-0f6e00cd-90cb-4099-a65d-d55a3534864c">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 19, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In examining the sequence of your thoughts, I notice a consistent progression towards achieving a specific goal. Each step in your thinking indicates a layer of checking and finalizing processes, suggesting a methodical approach to your tasks. There is a clear theme of determination and careful attention to detail, as you are focused on ensuring each element, such as color differentiation and data storage, meets your expectations.
+
+Emotionally, there appears to be a steady perseverance, without any noticeable shifts, indicating a focused and deliberate mindset. This persistence reflects a strong commitment towards your work and career goals, marked by creativity in exploring alternatives and dedication to a thorough understanding of the tasks.
+
+I encourage you to maintain awareness of how your focused determination and creative processes fuel your progress. Balancing these strengths with moments of rest can help sustain your innovation and commitment over the long term. Recognizing these patterns could empower you to leverage your strengths while ensuring you don&#39;t overlook your well-being.
+
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('0f6e00cd-90cb-4099-a65d-d55a3534864c', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('0f6e00cd-90cb-4099-a65d-d55a3534864c', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-e8edecf5-8c11-45ae-aee4-c6e857591d55">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 19, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In examining the progression of your thoughts, it&#39;s clear that you exhibit a methodical and dedicated approach. Your thought process reveals a pattern of setting tasks, executing them, and evaluating outcomes, demonstrating both creativity and determination. There is a steady and focused energy as you move from one task to the next, suggesting a commitment to seeing your projects through, even if it requires multiple attempts. 
+
+Your ability to manage this sequence of actions—from considering new color options to ensuring technical components like &#39;duration underscore seconds&#39; align with your goals—highlights a strong aptitude for problem-solving and task management. While there are no evident contradictions, the recurring theme of determination is quite prominent, reflecting a possibly deep-seated motivation to achieve desired results. 
+
+For self-awareness, it might be helpful to pause and reflect on not just the outcomes of these tasks, but also the underlying motivations driving this determination. Are these goals aligned with a larger purpose or personal satisfaction? Understanding the roots of your motivation can provide further clarity and satisfaction in your career endeavors. 
+
+Approaching your work with creativity and determination is commendable, and offering yourself moments of reflection can foster a deeper connection with both the tasks at hand and the overarching goals they serve.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('e8edecf5-8c11-45ae-aee4-c6e857591d55', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down active" 
+                                    onclick="submitFeedback('e8edecf5-8c11-45ae-aee4-c6e857591d55', -1)">
+                                <i class="bi bi-hand-thumbs-down-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="reflection-card reflection-item" id="reflection-7dac44c4-045c-4e52-93e9-b858c2204765">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                May 19, 2025
+                                
+                                    <span class="badge bg-danger ms-2">New</span>
+                                
+                            </div>
+                        </div>
+                        <div class="reflection-body">
+                            In reflecting on your thought sequence, it seems that you&#39;re navigating a mixture of creative exploration and analytical problem-solving. You appear to be in the midst of a project or task, evaluating different aspects and making adjustments as you go. There is a noticeable pattern of engaging with uncertainty, particularly regarding the &#39;90 second duration, fixed duration button.&#39; This suggests a current state of exploration and a willingness to delve into unknown territories. 
+
+Moreover, your thoughts traverse from feeling content and acknowledging progress to moments of doubt and determination when faced with unfamiliar elements. This emotional shift speaks to both your satisfaction with progress and a desire to thoroughly understand and resolve outstanding questions.
+
+No apparent contradictions emerge within your reflections, which is a testament to your coherent approach to the task at hand. It&#39;s inspiring to see this combination of creativity and resilience, as it can often lead to meaningful growth. 
+
+I encourage you to continue embracing this mix of emotions and curiosity. Paying attention to the areas that spark doubt could be pivotal in furthering your growth and development in this creative project. Things might seem uncertain, but your determined approach is likely to yield clarity and advancement in time. 
+
+This recognition of emotional shifts and your proactive engagement with challenges enhances your self-awareness and can guide you in navigating similar experiences in the future.
+                        </div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up " 
+                                    onclick="submitFeedback('7dac44c4-045c-4e52-93e9-b858c2204765', 1)">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down " 
+                                    onclick="submitFeedback('7dac44c4-045c-4e52-93e9-b858c2204765', -1)">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+            </div>
+            
+            <!-- Pagination controls -->
+            <div class="d-flex justify-content-between align-items-center mt-4" id="pagination-controls">
+                <button class="btn btn-outline-primary" id="prev-btn" onclick="previousPage()" disabled>
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+                
+                <span class="text-muted" id="page-info">
+                    Page 1 of 1
+                </span>
+                
+                <button class="btn btn-outline-primary" id="next-btn" onclick="nextPage()">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Pagination variables
+        const ITEMS_PER_PAGE = 3;
+        let currentPage = 1;
+        let totalItems = 0;
+        let totalPages = 1;
+        
+        // Initialize pagination
+        function initializePagination() {
+            const reflectionItems = document.querySelectorAll('.reflection-item');
+            totalItems = reflectionItems.length;
+            totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            
+            if (totalItems <= ITEMS_PER_PAGE) {
+                // Hide pagination if 3 or fewer items
+                document.getElementById('pagination-controls').style.display = 'none';
+            } else {
+                showPage(1);
+            }
+        }
+        
+        // Show specific page
+        function showPage(page) {
+            const reflectionItems = document.querySelectorAll('.reflection-item');
+            const startIndex = (page - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            
+            // Hide all items
+            reflectionItems.forEach((item, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    item.style.display = 'block';
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                    }, 50);
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Update page info
+            document.getElementById('page-info').textContent = `Page ${page} of ${totalPages}`;
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = (page === 1);
+            document.getElementById('next-btn').disabled = (page === totalPages);
+            
+            currentPage = page;
+        }
+        
+        // Previous page
+        function previousPage() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
+        }
+        
+        // Next page
+        function nextPage() {
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        }
+        
+        function submitFeedback(reflectionId, feedback) {
+            const feedbackValue = parseInt(feedback);
+            fetch(`/api/v1/reflections/${reflectionId}/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feedback: feedbackValue })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to submit feedback');
+                return response.json();
+            })
+            .then(data => {
+                // Update UI
+                const card = document.getElementById(`reflection-${reflectionId}`);
+                const thumbsUp = card.querySelector('.thumbs-up');
+                const thumbsDown = card.querySelector('.thumbs-down');
+                
+                // Reset buttons
+                thumbsUp.classList.remove('active');
+                thumbsDown.classList.remove('active');
+                thumbsUp.querySelector('i').className = 'bi bi-hand-thumbs-up';
+                thumbsDown.querySelector('i').className = 'bi bi-hand-thumbs-down';
+                
+                // Set active button
+                if (feedbackValue === 1) {
+                    thumbsUp.classList.add('active');
+                    thumbsUp.querySelector('i').className = 'bi bi-hand-thumbs-up-fill';
+                } else if (feedbackValue === -1) {
+                    thumbsDown.classList.add('active');
+                    thumbsDown.querySelector('i').className = 'bi bi-hand-thumbs-down-fill';
+                }
+                
+                // No toast message shown after feedback
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // No error toast shown for failed submissions
+            });
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize pagination
+            initializePagination();
+            
+            // Mark reflections as viewed
+            const reflectionElements = document.querySelectorAll('.reflection-item');
+            reflectionElements.forEach(element => {
+                const reflectionId = element.id.replace('reflection-', '');
+                const hasNewBadge = element.querySelector('.badge');
+                if (hasNewBadge && hasNewBadge.textContent === 'New') {
+                    fetch(`/api/v1/reflections/${reflectionId}/mark-reflected`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).catch(err => console.error('Error marking reflection as viewed:', err));
+                }
+            });
+        });
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // Initialize mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarCollapse = document.getElementById('navbarNav');
+            
+            if (navbarToggler && navbarCollapse) {
+                // Close menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (navbarCollapse.classList.contains('show')) {
+                        if (!navbarCollapse.contains(event.target) && !navbarToggler.contains(event.target)) {
+                            navbarCollapse.classList.remove('show');
+                        }
+                    }
+                });
+                
+                // Close menu when clicking on menu items
+                const menuLinks = navbarCollapse.querySelectorAll('.nav-link');
+                menuLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        navbarCollapse.classList.remove('show');
+                    });
+                });
+            }
+        });
+    </script>
+    
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

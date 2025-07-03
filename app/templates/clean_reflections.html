@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<!-- Navbar uses shared partial: navbar.html. No navbar CSS should exist here. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smriti - Your Reflections</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="AI-powered emotional intelligence voice journaling app">
+    <meta name="theme-color" content="#f39c12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smriti">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Shared CSS Variables -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <!-- Shared Navbar Styles -->
+    <link rel="stylesheet" href="/static/css/navbar.css">
+    <!-- Bottom Navigation Styles -->
+    <link rel="stylesheet" href="/static/css/bottom_nav.css">
+    
+    <style>
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            scroll-behavior: auto !important;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+        }
+        
+        .scrollable-content {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        
+        
+        
+        /* Prevent focus rings from causing scroll */
+        .scrollable-content *:focus {
+            scroll-margin: 0 !important;
+            scroll-padding: 0 !important;
+        }
+        
+        /* Disable transitions during pagination */
+        .scrollable-content.transitioning * {
+            transition: none !important;
+            animation: none !important;
+        }
+        
+        
+        
+        .container {
+            max-width: 800px;
+        }
+        
+        .reflections-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .reflections-container {
+                padding: 0 10px;
+                margin: 15px auto;
+            }
+        }
+        
+        .reflection-card {
+            margin-bottom: 20px;
+            border-left: 3px solid var(--primary-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background-color: white;
+            transition: transform 0.2s;
+            overflow: hidden;
+        }
+        
+        .reflection-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .reflection-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        
+        .reflection-body {
+            padding: 20px;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+        
+        .reflection-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            background-color: rgba(243, 156, 18, 0.03);
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .thumbs-up.active {
+            color: #16a34a;
+        }
+        
+        .thumbs-down.active {
+            color: #dc2626;
+        }
+        
+        .feedback-btn {
+            background: none;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .feedback-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .feedback-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .reflection-item {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #pagination-controls {
+            margin-top: 2rem;
+            padding: 1rem 0;
+        }
+        
+        #pagination-controls .btn {
+            min-width: 100px;
+        }
+        
+        /* Override Bootstrap navigation styling with higher specificity */
+        
+        
+        
+        
+        
+        /* Mobile navigation styling */
+        
+        
+
+    </style>
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <div class="container reflections-container">
+        <h1 class="mb-4 text-center" style="color: var(--primary-color); font-weight: 700;">Your Reflections</h1>
+    </div>
+
+    <!-- Scrollable Content Container for Pagination -->
+    <div class="scrollable-content">
+        <div class="container py-4">
+        
+        {% if not reflections or reflections|length == 0 %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-lightbulb" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No reflections yet</h4>
+                <p>Keep journaling and reflections will be generated automatically based on patterns in your entries.</p>
+            </div>
+        {% else %}
+            <p class="text-muted mb-4">Here are the AI empowered insights curated for you based on your journal entries</p>
+            
+            <!-- Reflections container for pagination -->
+            <div id="reflections-container">
+                {% for reflection in reflections %}
+                    <div class="reflection-card reflection-item" id="reflection-{{ reflection.id }}">
+                        <div class="reflection-header">
+                            <div style="width: 100%;">
+                                {% if reflection.generated_at %}
+                                    {% if reflection.generated_at.strftime %}
+                                        {{ reflection.generated_at.strftime('%B %d, %Y') }}
+                                    {% else %}
+                                        {{ reflection.generated_at }}
+                                    {% endif %}
+                                {% else %}
+                                    Unknown Date
+                                {% endif %}
+                                {# {% if not reflection.is_reflected %}
+                                    <span class="badge bg-danger ms-2">New</span>
+                                {% endif %} #}
+                            </div>
+                        </div>
+                        <div class="reflection-body">{{ reflection.generated_text }}</div>
+                        <div class="reflection-footer">
+                            <button class="feedback-btn thumbs-up {% if reflection.feedback == 1 %}active{% endif %}" 
+                                    onclick="submitFeedback('{{ reflection.id }}', 1)">
+                                <i class="bi {% if reflection.feedback == 1 %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
+                            </button>
+                            <button class="feedback-btn thumbs-down {% if reflection.feedback == -1 %}active{% endif %}" 
+                                    onclick="submitFeedback('{{ reflection.id }}', -1)">
+                                <i class="bi {% if reflection.feedback == -1 %}bi-hand-thumbs-down-fill{% else %}bi-hand-thumbs-down{% endif %}"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {# Pagination disabled temporarily
+            {% if enable_pagination %}
+            <!-- Pagination controls -->
+            <div class="d-flex justify-content-between align-items-center mt-4" id="pagination-controls">
+                <button class="btn btn-outline-primary" id="prev-btn" onclick="previousPage()" disabled>
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+                
+                <span class="text-muted" id="page-info">
+                    Page 1 of 1
+                </span>
+                
+                <button class="btn btn-outline-primary" id="next-btn" onclick="nextPage()">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            {% endif %}
+            #}
+        {% endif %}
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Pagination variables - DISABLED
+        /*
+        const ITEMS_PER_PAGE = 3;
+        let currentPage = 1;
+        let totalItems = 0;
+        let totalPages = 1;
+        
+
+        
+        // Initialize pagination
+        function initializePagination() {
+            const reflectionItems = document.querySelectorAll('.reflection-item');
+            totalItems = reflectionItems.length;
+            totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            
+            if (totalItems <= ITEMS_PER_PAGE) {
+                // Hide pagination if 3 or fewer items
+                document.getElementById('pagination-controls').style.display = 'none';
+            } else {
+                showPage(1);
+            }
+        }
+        */
+        
+        // PAGINATION FUNCTIONS - DISABLED
+        /*
+        // Show specific page
+        function showPage(page) {
+            const scrollableContent = document.querySelector('.scrollable-content');
+            const reflectionItems = document.querySelectorAll('.reflection-item');
+            const startIndex = (page - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            
+            // 1. IMMEDIATE: Disable all scrolling and reset position
+            scrollableContent.style.overflow = 'hidden';
+            scrollableContent.scrollTop = 0;
+            window.scrollTo(0, 0);
+            
+            // 2. PREVENT: Disable smooth scrolling globally during transition
+            const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+            document.documentElement.style.scrollBehavior = 'auto';
+            scrollableContent.style.scrollBehavior = 'auto';
+            
+            // 3. BLOCK: Prevent any scroll events during transition
+            let isTransitioning = true;
+            const preventScroll = (e) => {
+                if (isTransitioning) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    scrollableContent.scrollTop = 0;
+                    return false;
+                }
+            };
+            
+            // Add comprehensive scroll event blocking
+            ['scroll', 'wheel', 'touchmove', 'keydown'].forEach(event => {
+                scrollableContent.addEventListener(event, preventScroll, { passive: false, capture: true });
+                document.addEventListener(event, preventScroll, { passive: false, capture: true });
+            });
+            
+            // 4. BLUR: Remove focus from any active elements
+            if (document.activeElement && document.activeElement.blur) {
+                document.activeElement.blur();
+            }
+            
+            // 5. FORCE: Reset scroll position multiple times with different methods
+            const forceScrollReset = () => {
+                scrollableContent.scrollTop = 0;
+                scrollableContent.scrollTo(0, 0);
+                if (scrollableContent.scrollTop !== 0) {
+                    scrollableContent.style.transform = 'translateY(0)';
+                }
+            };
+            
+            // 6. IMMEDIATE: Force reset before DOM changes
+            forceScrollReset();
+            
+            // 7. DEFER: Make DOM changes after next frame to avoid layout shifts
+            requestAnimationFrame(() => {
+                forceScrollReset();
+                
+                // Show/hide items with immediate visibility to prevent layout shifts
+                reflectionItems.forEach((item, index) => {
+                    if (index >= startIndex && index < endIndex) {
+                        item.style.display = 'block';
+                        item.style.visibility = 'visible';
+                        item.style.opacity = '1';
+                    } else {
+                        item.style.display = 'none';
+                        item.style.visibility = 'hidden';
+                    }
+                });
+                
+                forceScrollReset();
+                
+                // 8. UPDATE: Pagination UI after content is shown
+                requestAnimationFrame(() => {
+                    forceScrollReset();
+                    
+                    document.getElementById('page-info').textContent = `Page ${page} of ${totalPages}`;
+                    document.getElementById('prev-btn').disabled = (page === 1);
+                    document.getElementById('next-btn').disabled = (page === totalPages);
+                    currentPage = page;
+                    
+                    // 9. MONITOR: Extended monitoring with exponential backoff
+                    let attempts = 0;
+                    const maxAttempts = 50; // 500ms total
+                    
+                    const monitorAndReset = () => {
+                        forceScrollReset();
+                        attempts++;
+                        
+                        if (attempts < maxAttempts) {
+                            // Exponential backoff: more frequent checks initially, then less frequent
+                            const delay = attempts < 10 ? 10 : attempts < 20 ? 25 : 50;
+                            setTimeout(monitorAndReset, delay);
+                        }
+                    };
+                    
+                    monitorAndReset();
+                    
+                    // 10. CLEANUP: Re-enable scrolling after extended period
+                    setTimeout(() => {
+                        isTransitioning = false;
+                        
+                        // Remove event listeners
+                        ['scroll', 'wheel', 'touchmove', 'keydown'].forEach(event => {
+                            scrollableContent.removeEventListener(event, preventScroll, { capture: true });
+                            document.removeEventListener(event, preventScroll, { capture: true });
+                        });
+                        
+                        // Final reset before re-enabling
+                        forceScrollReset();
+                        
+                        // Re-enable scrolling
+                        scrollableContent.style.overflow = 'auto';
+                        
+                        // Restore original scroll behavior
+                        if (originalScrollBehavior) {
+                            document.documentElement.style.scrollBehavior = originalScrollBehavior;
+                        } else {
+                            document.documentElement.style.scrollBehavior = '';
+                        }
+                        
+                        // One final reset after re-enabling
+                        setTimeout(() => forceScrollReset(), 10);
+                        
+                    }, 500); // Extended to 500ms
+                });
+            });
+        }
+        
+        // Enhanced version with transitioning class
+        function showPageEnhanced(page) {
+            const scrollableContent = document.querySelector('.scrollable-content');
+            
+            // Add transitioning class to disable any CSS transitions/animations
+            scrollableContent.classList.add('transitioning');
+            
+            // Call the main function
+            showPage(page);
+            
+            // Remove transitioning class after everything is done
+            setTimeout(() => {
+                scrollableContent.classList.remove('transitioning');
+            }, 600);
+        }
+        
+        // Previous page
+        function previousPage() {
+            if (currentPage > 1) {
+                showPageEnhanced(currentPage - 1);
+            }
+        }
+        
+        // Next page
+        function nextPage() {
+            if (currentPage < totalPages) {
+                showPageEnhanced(currentPage + 1);
+            }
+        }
+        */
+        
+        function submitFeedback(reflectionId, feedback) {
+            const feedbackValue = parseInt(feedback);
+            fetch(`/api/v1/reflections/${reflectionId}/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feedback: feedbackValue }),
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to submit feedback');
+                return response.json();
+            })
+            .then(data => {
+                // Update UI
+                const card = document.getElementById(`reflection-${reflectionId}`);
+                const thumbsUp = card.querySelector('.thumbs-up');
+                const thumbsDown = card.querySelector('.thumbs-down');
+                
+                // Reset buttons
+                thumbsUp.classList.remove('active');
+                thumbsDown.classList.remove('active');
+                thumbsUp.querySelector('i').className = 'bi bi-hand-thumbs-up';
+                thumbsDown.querySelector('i').className = 'bi bi-hand-thumbs-down';
+                
+                // Set active button
+                if (feedbackValue === 1) {
+                    thumbsUp.classList.add('active');
+                    thumbsUp.querySelector('i').className = 'bi bi-hand-thumbs-up-fill';
+                } else if (feedbackValue === -1) {
+                    thumbsDown.classList.add('active');
+                    thumbsDown.querySelector('i').className = 'bi bi-hand-thumbs-down-fill';
+                }
+                
+                // No toast message shown after feedback
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // No error toast shown for failed submissions
+            });
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize pagination - DISABLED
+            // initializePagination();
+            
+            // Mark reflections as viewed
+            const reflectionElements = document.querySelectorAll('.reflection-item');
+            reflectionElements.forEach(element => {
+                const reflectionId = element.id.replace('reflection-', '');
+                const hasNewBadge = element.querySelector('.badge');
+                if (hasNewBadge && hasNewBadge.textContent === 'New') {
+                    fetch(`/api/v1/reflections/${reflectionId}/mark-reflected`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    }).catch(err => console.error('Error marking reflection as viewed:', err));
+                }
+            });
+        });
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // Mobile menu functionality - REMOVED (handled by bottom navigation)
+    </script>
+    
+    <!-- PWA Install Prompt -->
+    <script src="/static/install-prompt.js"></script>
+    
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Bottom Navigation -->
+    {% include 'partials/bottom_nav.html' %}
+</body>
+</html>

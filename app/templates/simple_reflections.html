@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Reflections Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .reflection {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .reflection-text {
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+        .reflection-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .example {
+            background-color: #fef9e7;
+            border-left: 4px solid #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Reflections Page</h1>
+        <p>This is a simplified page to directly display your reflections.</p>
+        
+        <h2>Hardcoded Examples:</h2>
+        <div class="reflection example">
+            <div class="reflection-meta">Example Reflection</div>
+            <div class="reflection-text">In examining your sequence of thoughts, there's a clear pattern of anticipation and excitement about the changes and new experiences that lie ahead. You genuinely seem to embrace the idea of diving into new and uncharted territories, which feeds into a broader theme of personal evolution and growth. Your enthusiasm about the upcoming yoga session not only marks a fresh start but also reveals an underlying determination to prioritize your health and well-being.</div>
+        </div>
+        
+        <h2>Your Reflections:</h2>
+        {% if reflections %}
+            {% for reflection in reflections %}
+                <div class="reflection">
+                    <div class="reflection-meta">
+                        Created: {% if reflection.generated_at %}
+                            {% if reflection.generated_at.strftime %}
+                                {{ reflection.generated_at.strftime('%B %d, %Y') }}
+                            {% else %}
+                                {{ reflection.generated_at }}
+                            {% endif %}
+                        {% else %}
+                            Unknown Date
+                        {% endif %}
+                        {% if not reflection.is_reflected %}<span style="color: red; margin-left: 10px;">New</span>{% endif %}
+                    </div>
+                    <div class="reflection-text">{{ reflection.generated_text }}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No reflections found in the database for your user ID.</p>
+        {% endif %}
+        
+        <div style="margin-top: 30px;">
+            <a href="/reflections">Back to Main Reflections Page</a>
+        </div>
+    </div>
+</body>
+</html>
