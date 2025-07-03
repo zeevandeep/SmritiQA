@@ -1,0 +1,88 @@
+On **Android**, modern browsers like Chrome and Edge automatically show the native PWA install prompt when your app meets the installability criteria. You can also implement a custom in-app install button that listens for the `beforeinstallprompt` event to trigger the prompt programmatically, providing a smoother user experience[1][2][3].
+
+However, on **iOS Safari**, **there is no native automatic install prompt** for PWAs. Apple does not support the `beforeinstallprompt` event or any automatic popup for "Add to Home Screen." Instead, iOS users must manually add the PWA via Safari’s Share menu > "Add to Home Screen"[4][2][3].
+
+### How to implement an install prompt popup that works on both Android (automatic) and iOS (manual guidance)
+
+1. **Detect the platform and support:**
+
+   - Listen for the `beforeinstallprompt` event on Android/Chromium browsers.
+   - Detect iOS devices via user agent or feature detection.
+
+2. **On Android (Chrome, Edge, etc.):**
+
+   - Capture the `beforeinstallprompt` event.
+   - Prevent the default prompt.
+   - Show your own custom install button or popup.
+   - When user clicks install, call the saved event’s `prompt()` method to show the native install dialog.
+
+   ```js
+   let deferredPrompt;
+   const installBtn = document.getElementById('installBtn');
+   installBtn.style.display = 'none';
+
+   window.addEventListener('beforeinstallprompt', (e) => {
+     e.preventDefault();
+     deferredPrompt = e;
+     installBtn.style.display = 'block';
+   });
+
+   installBtn.addEventListener('click', () => {
+     deferredPrompt.prompt();
+     deferredPrompt.userChoice.then((choiceResult) => {
+       deferredPrompt = null;
+       installBtn.style.display = 'none';
+     });
+   });
+   ```
+
+3. **On iOS Safari:**
+
+   - Since no automatic prompt exists, show a **custom popup or banner** with instructions on how to add the app to the home screen manually.
+   - This popup can include screenshots or step-by-step text guiding the user to tap the Share button and then "Add to Home Screen."
+   - You can use existing open-source scripts or widgets that show this iOS-specific install guide popup, such as [pwa-install-prompt](https://github.com/ryxxn/pwa-install-prompt) or custom widgets like the one from Mendix Marketplace[5][6].
+
+4. **Example for iOS install popup:**
+
+   - Show a modal only on iOS devices.
+   - Include text like:  
+     *"To install this app, tap the Share icon at the bottom of your browser and then select 'Add to Home Screen'."*
+
+5. **Combine both flows gracefully:**
+
+   - On Android, users get the native prompt or your custom install button.
+   - On iOS, users see your manual install instructions popup.
+   - On unsupported browsers or desktop, you can hide the prompt or show alternative messaging.
+
+### Summary
+
+| Platform | Install Prompt Behavior                                 | Implementation Notes                                      |
+|----------|--------------------------------------------------------|-----------------------------------------------------------|
+| Android  | Native automatic prompt (`beforeinstallprompt` event) | Capture event, show custom button, call `prompt()` method |
+| iOS      | No native prompt; manual install only                  | Show custom popup with manual "Add to Home Screen" steps  |
+| Desktop  | Varies by browser; often native prompt or manual       | Optional custom UI or rely on browser UI                   |
+
+### Additional resources
+
+- MDN guide on triggering install prompt: [MDN beforeinstallprompt](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Trigger_install_prompt)[1]
+- Web.dev installation prompt guide: [web.dev Installation prompt](https://web.dev/learn/pwa/installation-prompt)[2]
+- Open-source script for combined Android/iOS install popup: [pwa-install-prompt GitHub](https://github.com/ryxxn/pwa-install-prompt)[5]
+- Mendix widget for iOS install prompt popup: [Mendix PWA Install prompt](https://marketplace.mendix.com/link/component/119770/CLEVR/-PWA-Install-prompt-for-iOS)[6]
+
+By combining these approaches, you can provide a smooth, user-friendly PWA install experience that works automatically on Android and guides iOS users with a helpful popup.
+
+[1] https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Trigger_install_prompt
+[2] https://web.dev/learn/pwa/installation-prompt
+[3] https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
+[4] https://webvista.co.in/pwa-add-to-home-screen.html
+[5] https://github.com/ryxxn/pwa-install-prompt
+[6] https://marketplace.mendix.com/link/component/119770/CLEVR/-PWA-Install-prompt-for-iOS
+[7] https://www.reddit.com/r/webdev/comments/1ei4brx/pwa_is_there_any_way_to_automatically_prompt_add/
+[8] https://web.dev/learn/pwa/installation
+[9] https://www.mobiloud.com/blog/progressive-web-apps-ios
+[10] https://www.civicgov.civicplus.help/hc/en-us/articles/22341794253335-Install-a-Progressive-Web-Application-PWA
+[11] https://www.bitcot.com/how-to-install-a-pwa-to-your-device/
+[12] https://community.weweb.io/t/install-pwa-from-a-button/6114
+[13] https://stackoverflow.com/questions/78530337/why-does-the-install-prompt-on-my-pwa-doesnt-show-on-some-devices
+[14] https://stackoverflow.com/questions/50332119/is-it-possible-to-make-an-in-app-button-that-triggers-the-pwa-add-to-home-scree
+[15] https://developers.google.com/codelabs/pwa-training/pwa04--prompt-measure-install
