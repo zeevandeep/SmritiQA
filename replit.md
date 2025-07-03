@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Hamburger Menu Click-Outside Fix Complete**: Resolved UX issue where hamburger menu only closed when clicking the menu button itself. Implemented centralized JavaScript solution in `/static/js/navbar.js` that closes menu when clicking anywhere outside the menu area. Fixed Flask `url_for()` template compatibility issue in FastAPI context. Menu now provides intuitive mobile navigation experience across all pages
 - **New Brain Network Logo Implementation Complete**: Successfully replaced app logo with updated neural network brain design. Generated PWA-compliant icon sizes (192x192, 512x512, Apple touch icon, favicon) and updated all templates. Confirmed working perfectly on iOS devices - new logo displays correctly when saving app to iPhone home screen through "Add to Home Screen" functionality
 - **iOS PWA Installation Fix**: Fixed iOS device detection and unified installation instructions for both Safari and Chrome browsers. Enhanced platform detection to properly identify iPhone, iPad, and iPad Pro devices. Updated installation steps to correctly show "Share" button instructions since both iOS browsers use the same installation method through the Share menu
 - **Hamburger Menu Toggle Fix**: Resolved hamburger menu not closing issue on reflections page by removing duplicate Bootstrap JavaScript loading that caused collapse functionality conflicts. Menu now properly toggles open and close as expected
