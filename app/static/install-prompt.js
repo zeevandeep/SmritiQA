@@ -17,9 +17,11 @@ class PWAInstallManager {
     
     detectPlatform() {
         const userAgent = navigator.userAgent.toLowerCase();
-        const isIOS = /ipad|iphone|ipod/.test(userAgent) && !window.MSStream;
+        // Enhanced iOS detection
+        const isIOS = (/ipad|iphone|ipod/.test(userAgent) && !window.MSStream) || 
+                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad Pro fix
         const isIOSChrome = isIOS && /crios/.test(userAgent);
-        const isIOSSafari = isIOS && /safari/.test(userAgent) && !/crios/.test(userAgent);
+        const isIOSSafari = isIOS && /safari/.test(userAgent) && !/crios|chrome/.test(userAgent);
         const isAndroid = /android/.test(userAgent);
         const supportsBeforeInstallPrompt = 'onbeforeinstallprompt' in window;
         
@@ -90,13 +92,6 @@ class PWAInstallManager {
     setupIOSFlow() {
         // For iOS, we'll show the prompt after user engagement
         console.log('Setting up iOS install flow');
-        // Force show for iOS testing
-        if (this.platform.isIOS) {
-            console.log('iOS detected - will show prompt immediately for testing');
-            setTimeout(() => {
-                this.showInstallPrompt();
-            }, 2000);
-        }
         this.scheduleIOSPrompt();
     }
     
@@ -122,27 +117,20 @@ class PWAInstallManager {
     
     schedulePromptDisplay() {
         // Show prompt after engagement + delay
-        console.log('schedulePromptDisplay called, platform isIOS:', this.platform.isIOS, 'userEngaged:', this.userEngaged);
-        
         if (this.engagementTimer) {
             clearTimeout(this.engagementTimer);
         }
         
         this.engagementTimer = setTimeout(() => {
-            console.log('Prompt display timer triggered. iOS:', this.platform.isIOS, 'Engaged:', this.userEngaged, 'Already shown:', this.promptShown);
             if (this.userEngaged || this.platform.isIOS) {
                 this.showInstallPrompt();
-            } else {
-                console.log('Not showing prompt - waiting for user engagement');
             }
         }, 3000);
     }
     
     scheduleIOSPrompt() {
         // For iOS, show prompt after user engagement + delay
-        console.log('Scheduling iOS prompt display');
         setTimeout(() => {
-            console.log('iOS prompt timer triggered, user engaged:', this.userEngaged);
             this.schedulePromptDisplay();
         }, 1000);
     }
@@ -241,10 +229,7 @@ class PWAInstallManager {
         // Append to document
         document.body.appendChild(installModal);
         
-        // Add iOS testing support
-        if (this.platform.isIOS) {
-            this.addIOSTestButton();
-        }
+
     }
     
     createIOSInstructionModal() {
@@ -1069,37 +1054,7 @@ class PWAInstallManager {
         }
     }
     
-    addIOSTestButton() {
-        // Add a temporary test button for iOS debugging
-        const testButton = document.createElement('button');
-        testButton.textContent = 'Test iOS Install Popup';
-        testButton.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 10002;
-            background: #f39c12;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-        `;
-        testButton.addEventListener('click', () => {
-            console.log('Test button clicked - forcing iOS popup');
-            this.promptShown = false; // Reset to allow showing
-            this.showInstallPrompt();
-        });
-        document.body.appendChild(testButton);
-        
-        // Auto-remove after 30 seconds
-        setTimeout(() => {
-            if (testButton.parentNode) {
-                testButton.remove();
-            }
-        }, 30000);
-    }
+
 }
 
 // Initialize when script loads
