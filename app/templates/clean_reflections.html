@@ -33,39 +33,13 @@
     
     <style>
         
-        html, body {
-            height: 100vh;
-            overflow-x: hidden;
-            scroll-behavior: auto !important;
-        }
-        
         body {
+            padding-top: 70px;
+            padding-bottom: 2rem;
+            background-color: var(--background-light);
+            color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
         }
-        
-        .scrollable-content {
-            height: calc(100vh - 140px);
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
-        
-        
-        
-        /* Prevent focus rings from causing scroll */
-        .scrollable-content *:focus {
-            scroll-margin: 0 !important;
-            scroll-padding: 0 !important;
-        }
-        
-        /* Disable transitions during pagination */
-        .scrollable-content.transitioning * {
-            transition: none !important;
-            animation: none !important;
-        }
-        
-        
-        
         .container {
             max-width: 800px;
         }
@@ -162,19 +136,7 @@
         
         
         
-        /* Mobile navigation styling */
-        
-        /* Override navbar.css positioning to fix hamburger menu */
-        @media (max-width: 991.98px) {
-            #smriti-navbar .navbar-collapse {
-                position: static !important;
-                background-color: white !important;
-                border-top: 1px solid #dee2e6 !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-                max-height: none !important;
-                overflow-y: visible !important;
-            }
-        }
+        /* Mobile navigation styling - simplified */
         
         
 
@@ -185,11 +147,6 @@
 
     <div class="container reflections-container">
         <h1 class="mb-4 text-center" style="color: var(--primary-color); font-weight: 700;">Your Reflections</h1>
-    </div>
-
-    <!-- Scrollable Content Container for Pagination -->
-    <div class="scrollable-content">
-        <div class="container py-4">
         
         {% if not reflections or reflections|length == 0 %}
             <div class="text-center py-5 text-muted">
@@ -254,7 +211,6 @@
             {% endif %}
             #}
         {% endif %}
-        </div>
     </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
