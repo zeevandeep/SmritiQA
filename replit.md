@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Notification Settings Disabled**: Disabled daily journal reminders and new reflection alerts toggles in settings page since these features aren't implemented yet. Set both to off by default and added "(Coming Soon)" labels to prevent user confusion about unimplemented features
 - **Settings Page Language Selector Disabled**: Disabled language dropdown in settings page to prevent users from changing languages since only English is currently supported. Added "Coming Soon" labels to non-English options and made selector read-only, consistent with signup page restrictions
 - **Display Name Update Feature Complete**: Successfully implemented full display name editing functionality in settings page. Users can now update their display name through a proper form submission that saves to the user_profile database table with success/error feedback messages. Form includes proper validation and database error handling
 - **Language Selector Update**: Disabled non-English language options in signup form with "Coming Soon" labels since app currently only supports English. Prevents user confusion and accidental selection of unsupported languages during account creation
