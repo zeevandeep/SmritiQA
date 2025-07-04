@@ -638,7 +638,8 @@ async def settings_page(request: Request, db: Session = Depends(get_db)):
 @app.post("/settings", response_class=HTMLResponse)
 async def settings_post(
     request: Request, 
-    display_name: str = Form(...),
+    action: str = Form(...),
+    display_name: str = Form(""),
     db: Session = Depends(get_db)
 ):
     """Handle settings form submission."""
@@ -658,14 +659,30 @@ async def settings_post(
         # Convert user_id to UUID
         user_uuid = UUID(user_id)
         
-        # Update display name in user_profile table
-        success = user_repository.update_display_name(db, user_uuid, display_name.strip())
-        
-        if success:
-            flash(request, 'success', 'Display name updated successfully!')
-        else:
-            flash(request, 'error', 'Failed to update display name. Please try again.')
+        if action == "delete":
+            # Delete user account and all data
+            success = user_repository.delete_user_completely(db, user_uuid)
             
+            if success:
+                # Clear all cookies and session data
+                response = RedirectResponse(url="/", status_code=303)
+                response.delete_cookie("smriti_access_token")
+                response.delete_cookie("smriti_refresh_token")
+                request.session.clear()
+                return response
+            else:
+                flash(request, 'error', 'Failed to delete account. Please try again.')
+                return RedirectResponse(url="/settings", status_code=303)
+        
+        elif action == "update":
+            # Update display name in user_profile table
+            success = user_repository.update_display_name(db, user_uuid, display_name.strip())
+            
+            if success:
+                flash(request, 'success', 'Display name updated successfully!')
+            else:
+                flash(request, 'error', 'Failed to update display name. Please try again.')
+                
     except Exception as e:
         flash(request, 'error', f'Error updating settings: {str(e)}')
     

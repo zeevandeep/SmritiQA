@@ -201,3 +201,47 @@ def update_display_name(db: Session, user_id: UUID, display_name: str) -> bool:
     except Exception as e:
         db.rollback()
         return False
+
+
+def delete_user_completely(db: Session, user_id: UUID) -> bool:
+    """
+    Delete a user and all their associated data from all tables.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user to delete.
+        
+    Returns:
+        True if deletion was successful, False otherwise.
+    """
+    from app.models.models import User, UserProfile, Session as JournalSession, Node, Edge, Reflection, Feedback
+    
+    try:
+        # Delete all related data in the correct order (respecting foreign key constraints)
+        
+        # 1. Delete feedback
+        db.query(Feedback).filter(Feedback.user_id == user_id).delete()
+        
+        # 2. Delete reflections
+        db.query(Reflection).filter(Reflection.user_id == user_id).delete()
+        
+        # 3. Delete edges
+        db.query(Edge).filter(Edge.user_id == user_id).delete()
+        
+        # 4. Delete nodes
+        db.query(Node).filter(Node.user_id == user_id).delete()
+        
+        # 5. Delete journal sessions
+        db.query(JournalSession).filter(JournalSession.user_id == user_id).delete()
+        
+        # 6. Delete user profile
+        db.query(UserProfile).filter(UserProfile.user_id == user_id).delete()
+        
+        # 7. Finally delete the user
+        db.query(User).filter(User.id == user_id).delete()
+        
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        return False
