@@ -83,6 +83,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
    - Runs automatically after each journal submission
 
 6. **Reflection Generation**
+   - **Manual process only** - triggered when user clicks "Generate Reflection" button
    - Uses both dynamic chain discovery and pre-identified chain markers
    - Generates personalized insights from connected thought sequences
    - Provides empathetic, supportive reflections with confidence scores
