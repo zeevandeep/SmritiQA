@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 MAX_CHAIN_LENGTH = int(os.environ.get("MAX_CHAIN_LENGTH", "20"))
 
 # Maximum age of nodes to include in the chain (in days)
-MAX_NODE_AGE_DAYS = int(os.environ.get("MAX_NODE_AGE_DAYS", "30"))
+MAX_NODE_AGE_DAYS = int(os.environ.get("MAX_NODE_AGE_DAYS", "90"))
 
 
 def build_node_chain(db: DbSession, edge: Dict[str, Any], user_id: UUID, visited_nodes: Set[UUID]) -> List[Dict[str, Any]]:
