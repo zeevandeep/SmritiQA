@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Settings Page Language Selector Disabled**: Disabled language dropdown in settings page to prevent users from changing languages since only English is currently supported. Added "Coming Soon" labels to non-English options and made selector read-only, consistent with signup page restrictions
 - **Display Name Update Feature Complete**: Successfully implemented full display name editing functionality in settings page. Users can now update their display name through a proper form submission that saves to the user_profile database table with success/error feedback messages. Form includes proper validation and database error handling
 - **Language Selector Update**: Disabled non-English language options in signup form with "Coming Soon" labels since app currently only supports English. Prevents user confusion and accidental selection of unsupported languages during account creation
 - **Reflection Generation Age Limit Fix**: Resolved critical issue preventing reflection generation by updating MAX_NODE_AGE_DAYS from 30 to 90 days. Root cause: all unprocessed edges connected nodes older than 30 days (42-48 days old), causing automatic rejection during chain building. This created permanent backlog of unprocessable edges. Users can now generate reflections from historical journal connections spanning up to 3 months
