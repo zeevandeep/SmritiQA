@@ -176,3 +176,28 @@ def update_user_profile(db: Session, profile: UserProfileUpdate, user_id: UUID) 
     db.commit()
     db.refresh(db_profile)
     return db_profile
+
+
+def update_display_name(db: Session, user_id: UUID, display_name: str) -> bool:
+    """
+    Update the display name for a user profile.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user.
+        display_name: New display name.
+        
+    Returns:
+        True if update was successful, False otherwise.
+    """
+    try:
+        db_profile = get_user_profile(db, user_id)
+        if db_profile is None:
+            return False
+        
+        setattr(db_profile, 'display_name', display_name)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        return False

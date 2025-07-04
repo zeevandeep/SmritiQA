@@ -636,7 +636,11 @@ async def settings_page(request: Request, db: Session = Depends(get_db)):
     })
 
 @app.post("/settings", response_class=HTMLResponse)
-async def settings_post(request: Request):
+async def settings_post(
+    request: Request, 
+    display_name: str = Form(...),
+    db: Session = Depends(get_db)
+):
     """Handle settings form submission."""
     # Check JWT authentication first, then fallback to session
     user_id = get_current_user_id(request)
@@ -647,8 +651,24 @@ async def settings_post(request: Request):
         flash(request, 'warning', 'Please log in to access this page')
         return RedirectResponse(url="/login", status_code=303)
     
-    # Here you would typically update user preferences in the database
-    flash(request, 'success', 'Settings saved successfully!')
+    try:
+        from app.repositories import user_repository
+        from uuid import UUID
+        
+        # Convert user_id to UUID
+        user_uuid = UUID(user_id)
+        
+        # Update display name in user_profile table
+        success = user_repository.update_display_name(db, user_uuid, display_name.strip())
+        
+        if success:
+            flash(request, 'success', 'Display name updated successfully!')
+        else:
+            flash(request, 'error', 'Failed to update display name. Please try again.')
+            
+    except Exception as e:
+        flash(request, 'error', f'Error updating settings: {str(e)}')
+    
     return RedirectResponse(url="/settings", status_code=303)
 
 @app.get("/logout")

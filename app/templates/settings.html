@@ -181,20 +181,35 @@
     <!-- Scrollable Content Container -->
     <div class="settings-scrollable-content">
         <div class="container">
-            <!-- Profile Settings -->
-            <div class="settings-section">
-                <div class="section-header">
-                    <i class="bi bi-person-circle"></i>
-                    <h5 class="mb-0">Profile</h5>
-                </div>
-                
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <h6>Display Name</h6>
-                        <small>How you'd like to be addressed in reflections</small>
+            {% if flashes %}
+                {% for category, message in flashes %}
+                    {% if category == 'error' %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                    {% elif category == 'success' %}
+                    <div class="alert alert-success">{{ message }}</div>
+                    {% elif category == 'info' %}
+                    <div class="alert alert-info">{{ message }}</div>
+                    {% elif category == 'warning' %}
+                    <div class="alert alert-warning">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="/settings">
+                <!-- Profile Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <i class="bi bi-person-circle"></i>
+                        <h5 class="mb-0">Profile</h5>
                     </div>
-                    <input type="text" class="form-control" style="width: 150px;" placeholder="Your name" value="{{ user.display_name if user.display_name else '' }}">
-                </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h6>Display Name</h6>
+                            <small>How you'd like to be addressed in reflections</small>
+                        </div>
+                        <input type="text" name="display_name" class="form-control" style="width: 150px;" placeholder="Your name" value="{{ user.display_name if user.display_name else '' }}">
+                    </div>
 
                 <div class="setting-item">
                     <div class="setting-info">
@@ -321,9 +336,10 @@
                 </div>
             </div>
 
-            <div class="text-center mt-4">
-                <button class="btn btn-primary btn-lg">Save Changes</button>
-            </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 
