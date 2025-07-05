@@ -131,7 +131,7 @@ async def google_callback(
         response.set_cookie(
             key="smriti_refresh_token", 
             value=refresh_token,
-            max_age=7 * 24 * 3600,  # 7 days
+            max_age=7776000,  # 90 days
             httponly=True,
             secure=False,  # Set to True in production with HTTPS
             samesite="lax"

@@ -394,11 +394,11 @@ async def login_post(request: Request, email: str = Form(...), password: str = F
                 samesite='lax'
             )
             
-            # Set refresh token cookie (14 days) - secure=False for localhost
+            # Set refresh token cookie (90 days) - secure=False for localhost
             response.set_cookie(
                 'smriti_refresh_token',
                 refresh_token,
-                max_age=1209600,  # 14 days
+                max_age=7776000,  # 90 days
                 httponly=True,
                 secure=False,  # False for localhost development
                 samesite='lax'
@@ -498,11 +498,11 @@ async def signup_post(
             samesite='lax'
         )
         
-        # Set refresh token cookie (14 days) - secure=False for localhost
+        # Set refresh token cookie (90 days) - secure=False for localhost
         response.set_cookie(
             'smriti_refresh_token',
             refresh_token,
-            max_age=1209600,  # 14 days
+            max_age=7776000,  # 90 days
             httponly=True,
             secure=False,  # False for localhost development
             samesite='lax'

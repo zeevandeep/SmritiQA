@@ -15,7 +15,7 @@ import psycopg2
 
 # Environment-based configuration
 ACCESS_TOKEN_EXPIRY = int(os.getenv("ACCESS_TOKEN_EXPIRY_SECONDS", 1800))  # 30 minutes
-REFRESH_TOKEN_EXPIRY = int(os.getenv("REFRESH_TOKEN_EXPIRY_SECONDS", 1209600))  # 14 days
+REFRESH_TOKEN_EXPIRY = int(os.getenv("REFRESH_TOKEN_EXPIRY_SECONDS", 7776000))  # 90 days
 JWT_SECRET = os.environ.get("SESSION_SECRET")
 JWT_ALGORITHM = "HS256"
 

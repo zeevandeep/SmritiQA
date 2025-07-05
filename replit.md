@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Extended Session Duration**: Increased refresh token expiration from 14 days to 90 days across all authentication flows (email/password login, signup, Google OAuth). Users now stay logged in for 3 months instead of 2 weeks, significantly reducing login friction for regular users while maintaining reasonable security
 - **New User Journal Entry Fix Complete**: Resolved critical authentication issue preventing new users from saving journal entries immediately after signup. Implemented JWT token generation and secure cookie setting during email/password signup to match Google OAuth flow. New users now get instant access to journal creation without needing to log in again
 - **Notification Settings Disabled**: Disabled daily journal reminders and new reflection alerts toggles in settings page since these features aren't implemented yet. Set both to off by default and added "(Coming Soon)" labels to prevent user confusion about unimplemented features
 - **Settings Page Language Selector Disabled**: Disabled language dropdown in settings page to prevent users from changing languages since only English is currently supported. Added "Coming Soon" labels to non-English options and made selector read-only, consistent with signup page restrictions
