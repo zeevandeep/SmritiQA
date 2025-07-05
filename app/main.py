@@ -729,7 +729,7 @@ async def logout(request: Request):
     response.delete_cookie('smriti_access_token')
     response.delete_cookie('smriti_refresh_token')
     
-    flash(request, 'info', 'You have been logged out successfully.')
+    flash(request, 'info', 'You have been signed out successfully.')
     return response
 
 # Health check endpoint
