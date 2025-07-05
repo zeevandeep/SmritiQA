@@ -1,0 +1,96 @@
+1️⃣ Current Signup Flow: users + user_profile
+Does the current signup process create both a users table entry AND a user_profile table entry?
+
+✅ Yes — most likely.
+
+From your logs and the journal behavior, it's clear that the app expects a complete user record, meaning:
+
+users table contains the core account (e.g. email, password, ID)
+
+user_profile holds extended metadata (e.g. name, preferences, etc.)
+
+Since the JWT payload or session-related functionality might depend on user_profile fields (e.g. username, avatar), you should generate and return tokens only after both records are created.
+
+2️⃣ Token Cookie Names: smriti_access_token and smriti_refresh_token
+Should I use these exact names when setting cookies during signup?
+
+✅ Yes — you should match those exact cookie names (smriti_access_token, smriti_refresh_token), because:
+
+The backend is explicitly looking for those keys in request cookies, based on your log:
+
+pgsql
+Copy
+Edit
+DEBUG: Access token present: False
+Using different names (like access_token) will break the JWT extraction logic (likely from a FastAPI dependency like get_current_user_from_jwt).
+
+🛑 So don’t change the names unless you also update the token parsing logic everywhere.
+
+3️⃣ Signup Route Location: FastAPI or Flask?
+Is the signup endpoint in FastAPI (e.g. /api/v1/auth/signup) or via Flask proxy?
+
+🔍 To be sure, you'd need to inspect the routes, but here's a strong rule of thumb:
+
+If the frontend is sending a request to /api/v1/..., then it’s going to FastAPI.
+
+If you see Flask-style decorators like @app.route(...) (especially outside api/v1), then some legacy or proxy logic may be handled by Flask.
+
+💡 Since you mentioned JWTs and logs like get_current_user_from_jwt, this points to a FastAPI-based backend, so you're likely working in /api/v1/auth/signup.
+
+🧭 You can confirm this by searching the backend for:
+
+python
+Copy
+Edit
+@router.post("/signup")
+or
+
+python
+Copy
+Edit
+@auth_router.post("/signup")
+4️⃣ Google OAuth vs Regular Signup
+Should this fix apply to both Google OAuth and regular email/password signup?
+
+✅ Yes — eventually, both flows should result in JWT tokens being set.
+
+Google OAuth often skips password handling but still creates a user + profile.
+
+The token issuance logic should be shared (centralized), so that:
+
+Both login methods (OAuth or email) issue JWTs
+
+Both set the smriti_access_token and smriti_refresh_token cookies
+
+Both have valid sessions after signup or login
+
+💡 Ideally, you'd have a shared create_and_set_jwt_tokens(user, response) function used in both login and signup flows.
+
+5️⃣ User Profile Creation Timing
+Should the JWT token generation happen after both the user account AND user profile are created successfully?
+
+✅ Absolutely.
+
+Why?
+
+The JWT payload may depend on user_profile fields (like username, id, etc.).
+
+Other parts of the app (e.g. journal entry logic) assume the profile is already there.
+
+If you issue tokens before the user_profile exists, users may get weird auth/session failures or missing-data issues.
+
+🛠️ Best Practice:
+Wait until:
+
+python
+Copy
+Edit
+user = create_user(...)  
+profile = create_user_profile(user_id=user.id, ...)
+Then:
+
+python
+Copy
+Edit
+access_token, refresh_token = create_tokens(user.id)
+set_cookies(response, access_token, refresh_token)
