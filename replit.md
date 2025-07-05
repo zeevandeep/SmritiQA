@@ -6,9 +6,6 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
-- **Landing Page Text Update**: Updated landing page button text from "Log In to Smriti" to "Sign In to Smriti" for consistent terminology throughout the application
-- **Delete Account Functionality Complete**: Implemented comprehensive account deletion that removes all user data across all database tables (feedback, reflections, edges, nodes, sessions, profile, user) with double confirmation dialog and automatic logout upon successful deletion
-- **Export Data Button Disabled**: Disabled export data button in settings with "Coming Soon" label since feature is not yet implemented
 - **Notification Settings Disabled**: Disabled daily journal reminders and new reflection alerts toggles in settings page since these features aren't implemented yet. Set both to off by default and added "(Coming Soon)" labels to prevent user confusion about unimplemented features
 - **Settings Page Language Selector Disabled**: Disabled language dropdown in settings page to prevent users from changing languages since only English is currently supported. Added "Coming Soon" labels to non-English options and made selector read-only, consistent with signup page restrictions
 - **Display Name Update Feature Complete**: Successfully implemented full display name editing functionality in settings page. Users can now update their display name through a proper form submission that saves to the user_profile database table with success/error feedback messages. Form includes proper validation and database error handling
