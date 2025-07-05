@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **New User Journal Entry Fix Complete**: Resolved critical authentication issue preventing new users from saving journal entries immediately after signup. Implemented JWT token generation and secure cookie setting during email/password signup to match Google OAuth flow. New users now get instant access to journal creation without needing to log in again
 - **Notification Settings Disabled**: Disabled daily journal reminders and new reflection alerts toggles in settings page since these features aren't implemented yet. Set both to off by default and added "(Coming Soon)" labels to prevent user confusion about unimplemented features
 - **Settings Page Language Selector Disabled**: Disabled language dropdown in settings page to prevent users from changing languages since only English is currently supported. Added "Coming Soon" labels to non-English options and made selector read-only, consistent with signup page restrictions
 - **Display Name Update Feature Complete**: Successfully implemented full display name editing functionality in settings page. Users can now update their display name through a proper form submission that saves to the user_profile database table with success/error feedback messages. Form includes proper validation and database error handling
