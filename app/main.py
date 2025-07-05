@@ -197,7 +197,7 @@ async def homepage(request: Request):
         return RedirectResponse(url="/journal", status_code=303)
     
     flashes = pop_flashes(request)
-    return templates.TemplateResponse("login.html", {
+    return templates.TemplateResponse("landing.html", {
         "request": request,
         "flashes": flashes
     })
