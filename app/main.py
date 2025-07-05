@@ -456,6 +456,7 @@ async def signup_post(
         from app.repositories import user_repository
         from app.schemas.schemas import UserCreate, UserProfileCreate
         from app.utils.auth import hash_password
+        from app.utils.jwt_utils import generate_access_token, generate_refresh_token
         
         # Check if user already exists
         existing_user = user_repository.get_user_by_email(db, email)
@@ -480,10 +481,37 @@ async def signup_post(
         from uuid import UUID
         user_repository.create_user_profile(db, profile_create, UUID(str(user.id)))
         
-        # Log user in
+        # Generate JWT tokens for immediate authentication
+        access_token = generate_access_token(str(user.id), str(user.email))
+        refresh_token = generate_refresh_token(str(user.id))
+        
+        # Create response and set secure cookies (matching login flow exactly)
+        response = RedirectResponse(url="/journal", status_code=303)
+        
+        # Set access token cookie (30 minutes) - secure=False for localhost
+        response.set_cookie(
+            'smriti_access_token',
+            access_token,
+            max_age=1800,  # 30 minutes
+            httponly=True,
+            secure=False,  # False for localhost development
+            samesite='lax'
+        )
+        
+        # Set refresh token cookie (14 days) - secure=False for localhost
+        response.set_cookie(
+            'smriti_refresh_token',
+            refresh_token,
+            max_age=1209600,  # 14 days
+            httponly=True,
+            secure=False,  # False for localhost development
+            samesite='lax'
+        )
+        
+        # Also set session for backward compatibility
         request.session["user_id"] = str(user.id)
         flash(request, 'success', f'Welcome to Smriti, {display_name}!')
-        return RedirectResponse(url="/journal", status_code=303)
+        return response
             
     except Exception as e:
         print(f"Signup error: {e}")

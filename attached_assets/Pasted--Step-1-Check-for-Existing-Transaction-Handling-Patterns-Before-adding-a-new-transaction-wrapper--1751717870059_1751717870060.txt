@@ -1,0 +1,67 @@
+✅ Step 1: Check for Existing Transaction Handling Patterns
+Before adding a new transaction wrapper, answer this:
+
+🔍 Is your app already using DB transactions during signup or similar critical flows (e.g., login with profile audit, password reset, etc.)?
+
+Where to look:
+
+Any use of with Session.begin(): or async with session.begin(): (for SQLAlchemy)
+
+Any decorators or wrappers like @db_transactional or @atomic
+
+Manual commits: db.commit() followed by rollback on except
+
+If you see those, replicate that exact style — consistency > cleverness.
+
+✅ Step 2: If No Existing Transaction Pattern Exists
+If the current code creates the user and profile with separate db.add() calls and commit(), then you should introduce a scoped transaction — but gently, without changing the architecture too much.
+
+Example — Sync SQLAlchemy
+python
+Copy
+Edit
+def signup(...):
+    try:
+        with Session.begin():  # atomic block
+            user = create_user(...)
+            profile = create_profile(user.id)
+            # No need to manually commit here — it's automatic on success
+    except Exception as e:
+        # Log error, return appropriate response
+        raise HTTPException(status_code=500, detail="Signup failed")
+Example — Async SQLAlchemy
+python
+Copy
+Edit
+async def signup(...):
+    async with async_session() as session:
+        async with session.begin():  # rollback on failure
+            user = await create_user(...)
+            profile = await create_profile(user.id)
+🎯 Goal: Ensure that if any one part fails (user, profile, token logic, etc.), the database state remains clean — no half-created records.
+
+✅ Step 3: Token Generation Should Happen After DB Commit (or Inside Transaction)
+Token generation is typically not DB-related, so you can safely do this:
+
+python
+Copy
+Edit
+with Session.begin():
+    user = create_user()
+    profile = create_profile(user)
+
+# Now generate tokens and set cookies
+access_token, refresh_token = create_jwt_tokens(user.id)
+response.set_cookie(..., value=access_token)
+response.set_cookie(..., value=refresh_token)
+❗Don't generate tokens before the user is fully committed to DB — or you might issue tokens for a user that doesn't persist if something fails.
+
+✅ Step 4: Checklist for Final Implementation Plan
+Task	Action
+🔍 Identify signup route	Look for /signup, register, or UserCreate usage
+🔁 Reuse token logic	Use create_jwt_tokens() or equivalent from login
+🍪 Copy cookie logic	Match httponly, secure, samesite settings
+🧱 Add transaction scope	Match existing DB transaction pattern, or use Session.begin()
+🧹 Rollback on error	Ensure all or nothing: no user without profile, no tokens for partial data
+✅ Keep response consistent	Just add token/cookie logic — no need to change response format unless necessary
+
