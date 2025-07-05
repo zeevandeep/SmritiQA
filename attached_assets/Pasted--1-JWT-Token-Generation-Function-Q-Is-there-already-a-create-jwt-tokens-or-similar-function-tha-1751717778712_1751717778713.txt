@@ -1,0 +1,69 @@
+✅ 1. JWT Token Generation Function
+Q: Is there already a create_jwt_tokens() or similar function that I should reuse?
+
+Yes, you should absolutely reuse the exact same token generation function used during login. This ensures:
+
+Same expiration durations
+
+Same signing secret and algorithm
+
+Same token structure (sub claim, user ID, etc.)
+
+🔍 How to confirm:
+Look inside your login route (e.g. /login, /token, etc.) and trace:
+
+The function used to generate tokens
+
+How they are set into cookies
+
+What response format is returned
+
+✅ Reuse: create_access_token, create_refresh_token, or any wrapper around them like create_jwt_tokens().
+
+✅ 2. Cookie Security Settings
+Q: Should I match the exact httponly, secure, samesite settings from login flow?
+
+Absolutely. Inconsistencies here can break authentication silently or introduce security issues.
+
+httponly=True: Prevents JS from accessing the token
+
+secure=True: Sends cookie only over HTTPS
+
+samesite="Lax" or "Strict": Controls cross-site behavior
+
+📌 Copy the cookie settings from the login route exactly.
+
+❗ If you forget secure=True on production (https://smriti.app), the cookies may silently not be sent by the browser.
+
+✅ 3. Error Handling During Signup
+Q: If user creation or user_profile creation fails, should I roll back?
+
+Yes — treat signup as a transactional unit. Either everything succeeds (user + profile + tokens), or nothing gets committed.
+
+You can:
+
+Use a DB transaction if you're on Postgres (e.g. with Session.begin())
+
+Or at least use try/except blocks and delete partial data if one step fails
+
+✅ Best UX: Avoid orphaned users with no profiles or incomplete auth states
+
+✅ 4. Signup Route Discovery
+Q: How to locate the right route to modify?
+
+Look for routes like:
+
+@router.post("/signup") or /register
+
+Functions using a schema like UserCreate or CreateUserSchema
+
+Search terms: create_user, register_user, or any calls to db.add(user)
+
+🔍 Also check if signup is split into multiple steps (user → profile → extras), or if it’s unified.
+
+✅ 5. Response Format
+Q: Should signup response format change, or just add cookie logic?
+
+No need to change the response structure. Just add cookie-setting to the existing logic.
+
+Unless the frontend is expecting a specific message (like "User created successfully"), keep the structure the same to avoid breaking anything.
