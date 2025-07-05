@@ -206,7 +206,7 @@ def index():
                     </div>
                     
                     <div class="auth-buttons">
-                        <a href="/login" class="btn btn-primary btn-lg">Log In</a>
+                        <a href="/login" class="btn btn-primary btn-lg">Sign In</a>
                         <a href="/signup" class="btn btn-outline-primary btn-lg">Sign Up</a>
                     </div>
                 </div>
