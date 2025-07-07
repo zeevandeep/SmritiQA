@@ -1,0 +1,109 @@
+1. ✅ API Endpoint Path
+❓ Should the refresh endpoint be /api/v1/auth/refresh or /auth/refresh?
+
+Answer: Use /api/v1/auth/refresh
+✅ Confirmed from your codebase — this is the correct path.
+
+js
+Copy
+Edit
+await fetch('/api/v1/auth/refresh', {
+  method: 'POST',
+  credentials: 'include',
+});
+2. 🔍 Error Response from Sessions Endpoint
+❓ What exact error does /api/v1/sessions/ return when token expires?
+
+Answer: We must confirm it's actually a 401 Unauthorized.
+
+✅ To check:
+Use DevTools or enhance your JS error logging:
+
+js
+Copy
+Edit
+.catch(err => {
+  console.error("Error saving journal entry:", err);
+  if (err.response) {
+    console.error("Status:", err.response.status);
+  }
+});
+✅ Or log response in secureFetch:
+
+js
+Copy
+Edit
+if (!response.ok) {
+  console.warn(`Request failed with status ${response.status}`);
+}
+Only if it's 401, should the refresh logic be triggered.
+If it's a different error (403, 500), don’t refresh — that’s likely a deeper issue.
+
+3. 🛡 Cookie Configuration (Localhost vs Production)
+❓ Should we handle secure=True cookie flag differently on localhost?
+
+Answer: Yes.
+
+secure=True cookies won’t be sent over HTTP (localhost, unless using HTTPS via localhost.run, etc.)
+
+Solution: Set secure=False for development mode
+
+✅ Add an environment check in token setting logic:
+python
+Copy
+Edit
+IS_PRODUCTION = os.getenv("ENV") == "production"
+
+response.set_cookie(
+    key="smriti_access_token",
+    value=access_token,
+    httponly=True,
+    secure=IS_PRODUCTION,
+    samesite="Lax"
+)
+4. ✅ Endpoints That Need secureFetch
+❓ Which API calls should use retry logic?
+
+Answer: Any protected endpoint requiring an access token.
+
+Minimum:
+
+POST /api/v1/sessions/ (journal save)
+
+GET /api/v1/sessions/user/{user_id} (journal fetch)
+
+POST /api/v1/feedback/
+
+PATCH /api/v1/users/me (profile updates)
+
+Any reflection or personalized insight generation
+
+💡 You don’t need to wrap login or refresh calls — only ones gated behind Depends(get_current_user).
+
+5. 🚨 Fallback on Refresh Failure
+❓ What should happen if refresh fails?
+
+Answer: Depends on UX style
+
+For Smriti, since you already use flash messages and redirects, best to:
+
+Show a flash message like “Session expired. Please log in again.”
+
+Then redirect to login page
+
+✅ Implementation:
+In secureFetch():
+
+js
+Copy
+Edit
+if (!refreshRes.ok) {
+  window.location.href = "/login"; // or trigger flash + redirect
+  return;
+}
+6. 🔄 Silent Refresh on Page Load
+❓ Proactive refresh or only on 401?
+
+**Answer: Do both eventually, but start with reactive for simplicity.
+
+✅ Reactive refresh is essential and lightweight
