@@ -13,9 +13,12 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import psycopg2
 
-# Environment-based configuration
-ACCESS_TOKEN_EXPIRY = int(os.getenv("ACCESS_TOKEN_EXPIRY_SECONDS", 1800))  # 30 minutes
-REFRESH_TOKEN_EXPIRY = int(os.getenv("REFRESH_TOKEN_EXPIRY_SECONDS", 7776000))  # 90 days
+# Import centralized configuration
+from app.config import AUTH_CONFIG
+
+# Convert timedelta to seconds for backward compatibility
+ACCESS_TOKEN_EXPIRY = int(AUTH_CONFIG["ACCESS_TOKEN_EXPIRY"].total_seconds())
+REFRESH_TOKEN_EXPIRY = int(AUTH_CONFIG["REFRESH_TOKEN_EXPIRY"].total_seconds())
 JWT_SECRET = os.environ.get("SESSION_SECRET")
 JWT_ALGORITHM = "HS256"
 
@@ -69,8 +72,8 @@ def generate_refresh_token(user_id: str) -> str:
             WHERE user_id = %s AND (expires_at < CURRENT_TIMESTAMP OR is_valid = FALSE)
         """, (user_id,))
         
-        # Insert new refresh token
-        expires_at = datetime.utcnow() + timedelta(seconds=REFRESH_TOKEN_EXPIRY)
+        # Insert new refresh token using centralized config
+        expires_at = datetime.utcnow() + AUTH_CONFIG["REFRESH_TOKEN_EXPIRY"]
         cursor.execute("""
             INSERT INTO refresh_tokens (user_id, token, expires_at)
             VALUES (%s, %s, %s)

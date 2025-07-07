@@ -743,14 +743,13 @@
                 const requestBody = JSON.stringify(sessionData);
                 console.log('Exact JSON being sent in request:', requestBody);
                 
-                // Create a new session with the transcript
-                const response = await fetch('/api/v1/sessions/', {
+                // Create a new session with the transcript using secureFetch
+                const response = await secureFetch('/api/v1/sessions/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: requestBody,
-                    credentials: 'include'
+                    body: requestBody
                 });
                 
                 if (!response.ok) {
@@ -803,6 +802,9 @@
             });
         }
     </script>
+    
+    <!-- Secure Fetch Utility -->
+    <script src="/static/js/secureFetch.js"></script>
     
     <!-- PWA Install Prompt -->
     <script src="/static/install-prompt.js"></script>

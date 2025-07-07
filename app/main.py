@@ -61,6 +61,23 @@ app.add_middleware(
     secret_key=os.environ.get("SESSION_SECRET", "fallback-secret-key")
 )
 
+# Add security headers middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    
+    # Basic security headers (safe to implement immediately)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # PWA-specific permissions policy
+    response.headers["Permissions-Policy"] = "microphone=self"
+    
+    return response
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -386,6 +403,7 @@ async def login_post(request: Request, email: str = Form(...), password: str = F
         from app.repositories import user_repository
         from app.schemas.schemas import UserAuthenticate
         from app.utils.jwt_utils import generate_access_token, generate_refresh_token
+        from app.utils.auth_utils import set_auth_cookies
         
         # Authenticate using existing repository method
         user_auth = UserAuthenticate(email=email, password=password)
@@ -404,28 +422,11 @@ async def login_post(request: Request, email: str = Form(...), password: str = F
             refresh_token = generate_refresh_token(str(user.id))
             print(f"DEBUG: JWT tokens generated successfully")
             
-            # Create response and set secure cookies
+            # Create response and set secure cookies using centralized utility
             response = RedirectResponse(url="/journal", status_code=303)
             
-            # Set access token cookie (30 minutes) - secure=False for localhost
-            response.set_cookie(
-                'smriti_access_token',
-                access_token,
-                max_age=1800,  # 30 minutes
-                httponly=True,
-                secure=False,  # False for localhost development
-                samesite='lax'
-            )
-            
-            # Set refresh token cookie (90 days) - secure=False for localhost
-            response.set_cookie(
-                'smriti_refresh_token',
-                refresh_token,
-                max_age=7776000,  # 90 days
-                httponly=True,
-                secure=False,  # False for localhost development
-                samesite='lax'
-            )
+            # Use centralized cookie utility
+            set_auth_cookies(response, access_token, refresh_token)
             
             print(f"DEBUG: Cookies set, redirecting to journal")
             flash(request, 'success', f'Welcome, {user.email}!')
@@ -480,6 +481,7 @@ async def signup_post(
         from app.schemas.schemas import UserCreate, UserProfileCreate
         from app.utils.auth import hash_password
         from app.utils.jwt_utils import generate_access_token, generate_refresh_token
+        from app.utils.auth_utils import set_auth_cookies
         
         # Check if user already exists
         existing_user = user_repository.get_user_by_email(db, email)
@@ -508,28 +510,11 @@ async def signup_post(
         access_token = generate_access_token(str(user.id), str(user.email))
         refresh_token = generate_refresh_token(str(user.id))
         
-        # Create response and set secure cookies (matching login flow exactly)
+        # Create response and set secure cookies using centralized utility
         response = RedirectResponse(url="/journal", status_code=303)
         
-        # Set access token cookie (30 minutes) - secure=False for localhost
-        response.set_cookie(
-            'smriti_access_token',
-            access_token,
-            max_age=1800,  # 30 minutes
-            httponly=True,
-            secure=False,  # False for localhost development
-            samesite='lax'
-        )
-        
-        # Set refresh token cookie (90 days) - secure=False for localhost
-        response.set_cookie(
-            'smriti_refresh_token',
-            refresh_token,
-            max_age=7776000,  # 90 days
-            httponly=True,
-            secure=False,  # False for localhost development
-            samesite='lax'
-        )
+        # Use centralized cookie utility
+        set_auth_cookies(response, access_token, refresh_token)
         
         # Also set session for backward compatibility
         request.session["user_id"] = str(user.id)
@@ -742,15 +727,16 @@ async def settings_post(
 @app.get("/logout")
 async def logout(request: Request):
     """Log the user out."""
+    from app.utils.auth_utils import clear_auth_cookies
+    
     # Clear session
     request.session.clear()
     
     # Create redirect response
     response = RedirectResponse(url="/", status_code=303)
     
-    # Clear JWT cookies
-    response.delete_cookie('smriti_access_token')
-    response.delete_cookie('smriti_refresh_token')
+    # Use centralized cookie utility to clear cookies
+    clear_auth_cookies(response)
     
     flash(request, 'info', 'You have been signed out successfully.')
     return response
@@ -760,6 +746,13 @@ async def logout(request: Request):
 def health():
     """Health check endpoint."""
     return {"status": "ok"}
+
+# Test endpoint for token expiry simulation
+@app.get("/api/test-token-expired")
+async def test_token_expired():
+    """Test endpoint that simulates token expiry for testing secureFetch."""
+    from fastapi import HTTPException
+    raise HTTPException(status_code=401, detail="Simulated token expiry")
 
 # Configure API router to use custom JSON response for proper timezone handling
 from fastapi.routing import APIRoute

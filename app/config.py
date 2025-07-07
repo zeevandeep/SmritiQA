@@ -6,6 +6,7 @@ and other configuration settings for the application.
 """
 import os
 from typing import List
+from datetime import timedelta
 
 from pydantic import Field, EmailStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -53,3 +54,14 @@ class Settings(BaseSettings):
 
 # Create settings object
 settings = Settings()
+
+# Token Configuration
+AUTH_CONFIG = {
+    "ACCESS_TOKEN_EXPIRY": timedelta(minutes=30),
+    "REFRESH_TOKEN_EXPIRY": timedelta(days=90),
+    "ACCESS_TOKEN_MAX_AGE": 1800,      # 30 minutes in seconds
+    "REFRESH_TOKEN_MAX_AGE": 7776000,  # 90 days in seconds
+}
+
+# Environment detection for cookie security
+IS_PRODUCTION = os.getenv("ENV") == "production" or not os.getenv("REPL_ID")

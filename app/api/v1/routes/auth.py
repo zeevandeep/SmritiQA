@@ -4,13 +4,14 @@ Authentication endpoints for JWT token management.
 This module provides endpoints for token refresh and authentication operations.
 """
 
-from fastapi import APIRouter, Request, HTTPException, status
+from fastapi import APIRouter, Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+
 from app.utils.jwt_utils import verify_refresh_token, generate_access_token, revoke_refresh_token
+from app.utils.auth_utils import set_auth_cookies, clear_auth_cookies
 from app.repositories import user_repository
 from app.db.database import get_db
-from sqlalchemy.orm import Session
-from fastapi import Depends
 
 router = APIRouter()
 
@@ -53,21 +54,14 @@ async def refresh_token(request: Request):
         # Generate new access token
         new_access_token = generate_access_token(user_id, user.email)
         
-        # Create response with new access token cookie
+        # Create response with new access token
         response = JSONResponse({
             "message": "Token refreshed successfully",
             "access_token": new_access_token  # Also return in body for client-side use
         })
         
-        # Set new access token cookie
-        response.set_cookie(
-            'smriti_access_token',
-            new_access_token,
-            max_age=1800,  # 30 minutes
-            httponly=True,
-            secure=True,
-            samesite='lax'
-        )
+        # Use centralized cookie utility
+        set_auth_cookies(response, new_access_token)
         
         return response
         
@@ -98,9 +92,8 @@ async def logout(request: Request):
     # Create response and clear cookies
     response = JSONResponse({"message": "Logged out successfully"})
     
-    # Clear authentication cookies
-    response.set_cookie('smriti_access_token', '', expires=0, httponly=True, secure=True, samesite='Lax')
-    response.set_cookie('smriti_refresh_token', '', expires=0, httponly=True, secure=True, samesite='Lax')
+    # Use centralized cookie utility to clear cookies
+    clear_auth_cookies(response)
     
     return response
 
