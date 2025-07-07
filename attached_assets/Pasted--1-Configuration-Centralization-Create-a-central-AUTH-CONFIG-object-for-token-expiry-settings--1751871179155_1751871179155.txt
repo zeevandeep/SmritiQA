@@ -1,0 +1,90 @@
+✅ 1. Configuration Centralization
+❓ Create a central AUTH_CONFIG object for token expiry settings?
+
+✔️ Recommendation: Absolutely yes.
+Creating a single source of truth in config.py avoids silent mismatches across:
+
+JWT creation (create_access_token(), create_refresh_token())
+
+Cookie setting (max_age)
+
+DB expiry logic (expires_at)
+
+Frontend refresh timer (if added later)
+
+✅ Example:
+python
+Copy
+Edit
+# config.py
+from datetime import timedelta
+
+AUTH_CONFIG = {
+    "ACCESS_TOKEN_EXPIRY": timedelta(minutes=30),
+    "REFRESH_TOKEN_EXPIRY": timedelta(days=90),
+    "ACCESS_TOKEN_MAX_AGE": 1800,      # seconds
+    "REFRESH_TOKEN_MAX_AGE": 7776000,  # seconds
+}
+Use this in:
+
+set_auth_cookies()
+
+create_access_token()
+
+Refresh token DB logic
+
+✅ 2. Graceful Degradation Strategy
+❓ What if /auth/refresh fails due to network, not auth?
+
+✔️ Recommendation: Retry once, then fallback to login
+If the refresh endpoint fails due to network timeout, do not redirect immediately — that feels broken to the user.
+
+✅ Strategy:
+Retry fetch('/auth/refresh') once with exponential backoff (setTimeout)
+
+If it still fails:
+
+Show a flash message: "Lost connection. Please refresh or log in again."
+
+Redirect to login page
+
+Example in secureFetch.js:
+js
+Copy
+Edit
+try {
+  const refreshRes = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' });
+
+  if (!refreshRes.ok) {
+    throw new Error("Refresh failed");
+  }
+} catch (err) {
+  console.warn("Network error during refresh", err);
+  alert("You're offline or your session expired. Please log in again.");
+  window.location.href = "/login";
+  return;
+}
+✅ 3. Security Headers Integration
+❓ Should we add X-Frame-Options, X-Content-Type-Options, etc.?
+
+✔️ Recommendation: Yes — for PWA security hardening
+This protects against clickjacking, content sniffing, and XSS amplification.
+
+✅ Add to all responses (or via middleware):
+python
+Copy
+Edit
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "microphone=()"
+    return response
+You can also consider:
+
+Content-Security-Policy (CSP) once frontend is stable
+
+Strict-Transport-Security if HTTPS enforced
+
