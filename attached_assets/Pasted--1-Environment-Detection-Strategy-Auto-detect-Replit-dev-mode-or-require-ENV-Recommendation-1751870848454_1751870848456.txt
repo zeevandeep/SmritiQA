@@ -1,0 +1,108 @@
+✅ 1. Environment Detection Strategy
+❓ Auto-detect Replit dev mode or require ENV?
+
+✔️ Recommendation: Use hybrid approach
+Use os.getenv("REPL_ID") or similar to auto-detect Replit in backend
+
+Still allow override with ENV variable in .env for flexibility
+
+In backend:
+python
+Copy
+Edit
+IS_PRODUCTION = os.getenv("ENV") == "production" or not os.getenv("REPL_ID")
+In frontend:
+js
+Copy
+Edit
+const isDev = window.location.hostname.includes("localhost") || window.location.hostname.includes(".replit.dev");
+🔒 This helps prevent accidental secure=True on HTTP while still being configurable for future deployment on Vercel, etc.
+
+✅ 2. Cookie Utility Integration
+❓ Should set_auth_cookies() handle environment detection internally?
+
+✔️ Recommendation: Yes — environment logic should be internal
+Centralize the secure, samesite, httponly flags inside the cookie utility. Keep the calling code clean.
+
+python
+Copy
+Edit
+def set_auth_cookies(response, access_token, refresh_token):
+    secure = IS_PRODUCTION
+    response.set_cookie("smriti_access_token", access_token, httponly=True, secure=secure, samesite="Lax")
+    response.set_cookie("smriti_refresh_token", refresh_token, httponly=True, secure=secure, samesite="Lax")
+✅ DRY principle, avoids inconsistencies, and makes future updates trivial.
+
+✅ 3. Error Response Testing Priority
+❓ Should we simulate token expiry before full implementation?
+
+✔️ Recommendation: Yes — confirm behavior first
+Manually simulate or expire token and hit POST /api/v1/sessions/. Validate:
+
+Does it return 401?
+
+Does it include any WWW-Authenticate or error message?
+
+🔎 Once confirmed, implement secureFetch() with confidence. This reduces guesswork.
+
+If needed, create a dummy endpoint with:
+
+python
+Copy
+Edit
+@app.get("/api/test-token-expired")
+async def test_token_expired():
+    raise HTTPException(status_code=401, detail="Simulated token expiry")
+✅ 4. Implementation Rollout Strategy
+❓ Start with journal save or replace all fetch calls at once?
+
+✔️ Recommendation: Start with journal save
+It’s the most critical and user-facing flow. Validate:
+
+Token refresh works
+
+Retry logic succeeds
+
+No duplicate requests
+
+No user confusion during silent refresh
+
+Once stable, move on to other areas like /reflections/, /entries/, /settings/.
+
+✅ 5. Refresh Token Validity Handling
+❓ What if both tokens are invalid?
+
+✔️ Recommendation: Redirect to login with flash message
+In secureFetch():
+
+js
+Copy
+Edit
+if (!refreshRes.ok) {
+  alert("Session expired. Please log in again.");
+  window.location.href = "/login";
+  return;
+}
+Later, upgrade this to flash messages if your pages already use that pattern.
+
+⚠️ This is critical to avoid infinite loops or silent failures.
+
+✅ 6. Frontend Integration Scope
+❓ Gradual migration or immediate full switch?
+
+✔️ Recommendation: Gradual migration, starting with journal.html
+Start with:
+
+saveJournalEntry() in journal.html
+
+Wrap only POST /api/v1/sessions/ with secureFetch
+
+Then expand:
+
+entries.html: GET /sessions/user
+
+reflections.html: personalized reflections
+
+settings.html: profile updates
+
+Eventually, replace all fetch() that require authentication.
