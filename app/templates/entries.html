@@ -279,15 +279,17 @@
                     
                     // Add each session to the list
                     sessions.forEach(session => {
+                        // Parse UTC timestamp (now with 'Z' suffix) and convert to user's local timezone
                         const dateObj = new Date(session.created_at);
-                        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                        const formattedDate = dateObj.toLocaleDateString(undefined, { 
                             year: 'numeric', 
                             month: 'long', 
                             day: 'numeric' 
                         });
-                        const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                        const formattedTime = dateObj.toLocaleTimeString(undefined, {
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
+                            hour12: true  // Show AM/PM
                         });
                         
                         // Format duration if available
