@@ -4,10 +4,10 @@ Pydantic schemas for the Smriti API.
 These schemas define the structure of request and response data for API endpoints.
 They are used for validation, serialization, and documentation.
 """
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import List, Optional, Union
 from uuid import UUID
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_serializer
 
 
 # User schemas
@@ -94,6 +94,15 @@ class SessionInDB(SessionBase):
     created_at: datetime
     is_processed: bool
     
+    @field_serializer('created_at')
+    def serialize_created_at(self, dt: datetime) -> str:
+        """Serialize datetime with UTC timezone indicator."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
+    
     class Config:
         from_attributes = True
 
@@ -125,6 +134,15 @@ class NodeInDB(NodeBase):
     session_id: UUID
     created_at: datetime
     is_processed: bool
+    
+    @field_serializer('created_at')
+    def serialize_created_at(self, dt: datetime) -> str:
+        """Serialize datetime with UTC timezone indicator."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
     
     class Config:
         from_attributes = True
@@ -160,6 +178,15 @@ class EdgeInDB(EdgeBase):
     created_at: datetime
     is_processed: bool
     
+    @field_serializer('created_at')
+    def serialize_created_at(self, dt: datetime) -> str:
+        """Serialize datetime with UTC timezone indicator."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
+    
     class Config:
         from_attributes = True
 
@@ -193,6 +220,15 @@ class ReflectionInDB(ReflectionBase):
     generated_at: datetime
     is_reflected: bool
     feedback: Optional[int] = None  # 1 for thumbs up, -1 for thumbs down
+    
+    @field_serializer('generated_at')
+    def serialize_generated_at(self, dt: datetime) -> str:
+        """Serialize datetime with UTC timezone indicator."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
     
     class Config:
         from_attributes = True
