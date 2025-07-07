@@ -1,0 +1,130 @@
+1. ✅ Environment Variable Name
+❓ What environment variable should we use? ENV, ENVIRONMENT, or REPLIT_ENV?
+
+Recommendation: Use ENV — it's concise and commonly supported.
+
+But before finalizing, check your current setup:
+
+bash
+Copy
+Edit
+print(os.environ)  # Temporarily in startup logs or a test endpoint
+If nothing is set, define it in .env like:
+
+env
+Copy
+Edit
+ENV=production
+And read it in Python:
+
+python
+Copy
+Edit
+IS_PRODUCTION = os.getenv("ENV") == "production"
+✅ Keep it consistent across cookie logic and other env-sensitive toggles.
+
+2. 🔍 Error Response Structure
+❓ Should we check response.status === 401 or also look for error messages?
+
+Answer: Check only response.status === 401.
+
+JWT expiry or invalid tokens always return 401 Unauthorized
+
+Avoid relying on message strings — they're implementation-specific and fragile
+
+✅ Add this log in frontend before retry:
+js
+Copy
+Edit
+if (response.status === 401) {
+  console.warn("Access token expired or invalid – attempting refresh.");
+}
+And test with:
+
+Expired token
+
+Missing token
+
+Malformed token
+
+You’ll almost always get 401.
+
+3. 🔍 Cookie Settings Consistency
+❓ Should we update all cookie-setting locations to use IS_PRODUCTION?
+
+Answer: Yes – all cookie writes should follow the same rule for secure, httponly, and samesite.
+
+Update in:
+
+Location	Cookie Type
+/login	Access + Refresh
+/auth/google/callback	Access + Refresh
+/auth/refresh	New Access Token
+/logout	Clear both cookies
+
+🔁 Centralize in a utility like set_auth_cookies(response, access_token, refresh_token) to avoid duplication.
+
+4. 🔍 Frontend Error Handling Integration
+❓ Use alert() or flash-style UI for errors in secureFetch()?
+
+Answer: Match existing pattern — if your app uses alert() now, keep that for consistency until you're ready for a better UI.
+
+In secureFetch:
+
+js
+Copy
+Edit
+if (!response.ok) {
+  alert("Session expired or unauthorized. Please log in again.");
+}
+Later, upgrade to flash/toast-style messaging. You could even expose an optional callback:
+
+js
+Copy
+Edit
+secureFetch(url, options, onAuthFail = () => alert(...));
+5. 🔄 Token Refresh Race Conditions
+❓ What if multiple API calls fail and all try to refresh?
+
+Answer: Yes, this is a real risk. You need refresh queuing (a refresh lock).
+
+✅ Add this in JS:
+js
+Copy
+Edit
+let isRefreshing = false;
+let refreshPromise = null;
+
+async function secureFetch(url, options = {}) {
+  let response = await fetch(url, { ...options, credentials: 'include' });
+
+  if (response.status === 401) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      }).finally(() => {
+        isRefreshing = false;
+      });
+    }
+
+    const refreshRes = await refreshPromise;
+    if (!refreshRes.ok) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "/login";
+      return;
+    }
+
+    // Retry original request
+    response = await fetch(url, { ...options, credentials: 'include' });
+  }
+
+  return response;
+}
+✅ This avoids parallel refresh attempts and maintains correct retry behavior.
+
+6. 🎨 User Experience During Refresh
+❓ Should there be a loading indicator?
+
+Answer: Keep refresh silent for now — unless the delay is noticeable.
