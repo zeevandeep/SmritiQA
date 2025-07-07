@@ -434,11 +434,10 @@
         
         function submitFeedback(reflectionId, feedback) {
             const feedbackValue = parseInt(feedback);
-            fetch(`/api/v1/reflections/${reflectionId}/feedback`, {
+            secureFetch(`/api/v1/reflections/${reflectionId}/feedback`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ feedback: feedbackValue }),
-                credentials: 'include'
+                body: JSON.stringify({ feedback: feedbackValue })
             })
             .then(response => {
                 if (!response.ok) throw new Error('Failed to submit feedback');
@@ -509,10 +508,9 @@
                 const reflectionId = element.id.replace('reflection-', '');
                 const hasNewBadge = element.querySelector('.badge');
                 if (hasNewBadge && hasNewBadge.textContent === 'New') {
-                    fetch(`/api/v1/reflections/${reflectionId}/mark-reflected`, {
+                    secureFetch(`/api/v1/reflections/${reflectionId}/mark-reflected`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include'
+                        headers: { 'Content-Type': 'application/json' }
                     }).catch(err => console.error('Error marking reflection as viewed:', err));
                 }
             });
@@ -533,6 +531,9 @@
         
         // Mobile menu functionality - REMOVED (handled by bottom navigation)
     </script>
+    
+    <!-- Secure Fetch Utility -->
+    <script src="/static/js/secureFetch.js"></script>
     
     <!-- PWA Install Prompt -->
     <script src="/static/install-prompt.js"></script>
