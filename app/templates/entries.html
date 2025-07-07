@@ -279,14 +279,13 @@
                     
                     // Add each session to the list
                     sessions.forEach(session => {
-                        // Parse UTC timestamp and convert to user's local timezone
-                        const dateObj = new Date(session.created_at); // Now handles UTC with 'Z' suffix properly
-                        const formattedDate = dateObj.toLocaleDateString(undefined, { 
+                        const dateObj = new Date(session.created_at);
+                        const formattedDate = dateObj.toLocaleDateString('en-US', { 
                             year: 'numeric', 
                             month: 'long', 
                             day: 'numeric' 
                         });
-                        const formattedTime = dateObj.toLocaleTimeString(undefined, {
+                        const formattedTime = dateObj.toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit'
                         });

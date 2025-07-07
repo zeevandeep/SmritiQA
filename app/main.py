@@ -7,10 +7,10 @@ import os
 import uuid
 import requests
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,29 +22,6 @@ from app.config import settings
 from app.db.database import init_db, get_db
 from app.repositories import user_repository
 from app.utils.jwt_utils import verify_access_token, verify_refresh_token, generate_access_token
-
-
-class UTCJSONResponse(JSONResponse):
-    """Custom JSON response that properly serializes datetime objects with UTC timezone."""
-    
-    def render(self, content: Any) -> bytes:
-        import json
-        from datetime import datetime
-        
-        def default(obj):
-            if isinstance(obj, datetime):
-                # Ensure the datetime is timezone-aware UTC
-                if obj.tzinfo is None:
-                    # Assume naive datetime is UTC
-                    obj = obj.replace(tzinfo=timezone.utc)
-                else:
-                    # Convert to UTC if it has timezone info
-                    obj = obj.astimezone(timezone.utc)
-                # Return ISO format with 'Z' suffix
-                return obj.isoformat().replace('+00:00', 'Z')
-            return str(obj)
-        
-        return json.dumps(content, default=default, ensure_ascii=False).encode("utf-8")
 
 # Create FastAPI application
 app = FastAPI(
@@ -760,14 +737,6 @@ async def logout(request: Request):
 def health():
     """Health check endpoint."""
     return {"status": "ok"}
-
-# Configure API router to use custom JSON response for proper timezone handling
-from fastapi.routing import APIRoute
-
-# Apply custom JSON response to all API routes
-for route in api_v1_router.routes:
-    if isinstance(route, APIRoute):
-        route.response_class = UTCJSONResponse
 
 # Include API routers (after HTML routes)
 app.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
