@@ -7,7 +7,7 @@ from fastapi import APIRouter
 
 from app.api.v1.routes import users, sessions, health, nodes, edges, reflections, audio, auth, google_oauth
 
-# Create main v1 router
+# Create main v1 router with custom JSON response for proper timezone handling
 router = APIRouter()
 
 # Include route modules
