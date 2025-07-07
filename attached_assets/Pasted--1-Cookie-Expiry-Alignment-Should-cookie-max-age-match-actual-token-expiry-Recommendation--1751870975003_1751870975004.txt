@@ -1,0 +1,128 @@
+✅ 1. Cookie Expiry Alignment
+❓ Should cookie.max_age match actual token expiry?
+
+✔️ Recommendation: Yes — align them precisely.
+Otherwise, you get weird edge cases like:
+
+Cookie expiring before JWT token (user is logged in but can’t make requests)
+
+Cookie lingering after JWT expiry (requests always fail)
+
+✅ For access token:
+If ACCESS_TOKEN_EXPIRY = timedelta(minutes=30), then:
+
+python
+Copy
+Edit
+response.set_cookie(..., max_age=1800)
+✅ For refresh token:
+If REFRESH_TOKEN_EXPIRY = timedelta(days=90), then:
+
+python
+Copy
+Edit
+response.set_cookie(..., max_age=7776000)  # 90 * 24 * 60 * 60
+🔄 Keep the expiry logic in sync between:
+
+JWT utility (create_access_token())
+
+Cookie setting (set_auth_cookies())
+
+If possible, centralize expiry config in config.py and reference from both places.
+
+✅ 2. Test Endpoint Strategy
+❓ Use real expiry or a test endpoint like /api/test-token-expired?
+
+✔️ Recommendation: Do both — but start with the test endpoint.
+🧪 Test Endpoint Benefits:
+Immediate testing without waiting for real expiry
+
+Can simulate any auth failure (401, 403, etc.)
+
+Easier to verify secureFetch fallback logic
+
+Example:
+
+python
+Copy
+Edit
+@app.get("/api/test-token-expired")
+def force_expired_token():
+    raise HTTPException(status_code=401, detail="Simulated token expiry")
+Once that flow is solid, then:
+
+Use access_token_expires=timedelta(seconds=10) to simulate real expiry
+
+Validate production-like behavior
+
+✅ 3. Frontend Architecture Pattern
+❓ Global secureFetch utility or per-page duplication?
+
+✔️ Recommendation: Use a global utility script
+You're building a PWA-style app with shared templates. Keep secureFetch in a shared file, e.g.,:
+
+txt
+Copy
+Edit
+/static/js/secureFetch.js
+Then include it in base layout:
+
+html
+Copy
+Edit
+<script src="/static/js/secureFetch.js"></script>
+Or via Jinja:
+
+html
+Copy
+Edit
+{% include 'components/scripts.html' %}
+This keeps things DRY, allows future enhancements (loading spinner, retries, logging), and avoids inconsistency.
+
+✅ 4. Error Message Consistency
+❓ Use alert() or flash() system on refresh failure?
+
+✔️ Recommendation: Use flash() for consistency
+You're already using:
+
+python
+Copy
+Edit
+flash(request, "error", "Session expired. Please log in again.")
+Update frontend to redirect with flash URL:
+
+js
+Copy
+Edit
+window.location.href = "/login?flash=session_expired";
+Then in login() route:
+
+python
+Copy
+Edit
+if request.query_params.get("flash") == "session_expired":
+    flash(request, "error", "Session expired. Please log in again.")
+✅ Cleaner UX, consistent message styling, and localized control.
+
+✅ 5. Refresh Token Duration Sync
+❓ Does refresh token expiry in DB match cookie lifetime?
+
+✔️ Recommendation: Confirm and align both
+If your refresh token is stored in a DB table like:
+
+sql
+Copy
+Edit
+refresh_token (id, user_id, expires_at, ... )
+Then:
+
+JWT creation should use expires_delta = timedelta(days=90)
+
+DB field expires_at should be set to match
+
+Cookie should be:
+
+python
+Copy
+Edit
+max_age = 60 * 60 * 24 * 90  # 90 days
