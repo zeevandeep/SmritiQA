@@ -387,7 +387,10 @@ def generate_single_reflection_for_user(
     user_id: UUID
 ) -> Dict[str, Any]:
     """
-    Generate a single reflection for a user from their strongest unprocessed edge.
+    Generate a single reflection for a user using iterative edge selection.
+    
+    Tries multiple edges in order of strength until finding one that produces
+    a valid chain (minimum 3 nodes) for reflection generation.
     
     Args:
         db: Database session.
@@ -401,106 +404,126 @@ def generate_single_reflection_for_user(
     stats = {
         'reflections_created': 0,
         'edges_processed': 0,
-        'errors': 0
+        'errors': 0,
+        'attempts_made': 0
     }
     
-    # Get unprocessed edges for the specific user
-    edges = edge_repository.get_unprocessed_edges(db, user_id)
-    
-    if not edges:
-        logger.info(f"No unprocessed edges found for user {user_id}")
-        return stats
+    # Maximum number of edges to try before giving up
+    MAX_ATTEMPTS = int(os.environ.get("MAX_REFLECTION_ATTEMPTS", "10"))
+    attempt_count = 0
     
     try:
-        # Calculate combined scores for all edges
-        edges_with_scores = []
-        now = datetime.now()
-        
-        for edge in edges:
-            # Calculate days since creation for decay factor
-            days_since_creation = 7  # Default value
+        while attempt_count < MAX_ATTEMPTS:
+            # Get current unprocessed edges (refreshed each iteration)
+            edges = edge_repository.get_unprocessed_edges(db, user_id)
             
-            if hasattr(edge, 'created_at') and edge.created_at:
-                days_since_creation = max(0, (now - edge.created_at).days)
+            if not edges:
+                logger.info(f"No more unprocessed edges found for user {user_id} after {attempt_count} attempts")
+                break
             
-            # Calculate decay value and combined score
-            decay_value = 1.0 / (1.0 + (days_since_creation / 7.0))
-            combined_score = float(edge.match_strength) + (0.3 * decay_value)
+            attempt_count += 1
+            stats['attempts_made'] = attempt_count
             
-            edges_with_scores.append({
-                'edge': edge,
-                'combined_score': combined_score
-            })
-        
-        # Sort edges by combined score in descending order
-        edges_with_scores.sort(key=lambda x: x['combined_score'], reverse=True)
-        
-        # Select only the strongest edge for reflection
-        strongest_edge = edges_with_scores[0]['edge']
-        logger.info(f"Selected strongest edge {strongest_edge.id} for reflection with score {edges_with_scores[0]['combined_score']}")
-        
-        # Convert the edge to a dictionary for easier handling
-        edge_dict = {
-            'id': str(strongest_edge.id),
-            'from_node_id': strongest_edge.from_node,
-            'to_node_id': strongest_edge.to_node,
-            'edge_type': strongest_edge.edge_type,
-            'match_strength': strongest_edge.match_strength,
-            'explanation': strongest_edge.explanation
-        }
-        
-        # Build a chain of nodes from this edge
-        visited_nodes = set()
-        chain = build_node_chain(db, edge_dict, user_id, visited_nodes)
-        
-        if len(chain) < 3:
-            logger.warning(f"Chain too short for edge: {strongest_edge.id}, marking as processed (minimum 3 nodes required)")
-            edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
-            stats['edges_processed'] += 1
-            return stats
-        
-        # Collect all edges connecting nodes in the chain
-        node_ids = [UUID(node.get('id')) for node in chain]
-        edges_for_chain = collect_edges_for_chain(db, node_ids)
-        
-        # Generate a reflection from the chain
-        reflection_data = generate_reflection_from_chain(chain, edges_for_chain, user_id)
-        
-        if reflection_data and isinstance(reflection_data, dict) and reflection_data.get('success', False):
-            # Create proper ReflectionCreate object from the dict
-            reflection_create = ReflectionCreate(
-                user_id=UUID(reflection_data['user_id']),
-                node_ids=[UUID(nid) for nid in reflection_data['node_ids']],
-                edge_ids=[UUID(eid) for eid in reflection_data['edge_ids']] if 'edge_ids' in reflection_data else [],
-                generated_text=reflection_data['generated_text'],
-                confidence_score=reflection_data['confidence_score']
-            )
+            # Calculate combined scores for all remaining edges
+            edges_with_scores = []
+            now = datetime.now()
             
-            # Create the reflection in the database
-            reflection = reflection_repository.create_reflection(db, reflection_create)
-            logger.info(f"Created reflection: {reflection.id}")
+            for edge in edges:
+                # Calculate days since creation for decay factor
+                days_since_creation = 7  # Default value
+                
+                if hasattr(edge, 'created_at') and edge.created_at:
+                    days_since_creation = max(0, (now - edge.created_at).days)
+                
+                # Calculate decay value and combined score
+                decay_value = 1.0 / (1.0 + (days_since_creation / 7.0))
+                combined_score = float(edge.match_strength) + (0.3 * decay_value)
+                
+                edges_with_scores.append({
+                    'edge': edge,
+                    'combined_score': combined_score
+                })
             
-            # Mark the starting edge as processed
-            edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
+            # Sort edges by combined score in descending order
+            edges_with_scores.sort(key=lambda x: x['combined_score'], reverse=True)
             
-            stats['reflections_created'] = 1
-            stats['edges_processed'] = 1
-            stats['reflection'] = {
-                'id': str(reflection.id),
-                'generated_text': reflection.generated_text,
-                'confidence_score': reflection.confidence_score,
-                'generated_at': reflection.generated_at.isoformat()
+            # Select the strongest remaining edge for this attempt
+            strongest_edge = edges_with_scores[0]['edge']
+            logger.info(f"Attempt {attempt_count}: Selected edge {strongest_edge.id} with score {edges_with_scores[0]['combined_score']}")
+            
+            # Convert the edge to a dictionary for easier handling
+            edge_dict = {
+                'id': str(strongest_edge.id),
+                'from_node_id': strongest_edge.from_node,
+                'to_node_id': strongest_edge.to_node,
+                'edge_type': strongest_edge.edge_type,
+                'match_strength': strongest_edge.match_strength,
+                'explanation': strongest_edge.explanation
             }
+            
+            # Build a chain of nodes from this edge
+            visited_nodes = set()
+            chain = build_node_chain(db, edge_dict, user_id, visited_nodes)
+            
+            if len(chain) < 3:
+                logger.info(f"Chain too short for edge {strongest_edge.id} ({len(chain)} nodes), marking as processed and trying next edge")
+                edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
+                stats['edges_processed'] += 1
+                continue  # Try next edge
+            
+            logger.info(f"Found valid chain with {len(chain)} nodes for edge {strongest_edge.id}")
+            
+            # Collect all edges connecting nodes in the chain
+            node_ids = [UUID(node.get('id')) for node in chain]
+            edges_for_chain = collect_edges_for_chain(db, node_ids)
+            
+            # Generate a reflection from the chain
+            reflection_data = generate_reflection_from_chain(chain, edges_for_chain, user_id)
+            
+            if reflection_data and isinstance(reflection_data, dict) and reflection_data.get('success', False):
+                # SUCCESS: Create proper ReflectionCreate object from the dict
+                reflection_create = ReflectionCreate(
+                    user_id=UUID(reflection_data['user_id']),
+                    node_ids=[UUID(nid) for nid in reflection_data['node_ids']],
+                    edge_ids=[UUID(eid) for eid in reflection_data['edge_ids']] if 'edge_ids' in reflection_data else [],
+                    generated_text=reflection_data['generated_text'],
+                    confidence_score=reflection_data['confidence_score']
+                )
+                
+                # Create the reflection in the database
+                reflection = reflection_repository.create_reflection(db, reflection_create)
+                logger.info(f"Successfully created reflection: {reflection.id} after {attempt_count} attempts")
+                
+                # Mark the starting edge as processed
+                edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
+                
+                stats['reflections_created'] = 1
+                stats['edges_processed'] += 1
+                stats['reflection'] = {
+                    'id': str(reflection.id),
+                    'generated_text': reflection.generated_text,
+                    'confidence_score': reflection.confidence_score,
+                    'generated_at': reflection.generated_at.isoformat()
+                }
+                
+                # Return immediately on success
+                return stats
+            else:
+                logger.warning(f"Failed to generate reflection for edge {strongest_edge.id}, marking as processed and trying next edge")
+                edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
+                stats['edges_processed'] += 1
+                stats['errors'] += 1
+                continue  # Try next edge
+                
+        # If we reach here, we've either exhausted all attempts or all edges
+        if attempt_count >= MAX_ATTEMPTS:
+            logger.warning(f"Reached maximum attempts ({MAX_ATTEMPTS}) for user {user_id} without generating reflection")
         else:
-            logger.warning(f"Failed to generate reflection for edge: {strongest_edge.id}")
-            # Mark the edge as processed anyway to avoid retrying indefinitely
-            edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
-            stats['edges_processed'] = 1
-            stats['errors'] = 1
+            logger.info(f"No more unprocessed edges available for user {user_id} after {attempt_count} attempts")
             
     except Exception as e:
         logger.error(f"Error generating reflection for user {user_id}: {e}", exc_info=True)
-        stats['errors'] = 1
+        stats['errors'] += 1
     
     return stats
 

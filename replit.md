@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Iterative Reflection Generation Implemented**: Enhanced reflection generation algorithm to try multiple edges until finding a valid chain (≥3 nodes). Previously, if the strongest edge couldn't form a sufficient chain, no reflection was generated. Now the system iteratively tries up to 10 edges in order of strength, dramatically improving success rate for new users with limited data
 - **Reflection Generation Algorithm Documentation Updated**: Corrected technical documentation to accurately reflect the unidirectional edge system and backward-only chain building algorithm. Reflection generation uses strongest edge selection, random backward traversal through incoming edges, and requires minimum 3-node chains for meaningful insights
 - **JWT Token Refresh System Complete**: Implemented comprehensive automatic token refresh system to resolve "Error saving journal entry" when access tokens expire. Added centralized AUTH_CONFIG in config.py, environment-aware cookie security settings, secureFetch.js utility with race condition prevention, and security headers middleware. System now automatically refreshes expired access tokens and retries failed requests transparently to users. Extended secureFetch implementation across all frontend templates (journal.html, entries.html, clean_reflections.html, generate_reflection_page.html, reflections.html) ensuring consistent token refresh behavior throughout the entire application
 - **Timezone Display Fix Complete**: Successfully resolved journal entries displaying in GMT/UTC instead of user's local timezone (IST). Implemented Pydantic field serializers for proper UTC timezone indicators with 'Z' suffix in API responses. Updated frontend JavaScript to use browser locale settings and automatically convert UTC timestamps to local timezone with AM/PM format. Journal entries now display correctly in user's local time zone - confirmed working by user testing
@@ -94,11 +95,13 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 6. **Reflection Generation**
    - **Manual process only** - triggered when user clicks "Generate Reflection" button
-   - **Edge Selection**: Identifies strongest unprocessed edge using combined score (match_strength + decay_factor)
+   - **Iterative Edge Selection**: Tries multiple edges in strength order until finding valid chain (≥3 nodes)
+   - **Edge Scoring**: Combined score = match_strength + (0.3 × decay_factor) prioritizes recent, strong connections
    - **Backward Chain Building**: Traces thought progression by following edges backward from selected edge
    - **Unidirectional Edges**: All edges are one-way relationships (from_node → to_node)
    - **Random Backward Traversal**: Randomly selects from available incoming edges to build causal history
    - **Chain Requirements**: Minimum 3 nodes, maximum 20 nodes, nodes must be ≤90 days old
+   - **Attempt Limits**: Maximum 10 edge attempts (configurable via MAX_REFLECTION_ATTEMPTS env var)
    - **AI Generation**: GPT-4o creates empathetic reflections from thought sequences with confidence scores
 
 ### Database Schema
