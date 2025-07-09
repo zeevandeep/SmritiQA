@@ -769,29 +769,4 @@ app.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
 @app.on_event("startup")
 async def startup_event():
     """Initialize application at startup."""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    try:
-        logger.info("Starting application initialization...")
-        
-        # Initialize database
-        init_db()
-        logger.info("Database initialized successfully")
-        
-        # Initialize encryption system with fail-fast behavior
-        from app.utils.encryption import init_encryption
-        init_encryption()
-        logger.info("Encryption system initialized successfully")
-        
-        # Verify encryption is actually working
-        from app.utils.encryption import get_encryption
-        encryption = get_encryption()
-        if not encryption.is_encryption_enabled():
-            raise RuntimeError("Encryption system failed to initialize properly")
-        
-        logger.info("Application startup completed successfully")
-        
-    except Exception as e:
-        logger.error(f"CRITICAL: Application startup failed: {e}")
-        raise RuntimeError(f"Application startup failed: {e}")
+    init_db()

@@ -15,32 +15,9 @@ class WsgiAdapter:
     
     def __init__(self, asgi_app):
         self.asgi_app = asgi_app
-        self._initialized = False
-        
-    def _ensure_initialization(self):
-        """Ensure application is properly initialized."""
-        if not self._initialized:
-            try:
-                # Initialize database
-                from app.db.database import init_db
-                init_db()
-                
-                # Initialize encryption
-                from app.utils.encryption import init_encryption
-                init_encryption()
-                
-                self._initialized = True
-                print("WSGI adapter: Application initialized successfully")
-                
-            except Exception as e:
-                print(f"WSGI adapter: Initialization failed: {e}")
-                raise
         
     def __call__(self, environ, start_response):
         """WSGI entry point."""
-        
-        # Ensure initialization happens before first request
-        self._ensure_initialization()
         
         # Create event loop for this request
         try:
