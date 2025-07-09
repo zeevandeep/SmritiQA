@@ -249,24 +249,46 @@ def _reset_encryption_for_tests():
 
 def encrypt_transcript(transcript: str) -> str:
     """
-    Convenience function to encrypt a transcript.
+    Convenience function to encrypt a transcript with fail-fast error handling.
     
     Args:
         transcript: The raw transcript text to encrypt
         
     Returns:
         str: Encrypted transcript
+        
+    Raises:
+        RuntimeError: If encryption system is not initialized
     """
-    return get_encryption().encrypt_transcript(transcript)
+    encryption = get_encryption()
+    if not encryption.is_encryption_enabled():
+        logger.error("CRITICAL: Encryption system is not initialized - preventing plaintext storage")
+        raise RuntimeError("Encryption system is not initialized. This would store plaintext data.")
+    
+    logger.debug(f"Encrypting transcript of length {len(transcript)}")
+    result = encryption.encrypt_transcript(transcript)
+    logger.debug(f"Encryption successful, result length {len(result)}")
+    return result
 
 def decrypt_transcript(encrypted_transcript: str) -> str:
     """
-    Convenience function to decrypt a transcript.
+    Convenience function to decrypt a transcript with fail-fast error handling.
     
     Args:
         encrypted_transcript: Encrypted transcript text
         
     Returns:
         str: Decrypted transcript
+        
+    Raises:
+        RuntimeError: If encryption system is not initialized
     """
-    return get_encryption().decrypt_transcript(encrypted_transcript)
+    encryption = get_encryption()
+    if not encryption.is_encryption_enabled():
+        logger.error("CRITICAL: Encryption system is not initialized - cannot decrypt data")
+        raise RuntimeError("Encryption system is not initialized. Cannot decrypt data.")
+    
+    logger.debug(f"Decrypting transcript of length {len(encrypted_transcript)}")
+    result = encryption.decrypt_transcript(encrypted_transcript)
+    logger.debug(f"Decryption successful, result length {len(result)}")
+    return result
