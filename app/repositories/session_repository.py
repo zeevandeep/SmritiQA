@@ -77,10 +77,17 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     # Encrypt transcript before storing
     if session_data.get('raw_transcript'):
+        logger.error("🔥 BRANCH A: About to encrypt transcript")
         session_data['raw_transcript'] = get_encryption().encrypt_transcript(session_data['raw_transcript'])
+        logger.error("🔥 BRANCH A: Encryption completed")
+    else:
+        logger.error("🔥 BRANCH B: No raw_transcript to encrypt")
     
+    logger.error("🔥 REPO: Creating Session object")
     db_session = Session(**session_data)
+    logger.error("🔥 REPO: Adding to database")
     db.add(db_session)
+    logger.error("🔥 REPO: Committing transaction")
     db.commit()
     db.refresh(db_session)
     
