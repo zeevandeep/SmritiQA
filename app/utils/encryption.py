@@ -26,11 +26,12 @@ class DatabaseEncryption:
     def _initialize_encryption(self):
         """Initialize the encryption key from environment variable."""
         try:
-            # Get encryption key from environment
+            # Get encryption key from environment (Replit secrets)
             encryption_key = os.environ.get('DATABASE_ENCRYPTION_KEY')
             
             if not encryption_key:
                 logger.warning("DATABASE_ENCRYPTION_KEY not set - encryption disabled")
+                logger.info("Set DATABASE_ENCRYPTION_KEY in Replit secrets to enable encryption")
                 return
             
             # Derive key using PBKDF2
