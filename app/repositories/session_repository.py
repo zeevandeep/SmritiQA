@@ -68,7 +68,12 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error("🔥 REPO: create_session called")
+    
     session_data = session.model_dump()
+    logger.error(f"🔥 REPO: session_data extracted: {session_data}")
     
     # Encrypt transcript before storing
     if session_data.get('raw_transcript'):

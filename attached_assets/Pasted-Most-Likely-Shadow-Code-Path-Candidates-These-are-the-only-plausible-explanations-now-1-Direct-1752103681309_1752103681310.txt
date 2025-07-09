@@ -1,0 +1,98 @@
+Most Likely Shadow Code Path Candidates
+These are the only plausible explanations now:
+
+1. 🔴 Direct SQLAlchemy usage in the route handler
+Someone is doing:
+
+python
+Copy
+Edit
+db.add(session_model)
+db.commit()
+Instead of:
+
+python
+Copy
+Edit
+session_repository.create_session(db, session_data)
+🔍 How to confirm:
+Search the whole repo for:
+
+python
+Copy
+Edit
+Session(  # instantiating model directly
+db.add(
+db.commit()
+2. 🟠 Async background task that writes sessions
+If session creation or chunked audio processing is done in background tasks (e.g., background_tasks.add_task(...)), they may bypass encryption.
+
+🔍 How to confirm:
+Check for usage of background task queues, asyncio.create_task(...), or similar inside session/audio handling logic.
+
+3. 🟠 Old version of create_session() used
+There may be duplicate versions of create_session() — an older one without encryption logic still wired into the app.
+
+🔍 How to confirm:
+Search for:
+
+python
+Copy
+Edit
+def create_session(
+And verify if there are multiple implementations — especially outside session_repository.py.
+
+4. 🟡 Misconfigured DI or Service Layer
+If there's a service layer between the API and repository, and it has its own create_session() logic, it may not call the correct repo method.
+
+🔍 How to confirm:
+Look for anything like session_service.create_session() and verify what that calls internally.
+
+5. 🟡 Testing/Debug code still wired to production
+Someone may have temporarily added a bypass in the API route for faster testing, which was never removed.
+
+✅ What’s NOT the Problem
+You can now rule out:
+
+❌ Encryption logic: working and tested
+
+❌ Environment variable or init logic
+
+❌ FastAPI route not mapped
+
+❌ Singleton pattern or get_encryption() issues
+
+🧪 Next Steps — High Certainty Debug Checklist
+Search entire project:
+
+bash
+Copy
+Edit
+grep -r "db.add(" .
+grep -r "raw_transcript" .
+Trace actual call from:
+POST /api/v1/sessions → What exactly does it call? Open routes/sessions.py. Does it call repo or model directly?
+
+Add a dummy log inside routes/sessions.py:
+
+python
+Copy
+Edit
+logger.error("🔥 ROUTE: POST /sessions called")
+Confirm if the current route is the one you think it is.
+
+Add a log inside model init, if needed:
+
+python
+Copy
+Edit
+class Session(Base):
+    def __init__(...):
+        logger.error("🔥 Model instantiated directly")
+🛑 Critical Fix Direction
+Once you find the shadow path:
+
+✅ Replace direct DB writes with session_repository.create_session(...)
+✅ Ensure encrypt_transcript() is the only way transcripts enter the DB
+✅ Add a failsafe test: reject session creation if raw_transcript is in plaintext (optional)
+

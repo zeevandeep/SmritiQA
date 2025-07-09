@@ -50,8 +50,9 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
         )
     
     # Create the session and return it
+    logger.error("🔥 ROUTE: About to call session_repository.create_session")
     created_session = session_repository.create_session(db=db, session=session)
-    logger.info(f"Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
+    logger.error(f"🔥 ROUTE: Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
     return created_session
 
 
