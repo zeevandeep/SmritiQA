@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session as DbSession
 
 from app.models.models import Session
 from app.schemas.schemas import SessionCreate
+from app.utils.encryption import encrypt_transcript, decrypt_transcript
 
 
 def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
@@ -21,7 +22,11 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
     Returns:
         Session object if found, None otherwise.
     """
-    return db.query(Session).filter(Session.id == session_id).first()
+    session = db.query(Session).filter(Session.id == session_id).first()
+    if session and session.raw_transcript:
+        # Decrypt transcript when reading from database
+        session.raw_transcript = decrypt_transcript(session.raw_transcript)
+    return session
 
 
 def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 100) -> List[Session]:
@@ -37,12 +42,19 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
     Returns:
         List of Session objects.
     """
-    return db.query(Session)\
+    sessions = db.query(Session)\
         .filter(Session.user_id == user_id)\
         .order_by(Session.created_at.desc())\
         .offset(skip)\
         .limit(limit)\
         .all()
+    
+    # Decrypt transcripts for all sessions
+    for session in sessions:
+        if session.raw_transcript:
+            session.raw_transcript = decrypt_transcript(session.raw_transcript)
+    
+    return sessions
 
 
 def create_session(db: DbSession, session: SessionCreate) -> Session:
@@ -56,10 +68,21 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
-    db_session = Session(**session.model_dump())
+    session_data = session.model_dump()
+    
+    # Encrypt transcript before storing
+    if session_data.get('raw_transcript'):
+        session_data['raw_transcript'] = encrypt_transcript(session_data['raw_transcript'])
+    
+    db_session = Session(**session_data)
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
+    
+    # Decrypt transcript for return value
+    if db_session.raw_transcript:
+        db_session.raw_transcript = decrypt_transcript(db_session.raw_transcript)
+    
     return db_session
 
 
@@ -75,13 +98,20 @@ def update_session_transcript(db: DbSession, session_id: UUID, transcript: str) 
     Returns:
         Updated Session object if found, None otherwise.
     """
-    db_session = get_session(db, session_id)
+    # Get session without decryption (direct database query)
+    db_session = db.query(Session).filter(Session.id == session_id).first()
     if db_session is None:
         return None
     
-    db_session.raw_transcript = transcript
+    # Encrypt transcript before storing
+    db_session.raw_transcript = encrypt_transcript(transcript)
     db.commit()
     db.refresh(db_session)
+    
+    # Decrypt transcript for return value
+    if db_session.raw_transcript:
+        db_session.raw_transcript = decrypt_transcript(db_session.raw_transcript)
+    
     return db_session
 
 
