@@ -1,0 +1,93 @@
+✅ 1. Where to Call init_encryption()?
+Current Startup Code:
+python
+Copy
+Edit
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application at startup."""
+    init_db()
+✅ Recommendation: YES, add init_encryption() to this existing startup hook
+No need for a second @app.on_event("startup") unless there's modular separation.
+
+Update it to:
+
+python
+Copy
+Edit
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application at startup."""
+    init_db()
+    init_encryption()
+This ensures:
+
+One clear startup event
+
+Deterministic initialization order
+
+No race condition between DB and encryption init
+
+✅ This is the right place to guarantee encryption is ready before any requests are served.
+
+✅ 2. Should You Replace Direct Imports With Singleton?
+Current pattern:
+python
+Copy
+Edit
+from app.utils.encryption import encrypt_transcript
+✅ Recommendation: Yes, replace with singleton accessor
+Change to:
+
+python
+Copy
+Edit
+from app.utils.encryption import get_encryption
+
+encrypted = get_encryption().encrypt_transcript(text)
+Why?
+
+It ensures you always use the same initialized instance
+
+Prevents module-level duplication (your current bug came from this)
+
+Avoids stale keys or partial environment loading
+
+🚫 Don't rely on module-level encrypt_transcript() unless you're 100% sure it's bound to the right singleton instance. Your analysis already proved it’s not.
+
+🔒 3. Fail-Fast vs Graceful Degradation
+Your question:
+Should we fail fast (crash the app if encryption isn't initialized) or maintain graceful degradation?
+
+✅ Recommendation: Fail Fast.
+For privacy-critical systems like Smriti, failing fast is non-negotiable.
+
+Why?
+
+If encryption isn’t working, storing raw transcripts is a major data leak
+
+Silent fallback breaks user trust and may violate privacy laws
+
+Fast failure during deployment = quick debug and fix
+
+It's easier to detect bugs with loud failures than subtle ones
+
+Implementation:
+In get_encryption():
+
+python
+Copy
+Edit
+def get_encryption():
+    if _encryption_instance is None:
+        raise RuntimeError("Encryption system not initialized. Call init_encryption() at startup.")
+    return _encryption_instance
+And in the class itself:
+
+python
+Copy
+Edit
+def encrypt_transcript(self, text: str) -> str:
+    if self._fernet is None:
+        raise RuntimeError("Encryption key missing or invalid.")
+    ...
