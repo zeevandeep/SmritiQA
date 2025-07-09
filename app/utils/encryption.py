@@ -265,9 +265,9 @@ def encrypt_transcript(transcript: str) -> str:
         logger.error("CRITICAL: Encryption system is not initialized - preventing plaintext storage")
         raise RuntimeError("Encryption system is not initialized. This would store plaintext data.")
     
-    logger.debug(f"Encrypting transcript of length {len(transcript)}")
+    logger.error(f"ENCRYPT: Called from session creation - transcript length {len(transcript)}")
     result = encryption.encrypt_transcript(transcript)
-    logger.debug(f"Encryption successful, result length {len(result)}")
+    logger.error(f"ENCRYPT: Success - result length {len(result)}, original hidden: {transcript not in result}")
     return result
 
 def decrypt_transcript(encrypted_transcript: str) -> str:
