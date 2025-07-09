@@ -33,27 +33,39 @@ def read_nodes(
         skip: Number of nodes to skip.
         limit: Maximum number of nodes to return.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         List[Node]: List of nodes.
+        
+    Raises:
+        HTTPException: If access is denied.
     """
+    # Verify user has access to view nodes for this user ID
+    verify_user_access(str(user_id), current_user_id)
+    
     return node_repository.get_user_nodes(db, user_id=user_id, skip=skip, limit=limit)
 
 
 @router.get("/session/{session_id}", response_model=List[NodeSchema])
-def read_session_nodes(session_id: UUID, db: Session = Depends(get_db)):
+def read_session_nodes(
+    session_id: UUID, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_from_jwt)
+):
     """
     Get nodes for a session.
     
     Args:
         session_id: ID of the session.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         List[Node]: List of nodes.
         
     Raises:
-        HTTPException: If the session is not found.
+        HTTPException: If the session is not found or access is denied.
     """
     # Verify that the session exists
     db_session = session_repository.get_session(db, session_id=session_id)
@@ -63,23 +75,31 @@ def read_session_nodes(session_id: UUID, db: Session = Depends(get_db)):
             detail="Session not found"
         )
     
+    # Verify user has access to this session
+    verify_user_access(str(db_session.user_id), current_user_id)
+    
     return node_repository.get_session_nodes(db, session_id=session_id)
 
 
 @router.post("/session/{session_id}/process", response_model=List[NodeSchema])
-def process_session_transcript(session_id: UUID, db: Session = Depends(get_db)):
+def process_session_transcript(
+    session_id: UUID, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_from_jwt)
+):
     """
     Process a session's transcript to extract nodes.
     
     Args:
         session_id: ID of the session.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         List[Node]: List of created nodes.
         
     Raises:
-        HTTPException: If the session is not found or processing fails.
+        HTTPException: If the session is not found, access is denied, or processing fails.
     """
     # Verify that the session exists
     db_session = session_repository.get_session(db, session_id=session_id)
@@ -88,6 +108,9 @@ def process_session_transcript(session_id: UUID, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found"
         )
+    
+    # Verify user has access to this session
+    verify_user_access(str(db_session.user_id), current_user_id)
     
     # Check if the session has a transcript
     if not db_session.raw_transcript:
@@ -114,19 +137,24 @@ def process_session_transcript(session_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/{node_id}", response_model=NodeSchema)
-def read_node(node_id: UUID, db: Session = Depends(get_db)):
+def read_node(
+    node_id: UUID, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_from_jwt)
+):
     """
     Get a node by ID.
     
     Args:
         node_id: ID of the node to retrieve.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         Node: Node data.
         
     Raises:
-        HTTPException: If the node is not found.
+        HTTPException: If the node is not found or access is denied.
     """
     db_node = node_repository.get_node(db, node_id=node_id)
     if db_node is None:
@@ -134,11 +162,19 @@ def read_node(node_id: UUID, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Node not found"
         )
+    
+    # Verify user has access to this node
+    verify_user_access(str(db_node.user_id), current_user_id)
+    
     return db_node
 
 
 @router.post("/", response_model=NodeSchema, status_code=status.HTTP_201_CREATED)
-def create_node(node: NodeCreate, db: Session = Depends(get_db)):
+def create_node(
+    node: NodeCreate, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_from_jwt)
+):
     """
     Create a new node manually.
     
@@ -148,10 +184,17 @@ def create_node(node: NodeCreate, db: Session = Depends(get_db)):
     Args:
         node: Node data.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         Node: Created node data.
+        
+    Raises:
+        HTTPException: If access is denied.
     """
+    # Verify user has access to create nodes for this user ID
+    verify_user_access(str(node.user_id), current_user_id)
+    
     return node_repository.create_node(db=db, node=node)
 
 
