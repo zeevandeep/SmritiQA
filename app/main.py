@@ -770,3 +770,7 @@ app.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
 async def startup_event():
     """Initialize application at startup."""
     init_db()
+    
+    # Initialize encryption system
+    from app.utils.encryption import init_encryption
+    init_encryption()

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session as DbSession
 
 from app.models.models import Session
 from app.schemas.schemas import SessionCreate
-from app.utils.encryption import encrypt_transcript, decrypt_transcript
+from app.utils.encryption import get_encryption
 
 
 def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
@@ -25,7 +25,7 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
     session = db.query(Session).filter(Session.id == session_id).first()
     if session and session.raw_transcript:
         # Decrypt transcript when reading from database
-        session.raw_transcript = decrypt_transcript(session.raw_transcript)
+        session.raw_transcript = get_encryption().decrypt_transcript(session.raw_transcript)
     return session
 
 
@@ -52,7 +52,7 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
     # Decrypt transcripts for all sessions
     for session in sessions:
         if session.raw_transcript:
-            session.raw_transcript = decrypt_transcript(session.raw_transcript)
+            session.raw_transcript = get_encryption().decrypt_transcript(session.raw_transcript)
     
     return sessions
 
@@ -72,7 +72,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     # Encrypt transcript before storing
     if session_data.get('raw_transcript'):
-        session_data['raw_transcript'] = encrypt_transcript(session_data['raw_transcript'])
+        session_data['raw_transcript'] = get_encryption().encrypt_transcript(session_data['raw_transcript'])
     
     db_session = Session(**session_data)
     db.add(db_session)
@@ -81,7 +81,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     # Decrypt transcript for return value
     if db_session.raw_transcript:
-        db_session.raw_transcript = decrypt_transcript(db_session.raw_transcript)
+        db_session.raw_transcript = get_encryption().decrypt_transcript(db_session.raw_transcript)
     
     return db_session
 
@@ -104,13 +104,13 @@ def update_session_transcript(db: DbSession, session_id: UUID, transcript: str) 
         return None
     
     # Encrypt transcript before storing
-    db_session.raw_transcript = encrypt_transcript(transcript)
+    db_session.raw_transcript = get_encryption().encrypt_transcript(transcript)
     db.commit()
     db.refresh(db_session)
     
     # Decrypt transcript for return value
     if db_session.raw_transcript:
-        db_session.raw_transcript = decrypt_transcript(db_session.raw_transcript)
+        db_session.raw_transcript = get_encryption().decrypt_transcript(db_session.raw_transcript)
     
     return db_session
 

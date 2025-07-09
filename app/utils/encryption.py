@@ -60,14 +60,16 @@ class DatabaseEncryption:
             transcript: The raw transcript text to encrypt
             
         Returns:
-            str: Base64-encoded encrypted transcript, or original if encryption disabled
+            str: Base64-encoded encrypted transcript
+            
+        Raises:
+            RuntimeError: If encryption is not properly configured
         """
         if not transcript:
             return transcript
             
         if not self._fernet:
-            logger.warning("Encryption not available - storing transcript unencrypted")
-            return transcript
+            raise RuntimeError("Encryption key missing or invalid.")
         
         try:
             # Encrypt the transcript
@@ -81,8 +83,7 @@ class DatabaseEncryption:
             
         except Exception as e:
             logger.error(f"Failed to encrypt transcript: {e}")
-            # Fall back to unencrypted storage
-            return transcript
+            raise RuntimeError(f"Encryption failed: {e}")
     
     def decrypt_transcript(self, encrypted_transcript: str) -> str:
         """
@@ -170,17 +171,81 @@ class DatabaseEncryption:
 # Global encryption instance
 _encryption_instance = None
 
+def init_encryption():
+    """
+    Initialize the global encryption instance.
+    
+    This must be called during application startup before any encryption operations.
+    
+    Raises:
+        RuntimeError: If encryption key is invalid or initialization fails
+    """
+    global _encryption_instance
+    
+    # Get encryption key from environment
+    key = os.environ.get('DATABASE_ENCRYPTION_KEY')
+    if not key:
+        raise RuntimeError("DATABASE_ENCRYPTION_KEY environment variable not set")
+    
+    if len(key) < 16:
+        raise RuntimeError("Encryption key too short. Must be at least 16 characters.")
+    
+    try:
+        # Create encryption instance
+        encryption = DatabaseEncryption()
+        
+        # Validate encryption works with comprehensive test cases
+        test_cases = [
+            "simple text",
+            "Unicode ❤️ ✨ 🧠",
+            "Longer journal entry simulation... " * 10,
+        ]
+        
+        for test in test_cases:
+            encrypted = encryption.encrypt_transcript(test)
+            decrypted = encryption.decrypt_transcript(encrypted)
+            
+            # Validate roundtrip
+            if decrypted != test:
+                raise RuntimeError(f"Encryption roundtrip failed for test case: {test[:20]}...")
+            
+            # Validate encryption actually occurred
+            if test in encrypted:
+                raise RuntimeError("Encryption failed - original text visible in encrypted data")
+            
+            # Validate encrypted data format
+            if not isinstance(encrypted, str) or len(encrypted) < 50:
+                raise RuntimeError("Encrypted data format invalid")
+        
+        # Store the validated instance
+        _encryption_instance = encryption
+        logger.info("Encryption system initialized successfully")
+        
+    except Exception as e:
+        raise RuntimeError(f"Encryption initialization failed: {e}")
+
 def get_encryption() -> DatabaseEncryption:
     """
     Get the global encryption instance.
     
     Returns:
         DatabaseEncryption: The encryption instance
+        
+    Raises:
+        RuntimeError: If encryption has not been initialized
+    """
+    if _encryption_instance is None:
+        raise RuntimeError("Encryption system not initialized. Call init_encryption() at startup.")
+    return _encryption_instance
+
+def _reset_encryption_for_tests():
+    """
+    Reset encryption instance for testing purposes.
+    
+    WARNING: This is a test-only utility. Do not use in production code.
     """
     global _encryption_instance
-    if _encryption_instance is None:
-        _encryption_instance = DatabaseEncryption()
-    return _encryption_instance
+    _encryption_instance = None
 
 def encrypt_transcript(transcript: str) -> str:
     """
