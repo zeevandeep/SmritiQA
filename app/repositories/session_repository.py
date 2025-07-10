@@ -110,6 +110,11 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     """
     session_data = session.model_dump()
     
+    logger.info(f"[REPOSITORY] create_session called with session data: {session_data}")
+    logger.info(f"[REPOSITORY] Checking encryption conditions...")
+    logger.info(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")
+    logger.info(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}")
+    
     # Encrypt raw_transcript if it exists
     if session_data.get('raw_transcript') and session_data.get('user_id'):
         try:
