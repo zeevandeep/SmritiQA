@@ -1,0 +1,131 @@
+🔍 Root Cause Possibilities
+1. 🔁 Shadow Commit / Session Overwrite
+You're saving this:
+
+python
+Copy
+Edit
+session_data = {
+  'raw_transcript': encrypted_transcript,
+  ...
+}
+db_session = Session(**session_data)
+db.add(db_session)
+db.commit()
+But some other code later is reusing the same SessionCreate Pydantic object and calling:
+
+python
+Copy
+Edit
+Session(**session.model_dump())  # ← this contains plaintext
+This would re-create a new Session object with the old plaintext and re-save it after the encrypted one, silently overwriting it.
+
+🧠 Your logs are from the first call, but the DB reflects the second overwrite.
+
+2. 🧪 Session is created in memory but not committed
+If:
+
+The Session object is created and db.add() is called,
+
+But another error occurs before db.commit(),
+
+And no rollback or exception is logged,
+
+Then the session will appear to save — but it doesn't.
+
+Unlikely here, since db.commit() appears in logs, and is_encrypted = true is getting saved. Still, worth validating.
+
+3. 🧼 Pydantic .model_dump() used after encryption
+If you're doing something like:
+
+python
+Copy
+Edit
+session_data = session.model_dump()
+session_data["raw_transcript"] = encrypted_transcript
+Then even referencing session.model_dump() again later will regenerate the old data.
+
+❗So you MUST ensure session itself is no longer used after encryption.
+
+4. 💣 Multiple Calls to create_session()
+It’s possible the API is calling create_session() more than once. The first call encrypts, the second call saves plaintext.
+
+✅ You've already traced this, but confirm in the route:
+
+python
+Copy
+Edit
+@app.post(...)
+def create_session(...):
+    log.info("ENTRY - API route")
+    session_repository.create_session(...)  # <-- only once?
+✅ Action Plan
+1. 🚨 Add Full-Chain Fingerprinting
+To confirm if there’s a second overwrite or not, track unique SHA hashes of what’s saved.
+
+In create_session():
+
+python
+Copy
+Edit
+import hashlib
+
+hash_encrypted = hashlib.sha256(encrypted_transcript.encode()).hexdigest()
+log.info(f"[SESSION DEBUG] Encrypted transcript hash: {hash_encrypted}")
+Then later:
+
+sql
+Copy
+Edit
+SELECT raw_transcript FROM sessions ORDER BY created_at DESC LIMIT 1;
+And:
+
+python
+Copy
+Edit
+hash_db = hashlib.sha256(db_result.encode()).hexdigest()
+print(f'Database hash: {hash_db}')
+Do they match? If not — something saved new data after your call.
+
+2. ✅ Hardcode Manual Insert as Test
+In session_repository.create_session() — hardcode one dummy entry:
+
+python
+Copy
+Edit
+if session.raw_transcript == "test-overwrite-detect":
+    db.add(Session(
+        user_id=user_id,
+        raw_transcript="THIS_SHOULD_BE_IN_DB",
+        ...
+    ))
+    db.commit()
+    return
+Then POST:
+
+json
+Copy
+Edit
+{ "raw_transcript": "test-overwrite-detect", ... }
+Does "THIS_SHOULD_BE_IN_DB" appear in the database?
+
+If not — something is rolling back or overwriting after commit.
+
+3. 🧱 Final Fix Strategy
+Once confirmed:
+
+Stop using session.model_dump() after encryption.
+
+Create clean dict for encrypted data like:
+
+python
+Copy
+Edit
+session_data = {
+  "raw_transcript": encrypted_transcript,
+  "is_encrypted": True,
+  ...
+}
+Add db.flush() after db.add() and check intermediate values.
+
+Log full DB save sequence.

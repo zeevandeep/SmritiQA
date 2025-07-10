@@ -98,6 +98,21 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     duration_seconds = session.duration_seconds
     original_transcript = session.raw_transcript
     
+    # ChatGPT's hardcoded test to detect overwrite patterns
+    if original_transcript == "test-overwrite-detect":
+        logger.info(f"[OVERWRITE TEST] Detected test phrase, creating hardcoded entry")
+        test_session = Session(
+            user_id=user_id,
+            raw_transcript="THIS_SHOULD_BE_IN_DB",
+            duration_seconds=duration_seconds,
+            is_encrypted=False,
+            is_processed=False
+        )
+        db.add(test_session)
+        db.commit()
+        logger.info(f"[OVERWRITE TEST] Test session created with ID: {test_session.id}")
+        return test_session
+    
     # Encrypt raw_transcript if it exists
     if original_transcript and user_id:
         try:
@@ -110,8 +125,15 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             # Encrypt the transcript
             encrypted_transcript = encrypt_data(original_transcript, user_id_str)
             
+            # Add SHA256 fingerprint to track data integrity
+            import hashlib
+            hash_original = hashlib.sha256(original_transcript.encode()).hexdigest()
+            hash_encrypted = hashlib.sha256(encrypted_transcript.encode()).hexdigest()
+            
             logger.info(f"[ENCRYPTION DEBUG] Encryption successful, length: {len(encrypted_transcript)}")
             logger.info(f"[ENCRYPTION DEBUG] Encrypted transcript: {encrypted_transcript[:50]}...")
+            logger.info(f"[SESSION FINGERPRINT] Original hash: {hash_original}")
+            logger.info(f"[SESSION FINGERPRINT] Encrypted hash: {hash_encrypted}")
             
             # Create Session object directly with encrypted data - NO model_dump() usage
             db_session = Session(
@@ -166,10 +188,24 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     # Check what's actually in the database immediately after commit
     from sqlalchemy import text
-    result = db.execute(text("SELECT LENGTH(raw_transcript), is_encrypted, LEFT(raw_transcript, 50) FROM sessions WHERE id = :session_id"), 
+    result = db.execute(text("SELECT LENGTH(raw_transcript), is_encrypted, LEFT(raw_transcript, 50), raw_transcript FROM sessions WHERE id = :session_id"), 
                        {"session_id": str(db_session.id)}).fetchone()
     if result:
         logger.info(f"[SESSION CREATE] Database verification - length: {result[0]}, is_encrypted: {result[1]}, sample: {result[2]}")
+        
+        # Calculate hash of what's actually in database
+        import hashlib
+        hash_db = hashlib.sha256(result[3].encode()).hexdigest()
+        logger.info(f"[SESSION FINGERPRINT] Database hash: {hash_db}")
+        
+        # Check if it matches what we intended to save
+        intended_hash = hashlib.sha256((db_session.raw_transcript or '').encode()).hexdigest()
+        logger.info(f"[SESSION FINGERPRINT] Intended hash: {intended_hash}")
+        
+        if hash_db == intended_hash:
+            logger.info(f"[SESSION FINGERPRINT] ✓ MATCH - Database contains what we intended")
+        else:
+            logger.error(f"[SESSION FINGERPRINT] ✗ MISMATCH - Database was overwritten!")
     
     db.refresh(db_session)
     logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")

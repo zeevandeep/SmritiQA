@@ -33,13 +33,20 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
     Raises:
         HTTPException: If the user does not exist or access is denied.
     """
+    # Log API route entry with fingerprint
+    import logging, hashlib
+    logger = logging.getLogger(__name__)
+    
+    # Create fingerprint of incoming session data
+    session_data_str = str(session.model_dump())
+    incoming_hash = hashlib.sha256(session_data_str.encode()).hexdigest()
+    
+    logger.info(f"[API ENTRY] create_session called")
+    logger.info(f"[API FINGERPRINT] Incoming session hash: {incoming_hash}")
+    logger.info(f"Creating session with data: {session.model_dump()}")
+    
     # Verify user has access to create sessions for this user ID
     verify_user_access(str(session.user_id), current_user_id)
-    
-    # Log received session data for debugging
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Creating session with data: {session.model_dump()}")
     
     # Verify that the user exists
     user = user_repository.get_user(db, user_id=session.user_id)
@@ -49,9 +56,11 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
             detail="User not found"
         )
     
-    # Create the session and return it
+    # Create the session and return it - ONLY ONCE
+    logger.info(f"[API CALL] About to call session_repository.create_session() - ONCE ONLY")
     created_session = session_repository.create_session(db=db, session=session)
-    logger.info(f"Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
+    logger.info(f"[API EXIT] Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
+    
     return created_session
 
 
