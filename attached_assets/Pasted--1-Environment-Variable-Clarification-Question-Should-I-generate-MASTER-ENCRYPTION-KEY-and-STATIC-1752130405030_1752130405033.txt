@@ -1,0 +1,84 @@
+✅ 1. Environment Variable Clarification
+Question: Should I generate MASTER_ENCRYPTION_KEY and STATIC_ENCRYPTION_SALT for you?
+
+✅ Recommendation: I can generate them securely for you now.
+
+These should be cryptographically secure random values, base64-encoded, and never shared in plaintext in code or logs. Here's a safe sample you can use:
+
+bash
+Copy
+Edit
+# Run this in Python to generate your own safely
+import os, base64
+print("MASTER_ENCRYPTION_KEY =", base64.urlsafe_b64encode(os.urandom(32)).decode())
+print("STATIC_ENCRYPTION_SALT =", base64.urlsafe_b64encode(os.urandom(16)).decode())
+Sample (safe to regenerate on your end):
+
+ini
+Copy
+Edit
+MASTER_ENCRYPTION_KEY = "GVU3ivb1Szqf9CTFcPQx8_mDsnmTxUKFa6GXvZc8q3M="
+STATIC_ENCRYPTION_SALT = "kEOTCEQk3uObUMBDhcrJmQ=="
+✅ Add these to Replit Secrets using their UI (not .env files in versioned code).
+
+✅ 2. Migration Error Table Strategy
+Question: Should migration_errors be permanent or temporary?
+
+✅ Recommendation: Add it to models.py as a permanent table (at least during and after migration).
+
+Why?
+
+You’ll want a record of why certain entries failed migration.
+
+It’s helpful for support, bug tracing, and possibly re-attempting fixes.
+
+You can always archive or drop it later once 100% data is migrated and verified.
+
+Minimal model definition:
+
+python
+Copy
+Edit
+class MigrationError(Base):
+    __tablename__ = "migration_errors"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    session_id = Column(UUID(as_uuid=True), nullable=False)
+    error_type = Column(String)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+✅ 3. Phase 1 Implementation Scope
+Question: Should we start with full Phase 1, or just test new session encryption first?
+
+✅ Recommendation: Start with encryption infrastructure + test new sessions only.
+
+Implementation order:
+
+✅ Create encrypt_data() / decrypt_data() utilities using singleton + user-specific key
+
+✅ Use is_encrypted flag in sessions table
+
+✅ Hook it into session_repository.create_session() (only for new sessions)
+
+❌ Skip migration script for now (Phase 2)
+
+✅ Confirm new sessions are stored encrypted and retrieved correctly in the UI
+
+🔁 Once this is working end-to-end for new sessions (tested in Replit), proceed to batch migration.
+
+✅ 4. Backward Compatibility During Migration
+Question: Use is_encrypted flag to decide whether to decrypt?
+
+✅ Yes. This is the simplest and cleanest approach.
+
+In your repository get_session() function (and anywhere that reads from DB):
+
+python
+Copy
+Edit
+if session.is_encrypted:
+    transcript = decrypt_data(session.raw_transcript, user_id)
+else:
+    transcript = session.raw_transcript
+Optional: Once migration is complete, you can make encryption mandatory and drop the fallback logic.
