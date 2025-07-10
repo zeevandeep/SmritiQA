@@ -110,6 +110,10 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     """
     session_data = session.model_dump()
     
+    print(f"[REPOSITORY] create_session called with session data: {session_data}")
+    print(f"[REPOSITORY] Checking encryption conditions...")
+    print(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")
+    print(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}")
     logger.info(f"[REPOSITORY] create_session called with session data: {session_data}")
     logger.info(f"[REPOSITORY] Checking encryption conditions...")
     logger.info(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")

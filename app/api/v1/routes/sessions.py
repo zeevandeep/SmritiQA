@@ -39,6 +39,9 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
     # Log received session data for debugging
     import logging
     logger = logging.getLogger(__name__)
+    print(f"[API ENDPOINT] Creating session with data: {session.model_dump()}")
+    print(f"[API ENDPOINT] Session transcript length: {len(session.raw_transcript or '')}")
+    print(f"[API ENDPOINT] Session user_id: {session.user_id}")
     logger.info(f"[API ENDPOINT] Creating session with data: {session.model_dump()}")
     logger.info(f"[API ENDPOINT] Session transcript length: {len(session.raw_transcript or '')}")
     logger.info(f"[API ENDPOINT] Session user_id: {session.user_id}")
