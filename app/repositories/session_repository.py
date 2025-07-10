@@ -30,12 +30,21 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
     if db_session and db_session.is_encrypted and db_session.raw_transcript:
         try:
             user_id = str(db_session.user_id)
-            db_session.raw_transcript = decrypt_data(db_session.raw_transcript, user_id)
+            # Check if this looks like encrypted data (base64, longer than original)
+            if len(db_session.raw_transcript) > 100 and all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_" for c in db_session.raw_transcript):
+                db_session.raw_transcript = decrypt_data(db_session.raw_transcript, user_id)
+            else:
+                # This looks like plain text, fix the encryption flag
+                logger.warning(f"Session {session_id} marked as encrypted but contains plain text, fixing flag")
+                db_session.is_encrypted = False
+                db.commit()
         except EncryptionError as e:
             logger.error(f"Failed to decrypt session {session_id} for user {user_id}: {e}")
             _log_migration_error(db, db_session.user_id, session_id, "decryption_failed", str(e))
-            # Return None to indicate the session is corrupted
-            return None
+            # Treat as plain text if decryption fails
+            logger.warning(f"Treating session {session_id} as plain text due to decryption failure")
+            db_session.is_encrypted = False
+            db.commit()
     
     return db_session
 
@@ -65,13 +74,23 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
     for session in sessions:
         if session.is_encrypted and session.raw_transcript:
             try:
-                session.raw_transcript = decrypt_data(session.raw_transcript, str(user_id))
+                # Check if this looks like encrypted data (base64, longer than original)
+                if len(session.raw_transcript) > 100 and all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_" for c in session.raw_transcript):
+                    session.raw_transcript = decrypt_data(session.raw_transcript, str(user_id))
+                else:
+                    # This looks like plain text, fix the encryption flag
+                    logger.warning(f"Session {session.id} marked as encrypted but contains plain text, fixing flag")
+                    session.is_encrypted = False
+                    db.commit()
                 decrypted_sessions.append(session)
             except EncryptionError as e:
                 logger.error(f"Failed to decrypt session {session.id} for user {user_id}: {e}")
                 _log_migration_error(db, user_id, session.id, "decryption_failed", str(e))
-                # Skip corrupted sessions
-                continue
+                # Treat as plain text if decryption fails
+                logger.warning(f"Treating session {session.id} as plain text due to decryption failure")
+                session.is_encrypted = False
+                db.commit()
+                decrypted_sessions.append(session)
         else:
             decrypted_sessions.append(session)
     
