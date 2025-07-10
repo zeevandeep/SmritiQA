@@ -110,17 +110,21 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     """
     session_data = session.model_dump()
     
-    print(f"[REPOSITORY] create_session called with session data: {session_data}")
-    print(f"[REPOSITORY] Checking encryption conditions...")
-    print(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")
-    print(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}")
+    import sys
+    print(f"[REPOSITORY] create_session called with session data: {session_data}", flush=True)
+    print(f"[REPOSITORY] Checking encryption conditions...", flush=True)
+    print(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}", flush=True)
+    print(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}", flush=True)
+    sys.stdout.flush()
     logger.info(f"[REPOSITORY] create_session called with session data: {session_data}")
     logger.info(f"[REPOSITORY] Checking encryption conditions...")
     logger.info(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")
     logger.info(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}")
     
     # Encrypt raw_transcript if it exists
+    print(f"[REPOSITORY] About to check encryption condition...", flush=True)
     if session_data.get('raw_transcript') and session_data.get('user_id'):
+        print(f"[REPOSITORY] ENCRYPTION CONDITIONS MET - ENTERING ENCRYPTION BLOCK", flush=True)
         try:
             user_id = str(session_data['user_id'])
             original_transcript = session_data['raw_transcript']
