@@ -73,13 +73,24 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
         .limit(limit)\
         .all()
     
-    # Decrypt encrypted sessions
+    # Decrypt encrypted sessions with detached copies to prevent database overwrites
     decrypted_sessions = []
     for session in sessions:
         if session.is_encrypted and session.raw_transcript:
             try:
-                session.raw_transcript = decrypt_data(session.raw_transcript, str(user_id))
-                decrypted_sessions.append(session)
+                # CRITICAL FIX: Create detached copy to prevent overwriting database
+                # DO NOT modify session.raw_transcript directly as it will save back to database
+                decrypted_text = decrypt_data(session.raw_transcript, str(user_id))
+                
+                # Create a new Session object with decrypted data that's detached from database
+                from copy import copy
+                decrypted_session = copy(session)
+                decrypted_session.raw_transcript = decrypted_text
+                
+                # Detach from SQLAlchemy session to prevent accidental saves
+                db.expunge(decrypted_session)
+                
+                decrypted_sessions.append(decrypted_session)
             except EncryptionError as e:
                 logger.error(f"Failed to decrypt session {session.id} for user {user_id}: {e}")
                 _log_migration_error(db, user_id, session.id, "decryption_failed", str(e))
