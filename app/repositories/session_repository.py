@@ -113,6 +113,28 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
         logger.info(f"[OVERWRITE TEST] Test session created with ID: {test_session.id}")
         return test_session
     
+    # ChatGPT's poison value test to detect post-creation overwrites
+    if original_transcript == "poison-test":
+        logger.info(f"[POISON TEST] Creating encrypted session, then poisoning it")
+        # Create with encrypted data
+        encrypted_transcript = encrypt_data("Original encrypted content", str(user_id))
+        poison_session = Session(
+            user_id=user_id,
+            raw_transcript=encrypted_transcript,
+            duration_seconds=duration_seconds,
+            is_encrypted=True,
+            is_processed=False
+        )
+        db.add(poison_session)
+        db.commit()
+        logger.info(f"[POISON TEST] Session created with encrypted data")
+        
+        # Poison it post-commit
+        poison_session.raw_transcript = "POISON_OVERWRITE_SHOULD_NOT_HAPPEN"
+        db.commit()
+        logger.info(f"[POISON TEST] Session poisoned with plain text")
+        return poison_session
+    
     # Encrypt raw_transcript if it exists
     if original_transcript and user_id:
         try:
@@ -209,6 +231,17 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     db.refresh(db_session)
     logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")
+    
+    # ChatGPT's last-minute fingerprint logging before return
+    import hashlib
+    return_hash = hashlib.sha256((db_session.raw_transcript or '').encode()).hexdigest()
+    logger.warning(f"[RETURNING SESSION] ID: {db_session.id}")
+    logger.warning(f"[RETURNING SESSION] raw_transcript[:50]: {(db_session.raw_transcript or '')[:50]}")
+    logger.warning(f"[RETURNING SESSION] Hash: {return_hash}")
+    logger.warning(f"[RETURNING SESSION] Length: {len(db_session.raw_transcript or '')}")
+    
+    # ChatGPT's expunge suggestion to prevent future mutations
+    db.expunge(db_session)
     
     return db_session
 

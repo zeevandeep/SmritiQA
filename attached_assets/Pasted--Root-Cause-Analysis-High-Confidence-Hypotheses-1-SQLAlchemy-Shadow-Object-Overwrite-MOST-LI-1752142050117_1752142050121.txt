@@ -1,0 +1,102 @@
+🔬 Root Cause Analysis: High-Confidence Hypotheses
+🔁 1. SQLAlchemy Shadow Object Overwrite (MOST LIKELY)
+Mechanism:
+You're likely doing something like this in your API route or service layer:
+
+python
+Copy
+Edit
+session = SessionCreate(...)         # Pydantic object
+session_repo.create_session(session) # returns db_session
+# BUT LATER:
+db_session.raw_transcript = session.raw_transcript  # ← this line re-overwrites with plain text
+This silently rewrites the encrypted value back to plain text after encryption was done and committed.
+
+How to confirm:
+
+Add a log immediately after the API route returns (not inside create_session)
+
+python
+Copy
+Edit
+log.warning(f"[POST API] FINAL SESSION RAW_TRANSCRIPT: {db_session.raw_transcript[:50]}...")
+If this shows 130-character string (not 360 encrypted), you've confirmed overwriting.
+
+🧱 2. Model Auto-Coercion / Field Event Hook
+Check if the Session SQLAlchemy model has any:
+
+@validates('raw_transcript')
+
+@property or @hybrid_property wrappers
+
+Listeners via __mapper_args__, __init__(), or @reconstructor
+
+These can automatically transform data back to something else when the object is refreshed.
+
+💥 3. Pydantic → SQLAlchemy Mis-sync
+If you're using the same field name (raw_transcript) in both:
+
+SessionCreate (Pydantic)
+
+Session (SQLAlchemy)
+
+And passing session.model_dump() or session.raw_transcript anywhere again — it could re-overwrite encrypted value after creation.
+
+💾 4. Session Lifecycle Bug (Multiple Transactions)
+If your create_session() returns the object to an active SQLAlchemy session, and that object is then mutated later before the full request completes, the mutation is saved in the same transaction, even post-commit.
+
+🔍 Investigative Tools
+🧬 Add Last-Minute Fingerprint Logging
+In create_session() just before return:
+
+python
+Copy
+Edit
+log.warning(f"[RETURNING SESSION] ID: {db_session.id}")
+log.warning(f"raw_transcript[:50]: {db_session.raw_transcript[:50]}")
+log.warning(f"Hash: {sha256(db_session.raw_transcript.encode()).hexdigest()}")
+Then add the same log in the API route that called it — if the hashes differ, you have an overwrite post-creation.
+
+🧪 Add "Poison" Value Test
+Temporarily inject a dummy overwrite after encryption:
+
+python
+Copy
+Edit
+db_session.raw_transcript = "POISON_OVERWRITE_SHOULD_NOT_HAPPEN"
+Then commit. If DB shows "POISON...", you've found the overwrite pathway.
+
+✅ Final Fix Strategy
+🔒 Strict Object Isolation
+Replace:
+
+python
+Copy
+Edit
+session_data = session.model_dump()
+session_data["raw_transcript"] = encrypted_transcript
+db_session = Session(**session_data)
+With:
+
+python
+Copy
+Edit
+db_session = Session(
+    user_id=user_id,
+    raw_transcript=encrypted_transcript,
+    duration_seconds=session.duration_seconds,
+    is_encrypted=True,
+    ...
+)
+Never pass model_dump() once encryption begins. That ensures plain text cannot leak back in via shared object state.
+
+🧼 Immediately Detach or Expunge After Save
+To ensure no future mutations leak into the committed row:
+
+python
+Copy
+Edit
+db.add(db_session)
+db.commit()
+db.refresh(db_session)
+db.expunge(db_session)
