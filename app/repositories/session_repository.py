@@ -236,19 +236,27 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
         else:
             logger.error(f"[HASH RESULT] ✗ UNKNOWN DATA in database")
     
+    # ChatGPT's critical fix: Check ACTUAL database state BEFORE expunge
     db.refresh(db_session)
-    logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")
+    db_raw = db_session.raw_transcript or ''
+    logger.warning(f"[ACTUAL DB] Post-commit value length: {len(db_raw)}")
+    logger.warning(f"[ACTUAL DB] Post-commit value sample: {db_raw[:50]}")
     
-    # ChatGPT's last-minute fingerprint logging before return
     import hashlib
-    return_hash = hashlib.sha256((db_session.raw_transcript or '').encode()).hexdigest()
-    logger.warning(f"[RETURNING SESSION] ID: {db_session.id}")
-    logger.warning(f"[RETURNING SESSION] raw_transcript[:50]: {(db_session.raw_transcript or '')[:50]}")
-    logger.warning(f"[RETURNING SESSION] Hash: {return_hash}")
-    logger.warning(f"[RETURNING SESSION] Length: {len(db_session.raw_transcript or '')}")
+    actual_hash = hashlib.sha256(db_raw.encode()).hexdigest()
+    logger.warning(f"[ACTUAL DB] Post-commit HASH: {actual_hash}")
     
-    # ChatGPT's expunge suggestion to prevent future mutations
-    db.expunge(db_session)
+    # Compare with what we intended to save
+    if 'encrypted_transcript' in locals():
+        intended_hash = hashlib.sha256(encrypted_transcript.encode()).hexdigest()
+        logger.warning(f"[INTENDED] Hash: {intended_hash}")
+        if actual_hash == intended_hash:
+            logger.warning(f"[RESULT] ✓ Database has ENCRYPTED data")
+        else:
+            logger.error(f"[RESULT] ✗ Database was OVERWRITTEN with different data!")
+    
+    # ChatGPT's fix: REMOVE db.expunge() completely - it's not needed
+    # db.expunge(db_session)  # REMOVED - was causing verification issues
     
     return db_session
 

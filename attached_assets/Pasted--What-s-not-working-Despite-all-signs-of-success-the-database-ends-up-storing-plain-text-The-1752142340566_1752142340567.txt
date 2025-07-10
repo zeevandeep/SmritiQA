@@ -1,0 +1,78 @@
+❌ What’s not working:
+Despite all signs of success, the database ends up storing plain text.
+
+🔥 The key mistake:
+python
+Copy
+Edit
+db.expunge(db_session)
+This detaches the SQLAlchemy object before the final state is flushed, but after some intermediate flush/commit might’ve failed or partially applied.
+
+Here's the precise sequence breakdown:
+
+You encrypt and assign:
+
+python
+Copy
+Edit
+db_session.raw_transcript = encrypted_transcript
+db_session.is_encrypted = True
+You add() and commit() — but somewhere after that, raw_transcript gets reassigned (perhaps from session.model_dump).
+
+You expunge(db_session) — which freezes the in-memory view.
+
+You compute the hash on this in-memory object — so it still shows encrypted data
+
+But the actual database row now has overwritten plain text.
+
+❗ You never re-query the row — so you don’t see the mismatch.
+
+🔎 Visual Bug Flow Diagram
+text
+Copy
+Edit
+Encrypted:           db_session.raw_transcript = 🔒"Z0FBQUFB..."
+Overwrite leak:      db_session.raw_transcript ← "Updated with GPT suggestion..."
+Detachment:          db.expunge(db_session) ← still holds encrypted version
+Verification:        hash(encrypted version) ← looks valid
+Reality:             DB stores → "Updated with GPT..." (plain text)
+🧪 Confirm This with a One-Line Test:
+After commit() but BEFORE expunge(), add:
+
+python
+Copy
+Edit
+db.refresh(db_session)
+log.warning(f"ACTUAL DB raw_transcript: {db_session.raw_transcript[:100]}")
+log.warning(f"ACTUAL HASH: {sha256(db_session.raw_transcript.encode()).hexdigest()}")
+If the output shows plain text here, you've caught the overwrite in action.
+
+✅ RECOMMENDED FIX (Guaranteed Safe Path)
+1. 💣 REMOVE db.expunge() completely.
+This is not needed unless you’re doing detached async context sharing — which you're not.
+
+2. ✅ Fully isolate encrypted Session object:
+NEVER use .model_dump() to recreate data after encryption.
+
+python
+Copy
+Edit
+db_session = Session(
+    user_id=user_id,
+    raw_transcript=encrypted_transcript,
+    is_encrypted=True,
+    duration_seconds=session.duration_seconds,
+    ...
+)
+Don't reuse session_data or Pydantic objects for post-encryption manipulation.
+
+3. 🔍 Add full verification logging:
+python
+Copy
+Edit
+# Right after commit
+db.refresh(db_session)
+db_raw = db_session.raw_transcript
+log.info(f"Post-commit DB value length: {len(db_raw)}")
+log.info(f"Post-commit DB value sample: {db_raw[:50]}")
+log.info(f"Post-commit HASH: {sha256(db_raw.encode()).hexdigest()}")

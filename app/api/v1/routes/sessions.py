@@ -61,12 +61,13 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
     created_session = session_repository.create_session(db=db, session=session)
     logger.info(f"[API EXIT] Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
     
-    # ChatGPT's post-creation fingerprint check
+    # ChatGPT's post-creation fingerprint check - now shows TRUE database state
     import hashlib
     post_creation_hash = hashlib.sha256((created_session.raw_transcript or '').encode()).hexdigest()
     logger.warning(f"[POST API] FINAL SESSION RAW_TRANSCRIPT: {(created_session.raw_transcript or '')[:50]}...")
     logger.warning(f"[POST API] FINAL SESSION Hash: {post_creation_hash}")
     logger.warning(f"[POST API] FINAL SESSION Length: {len(created_session.raw_transcript or '')}")
+    logger.warning(f"[POST API] Session attached to DB: {created_session in db.identity_map.all_states()}")
     
     return created_session
 
