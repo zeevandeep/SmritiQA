@@ -34,14 +34,20 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
             # DO NOT modify db_session.raw_transcript directly as it will save back to database
             decrypted_text = decrypt_data(db_session.raw_transcript, user_id)
             
-            # Create a new Session object with decrypted data that's detached from database
-            from copy import copy
-            decrypted_session = copy(db_session)
-            decrypted_session.raw_transcript = decrypted_text
+            # Create a completely new Session object with decrypted data (not a copy)
+            # This ensures no reference to the original encrypted database object
+            decrypted_session = Session(
+                id=db_session.id,
+                user_id=db_session.user_id,
+                raw_transcript=decrypted_text,  # Use decrypted text
+                duration_seconds=db_session.duration_seconds,
+                created_at=db_session.created_at,
+                updated_at=db_session.updated_at,
+                is_encrypted=db_session.is_encrypted,
+                is_processed=db_session.is_processed
+            )
             
-            # Detach from SQLAlchemy session to prevent accidental saves
-            db.expunge(decrypted_session)
-            
+            # This object is not attached to SQLAlchemy session, so no risk of accidental saves
             return decrypted_session
             
         except EncryptionError as e:
@@ -82,14 +88,20 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
                 # DO NOT modify session.raw_transcript directly as it will save back to database
                 decrypted_text = decrypt_data(session.raw_transcript, str(user_id))
                 
-                # Create a new Session object with decrypted data that's detached from database
-                from copy import copy
-                decrypted_session = copy(session)
-                decrypted_session.raw_transcript = decrypted_text
+                # Create a completely new Session object with decrypted data (not a copy)
+                # This ensures no reference to the original encrypted database object
+                decrypted_session = Session(
+                    id=session.id,
+                    user_id=session.user_id,
+                    raw_transcript=decrypted_text,  # Use decrypted text
+                    duration_seconds=session.duration_seconds,
+                    created_at=session.created_at,
+                    updated_at=session.updated_at,
+                    is_encrypted=session.is_encrypted,
+                    is_processed=session.is_processed
+                )
                 
-                # Detach from SQLAlchemy session to prevent accidental saves
-                db.expunge(decrypted_session)
-                
+                # This object is not attached to SQLAlchemy session, so no risk of accidental saves
                 decrypted_sessions.append(decrypted_session)
             except EncryptionError as e:
                 logger.error(f"Failed to decrypt session {session.id} for user {user_id}: {e}")
