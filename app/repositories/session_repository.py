@@ -42,7 +42,6 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
                 raw_transcript=decrypted_text,  # Use decrypted text
                 duration_seconds=db_session.duration_seconds,
                 created_at=db_session.created_at,
-                updated_at=db_session.updated_at,
                 is_encrypted=db_session.is_encrypted,
                 is_processed=db_session.is_processed
             )
@@ -96,7 +95,6 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
                     raw_transcript=decrypted_text,  # Use decrypted text
                     duration_seconds=session.duration_seconds,
                     created_at=session.created_at,
-                    updated_at=session.updated_at,
                     is_encrypted=session.is_encrypted,
                     is_processed=session.is_processed
                 )
