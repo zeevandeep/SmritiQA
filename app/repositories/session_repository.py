@@ -108,6 +108,15 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
+    # CRITICAL DEBUG - FORCE IMMEDIATE CONSOLE OUTPUT
+    import sys, os, inspect
+    print("=" * 80, flush=True)
+    print(f"[CRITICAL DEBUG] create_session() CALLED AT {__file__}:{inspect.currentframe().f_lineno}", flush=True)
+    print(f"[CRITICAL DEBUG] Process PID: {os.getpid()}", flush=True)
+    print(f"[CRITICAL DEBUG] Function called from: {inspect.stack()[1]}", flush=True)
+    print("=" * 80, flush=True)
+    sys.stdout.flush()
+    
     session_data = session.model_dump()
     
     import sys
