@@ -89,79 +89,79 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
-    logger.info(f"[SESSION DEBUG] create_session called with session type: {type(session)}")
+    logger.info(f"[SESSION DEBUG] create_session called")
     logger.info(f"[SESSION DEBUG] session user_id: {session.user_id}")
     logger.info(f"[SESSION DEBUG] session raw_transcript length: {len(session.raw_transcript or '')}")
     
-    # Get base session data but don't use it directly to avoid overriding encrypted data
-    base_data = session.model_dump()
-    logger.info(f"[SESSION DEBUG] base_data keys: {base_data.keys()}")
-    logger.info(f"[SESSION DEBUG] base_data raw_transcript length: {len(base_data.get('raw_transcript', ''))}")
-    
-    # Start with clean session data for database model
-    session_data = {
-        'user_id': base_data['user_id'],
-        'duration_seconds': base_data.get('duration_seconds'),
-        'raw_transcript': base_data.get('raw_transcript'),
-        'is_encrypted': False  # Default to False
-    }
-    logger.info(f"[SESSION DEBUG] initial session_data raw_transcript length: {len(session_data.get('raw_transcript', ''))}")
+    # Extract values directly from session object (don't use model_dump to avoid reintroducing plain text)
+    user_id = session.user_id
+    duration_seconds = session.duration_seconds
+    original_transcript = session.raw_transcript
     
     # Encrypt raw_transcript if it exists
-    if session_data.get('raw_transcript') and session_data.get('user_id'):
+    if original_transcript and user_id:
         try:
-            user_id = str(session_data['user_id'])
-            original_transcript = session_data['raw_transcript']
+            user_id_str = str(user_id)
             
-            logger.info(f"[ENCRYPTION DEBUG] Starting encryption for user {user_id}")
+            logger.info(f"[ENCRYPTION DEBUG] Starting encryption for user {user_id_str}")
             logger.info(f"[ENCRYPTION DEBUG] Original transcript length: {len(original_transcript)}")
             logger.info(f"[ENCRYPTION DEBUG] Original transcript: {original_transcript[:50]}...")
             
             # Encrypt the transcript
-            encrypted_transcript = encrypt_data(original_transcript, user_id)
+            encrypted_transcript = encrypt_data(original_transcript, user_id_str)
             
             logger.info(f"[ENCRYPTION DEBUG] Encryption successful, length: {len(encrypted_transcript)}")
             logger.info(f"[ENCRYPTION DEBUG] Encrypted transcript: {encrypted_transcript[:50]}...")
             
-            # CRITICAL: Replace with encrypted data and mark as encrypted
-            session_data['raw_transcript'] = encrypted_transcript
-            session_data['is_encrypted'] = True
+            # Create Session object directly with encrypted data - NO model_dump() usage
+            db_session = Session(
+                user_id=user_id,
+                raw_transcript=encrypted_transcript,  # Use encrypted data directly
+                duration_seconds=duration_seconds,
+                is_encrypted=True,
+                is_processed=False
+            )
             
-            logger.info(f"Session transcript encrypted for user {user_id}")
+            logger.info(f"Session transcript encrypted for user {user_id_str}")
             
         except Exception as e:  # Catch all exceptions, not just EncryptionError
             logger.error(f"[ENCRYPTION DEBUG] Exception during encryption: {type(e).__name__}: {e}")
             import traceback
             logger.error(f"[ENCRYPTION DEBUG] Traceback: {traceback.format_exc()}")
             
-            # For now, store as plain text if encryption fails
-            session_data['is_encrypted'] = False
+            # Create Session object with plain text if encryption fails
+            db_session = Session(
+                user_id=user_id,
+                raw_transcript=original_transcript,
+                duration_seconds=duration_seconds,
+                is_encrypted=False,
+                is_processed=False
+            )
             
             # Log the error to migration_errors table
-            _log_migration_error(db, session_data.get('user_id'), None, "encryption_failed", str(e))
+            _log_migration_error(db, user_id, None, "encryption_failed", str(e))
+    else:
+        # Create Session object with plain text if no transcript
+        db_session = Session(
+            user_id=user_id,
+            raw_transcript=original_transcript,
+            duration_seconds=duration_seconds,
+            is_encrypted=False,
+            is_processed=False
+        )
     
-    logger.info(f"[ENCRYPTION DEBUG] Final session_data raw_transcript length: {len(session_data.get('raw_transcript', ''))}")
-    logger.info(f"[ENCRYPTION DEBUG] Final is_encrypted flag: {session_data.get('is_encrypted')}")
-    logger.info(f"[ENCRYPTION DEBUG] About to create Session with: {session_data.keys()}")
-    
-    # Create Session object with final data
-    db_session = Session(**session_data)
-    
-    logger.info(f"[ENCRYPTION DEBUG] Session object created, raw_transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] Session object raw_transcript: {db_session.raw_transcript[:50]}...")
-    logger.info(f"[ENCRYPTION DEBUG] Session object is_encrypted: {db_session.is_encrypted}")
+    logger.info(f"[SESSION CREATE] Final session object raw_transcript length: {len(db_session.raw_transcript or '')}")
+    logger.info(f"[SESSION CREATE] Final session object is_encrypted: {db_session.is_encrypted}")
+    logger.info(f"[SESSION CREATE] Final session object raw_transcript: {(db_session.raw_transcript or '')[:50]}...")
     
     db.add(db_session)
-    logger.info(f"[ENCRYPTION DEBUG] After db.add(), raw_transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.add(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    logger.info(f"[SESSION CREATE] After db.add(), raw_transcript length: {len(db_session.raw_transcript or '')}")
     
     db.commit()
-    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), raw_transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    logger.info(f"[SESSION CREATE] After db.commit(), raw_transcript length: {len(db_session.raw_transcript or '')}")
     
     db.refresh(db_session)
-    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")
     
     return db_session
 
