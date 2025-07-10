@@ -132,18 +132,28 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     db_session = Session(**session_data)
     logger.info(f"[ENCRYPTION DEBUG] Session object created, transcript length: {len(db_session.raw_transcript)}")
     logger.info(f"[ENCRYPTION DEBUG] Session object encrypted flag: {db_session.is_encrypted}")
+    logger.info(f"[ENCRYPTION DEBUG] Session object transcript starts with: {db_session.raw_transcript[:50]}...")
     
     # Add to database
     db.add(db_session)
     logger.info(f"[ENCRYPTION DEBUG] After db.add(), transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.add(), transcript starts with: {db_session.raw_transcript[:50]}...")
     
     # Commit to database
     db.commit()
     logger.info(f"[ENCRYPTION DEBUG] After db.commit(), transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), transcript starts with: {db_session.raw_transcript[:50]}...")
+    
+    # Check what's actually in the database
+    db_check = db.query(Session).filter(Session.id == db_session.id).first()
+    logger.info(f"[ENCRYPTION DEBUG] Database reality check - length: {len(db_check.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] Database reality check - starts with: {db_check.raw_transcript[:50]}...")
+    logger.info(f"[ENCRYPTION DEBUG] Database reality check - is_encrypted: {db_check.is_encrypted}")
     
     # Refresh from database
     db.refresh(db_session)
     logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), transcript starts with: {db_session.raw_transcript[:50]}...")
     logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), is_encrypted: {db_session.is_encrypted}")
     
     return db_session
