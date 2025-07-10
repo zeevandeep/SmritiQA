@@ -97,15 +97,26 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             user_id = str(session_data['user_id'])
             original_transcript = session_data['raw_transcript']
             
+            logger.info(f"[ENCRYPTION DEBUG] Starting encryption for user {user_id}")
+            logger.info(f"[ENCRYPTION DEBUG] Original transcript length: {len(original_transcript)}")
+            logger.info(f"[ENCRYPTION DEBUG] Original transcript: {original_transcript[:50]}...")
+            
             # Encrypt the transcript
             encrypted_transcript = encrypt_data(original_transcript, user_id)
+            
+            logger.info(f"[ENCRYPTION DEBUG] Encryption successful, length: {len(encrypted_transcript)}")
+            logger.info(f"[ENCRYPTION DEBUG] Encrypted transcript: {encrypted_transcript[:50]}...")
+            
             session_data['raw_transcript'] = encrypted_transcript
             session_data['is_encrypted'] = True
             
             logger.info(f"Session transcript encrypted for user {user_id}")
             
         except Exception as e:  # Catch all exceptions, not just EncryptionError
-            logger.error(f"Failed to encrypt session transcript for user {user_id}: {e}")
+            logger.error(f"[ENCRYPTION DEBUG] Exception during encryption: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"[ENCRYPTION DEBUG] Traceback: {traceback.format_exc()}")
+            
             # For now, store as plain text if encryption fails
             session_data['is_encrypted'] = False
             
@@ -113,6 +124,9 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             _log_migration_error(db, session_data.get('user_id'), None, "encryption_failed", str(e))
     else:
         session_data['is_encrypted'] = False
+    
+    logger.info(f"[ENCRYPTION DEBUG] Final session_data raw_transcript length: {len(session_data.get('raw_transcript', ''))}")
+    logger.info(f"[ENCRYPTION DEBUG] Final is_encrypted flag: {session_data.get('is_encrypted')}")
     
     db_session = Session(**session_data)
     db.add(db_session)
