@@ -129,9 +129,22 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     logger.info(f"[ENCRYPTION DEBUG] Final is_encrypted flag: {session_data.get('is_encrypted')}")
     
     db_session = Session(**session_data)
+    logger.info(f"[ENCRYPTION DEBUG] Session object created, raw_transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] Session object raw_transcript: {db_session.raw_transcript[:50]}...")
+    logger.info(f"[ENCRYPTION DEBUG] Session object is_encrypted: {db_session.is_encrypted}")
+    
     db.add(db_session)
+    logger.info(f"[ENCRYPTION DEBUG] After db.add(), raw_transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.add(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    
     db.commit()
+    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), raw_transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    
     db.refresh(db_session)
+    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript)}")
+    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), raw_transcript: {db_session.raw_transcript[:50]}...")
+    
     return db_session
 
 
