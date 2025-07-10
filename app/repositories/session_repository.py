@@ -157,8 +157,19 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     db.add(db_session)
     logger.info(f"[SESSION CREATE] After db.add(), raw_transcript length: {len(db_session.raw_transcript or '')}")
     
+    # Force flush to database before commit to see if there's an issue
+    db.flush()
+    logger.info(f"[SESSION CREATE] After db.flush(), raw_transcript length: {len(db_session.raw_transcript or '')}")
+    
     db.commit()
     logger.info(f"[SESSION CREATE] After db.commit(), raw_transcript length: {len(db_session.raw_transcript or '')}")
+    
+    # Check what's actually in the database immediately after commit
+    from sqlalchemy import text
+    result = db.execute(text("SELECT LENGTH(raw_transcript), is_encrypted, LEFT(raw_transcript, 50) FROM sessions WHERE id = :session_id"), 
+                       {"session_id": str(db_session.id)}).fetchone()
+    if result:
+        logger.info(f"[SESSION CREATE] Database verification - length: {result[0]}, is_encrypted: {result[1]}, sample: {result[2]}")
     
     db.refresh(db_session)
     logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")
