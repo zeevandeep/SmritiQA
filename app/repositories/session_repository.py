@@ -104,7 +104,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             
             logger.info(f"Session transcript encrypted for user {user_id}")
             
-        except EncryptionError as e:
+        except Exception as e:  # Catch all exceptions, not just EncryptionError
             logger.error(f"Failed to encrypt session transcript for user {user_id}: {e}")
             # For now, store as plain text if encryption fails
             session_data['is_encrypted'] = False
