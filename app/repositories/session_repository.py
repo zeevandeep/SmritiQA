@@ -137,21 +137,38 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
 
 def update_session_transcript(db: DbSession, session_id: UUID, transcript: str) -> Optional[Session]:
     """
-    Update a session's transcript.
+    Update a session's transcript with encryption support.
     
     Args:
         db: Database session.
         session_id: ID of the session.
-        transcript: Transcript text.
+        transcript: Transcript text (plain text).
         
     Returns:
         Updated Session object if found, None otherwise.
     """
-    db_session = get_session(db, session_id)
+    db_session = db.query(Session).filter(Session.id == session_id).first()
     if db_session is None:
         return None
     
-    db_session.raw_transcript = transcript
+    # If the session is marked as encrypted, encrypt the new transcript
+    if db_session.is_encrypted:
+        try:
+            user_id = str(db_session.user_id)
+            logger.info(f"[UPDATE TRANSCRIPT] Encrypting updated transcript for user {user_id}")
+            encrypted_transcript = encrypt_data(transcript, user_id)
+            db_session.raw_transcript = encrypted_transcript
+            logger.info(f"[UPDATE TRANSCRIPT] Transcript encrypted successfully")
+        except Exception as e:
+            logger.error(f"[UPDATE TRANSCRIPT] Failed to encrypt updated transcript: {e}")
+            # If encryption fails, store as plain text and mark as unencrypted
+            db_session.raw_transcript = transcript
+            db_session.is_encrypted = False
+            _log_migration_error(db, db_session.user_id, session_id, "encryption_failed", str(e))
+    else:
+        # Session is not encrypted, store as plain text
+        db_session.raw_transcript = transcript
+    
     db.commit()
     db.refresh(db_session)
     return db_session
