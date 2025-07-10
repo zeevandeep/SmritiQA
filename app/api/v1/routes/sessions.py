@@ -39,12 +39,7 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
     # Log received session data for debugging
     import logging
     logger = logging.getLogger(__name__)
-    print(f"[API ENDPOINT] Creating session with data: {session.model_dump()}")
-    print(f"[API ENDPOINT] Session transcript length: {len(session.raw_transcript or '')}")
-    print(f"[API ENDPOINT] Session user_id: {session.user_id}")
-    logger.info(f"[API ENDPOINT] Creating session with data: {session.model_dump()}")
-    logger.info(f"[API ENDPOINT] Session transcript length: {len(session.raw_transcript or '')}")
-    logger.info(f"[API ENDPOINT] Session user_id: {session.user_id}")
+    logger.info(f"Creating session with data: {session.model_dump()}")
     
     # Verify that the user exists
     user = user_repository.get_user(db, user_id=session.user_id)
@@ -55,11 +50,8 @@ def create_session(session: SessionCreate, db: Session = Depends(get_db), curren
         )
     
     # Create the session and return it
-    logger.info(f"[API ENDPOINT] Calling session_repository.create_session...")
     created_session = session_repository.create_session(db=db, session=session)
-    logger.info(f"[API ENDPOINT] Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
-    logger.info(f"[API ENDPOINT] Created session transcript length: {len(created_session.raw_transcript or '')}")
-    logger.info(f"[API ENDPOINT] Created session is_encrypted: {created_session.is_encrypted}")
+    logger.info(f"Session created with ID: {created_session.id}, duration: {created_session.duration_seconds}")
     return created_session
 
 

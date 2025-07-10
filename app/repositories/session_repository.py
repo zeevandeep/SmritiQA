@@ -30,21 +30,12 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
     if db_session and db_session.is_encrypted and db_session.raw_transcript:
         try:
             user_id = str(db_session.user_id)
-            # Check if this looks like encrypted data (base64, longer than original)
-            if len(db_session.raw_transcript) > 100 and all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_" for c in db_session.raw_transcript):
-                db_session.raw_transcript = decrypt_data(db_session.raw_transcript, user_id)
-            else:
-                # This looks like plain text, fix the encryption flag
-                logger.warning(f"Session {session_id} marked as encrypted but contains plain text, fixing flag")
-                db_session.is_encrypted = False
-                db.commit()
+            db_session.raw_transcript = decrypt_data(db_session.raw_transcript, user_id)
         except EncryptionError as e:
             logger.error(f"Failed to decrypt session {session_id} for user {user_id}: {e}")
             _log_migration_error(db, db_session.user_id, session_id, "decryption_failed", str(e))
-            # Treat as plain text if decryption fails
-            logger.warning(f"Treating session {session_id} as plain text due to decryption failure")
-            db_session.is_encrypted = False
-            db.commit()
+            # Return None to indicate the session is corrupted
+            return None
     
     return db_session
 
@@ -74,23 +65,13 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
     for session in sessions:
         if session.is_encrypted and session.raw_transcript:
             try:
-                # Check if this looks like encrypted data (base64, longer than original)
-                if len(session.raw_transcript) > 100 and all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_" for c in session.raw_transcript):
-                    session.raw_transcript = decrypt_data(session.raw_transcript, str(user_id))
-                else:
-                    # This looks like plain text, fix the encryption flag
-                    logger.warning(f"Session {session.id} marked as encrypted but contains plain text, fixing flag")
-                    session.is_encrypted = False
-                    db.commit()
+                session.raw_transcript = decrypt_data(session.raw_transcript, str(user_id))
                 decrypted_sessions.append(session)
             except EncryptionError as e:
                 logger.error(f"Failed to decrypt session {session.id} for user {user_id}: {e}")
                 _log_migration_error(db, user_id, session.id, "decryption_failed", str(e))
-                # Treat as plain text if decryption fails
-                logger.warning(f"Treating session {session.id} as plain text due to decryption failure")
-                session.is_encrypted = False
-                db.commit()
-                decrypted_sessions.append(session)
+                # Skip corrupted sessions
+                continue
         else:
             decrypted_sessions.append(session)
     
@@ -108,32 +89,10 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
-    # CRITICAL DEBUG - FORCE IMMEDIATE CONSOLE OUTPUT
-    import sys, os, inspect
-    print("=" * 80, flush=True)
-    print(f"[CRITICAL DEBUG] create_session() CALLED AT {__file__}:{inspect.currentframe().f_lineno}", flush=True)
-    print(f"[CRITICAL DEBUG] Process PID: {os.getpid()}", flush=True)
-    print(f"[CRITICAL DEBUG] Function called from: {inspect.stack()[1]}", flush=True)
-    print("=" * 80, flush=True)
-    sys.stdout.flush()
-    
     session_data = session.model_dump()
     
-    import sys
-    print(f"[REPOSITORY] create_session called with session data: {session_data}", flush=True)
-    print(f"[REPOSITORY] Checking encryption conditions...", flush=True)
-    print(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}", flush=True)
-    print(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}", flush=True)
-    sys.stdout.flush()
-    logger.info(f"[REPOSITORY] create_session called with session data: {session_data}")
-    logger.info(f"[REPOSITORY] Checking encryption conditions...")
-    logger.info(f"[REPOSITORY] session_data.get('raw_transcript'): {bool(session_data.get('raw_transcript'))}")
-    logger.info(f"[REPOSITORY] session_data.get('user_id'): {bool(session_data.get('user_id'))}")
-    
     # Encrypt raw_transcript if it exists
-    print(f"[REPOSITORY] About to check encryption condition...", flush=True)
     if session_data.get('raw_transcript') and session_data.get('user_id'):
-        print(f"[REPOSITORY] ENCRYPTION CONDITIONS MET - ENTERING ENCRYPTION BLOCK", flush=True)
         try:
             user_id = str(session_data['user_id'])
             original_transcript = session_data['raw_transcript']
@@ -169,71 +128,30 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     logger.info(f"[ENCRYPTION DEBUG] Final session_data raw_transcript length: {len(session_data.get('raw_transcript', ''))}")
     logger.info(f"[ENCRYPTION DEBUG] Final is_encrypted flag: {session_data.get('is_encrypted')}")
     
-    # Create the Session object
     db_session = Session(**session_data)
-    logger.info(f"[ENCRYPTION DEBUG] Session object created, transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] Session object encrypted flag: {db_session.is_encrypted}")
-    logger.info(f"[ENCRYPTION DEBUG] Session object transcript starts with: {db_session.raw_transcript[:50]}...")
-    
-    # Add to database
     db.add(db_session)
-    logger.info(f"[ENCRYPTION DEBUG] After db.add(), transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.add(), transcript starts with: {db_session.raw_transcript[:50]}...")
-    
-    # Commit to database
     db.commit()
-    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.commit(), transcript starts with: {db_session.raw_transcript[:50]}...")
-    
-    # Check what's actually in the database
-    db_check = db.query(Session).filter(Session.id == db_session.id).first()
-    logger.info(f"[ENCRYPTION DEBUG] Database reality check - length: {len(db_check.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] Database reality check - starts with: {db_check.raw_transcript[:50]}...")
-    logger.info(f"[ENCRYPTION DEBUG] Database reality check - is_encrypted: {db_check.is_encrypted}")
-    
-    # Refresh from database
     db.refresh(db_session)
-    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), transcript length: {len(db_session.raw_transcript)}")
-    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), transcript starts with: {db_session.raw_transcript[:50]}...")
-    logger.info(f"[ENCRYPTION DEBUG] After db.refresh(), is_encrypted: {db_session.is_encrypted}")
-    
     return db_session
 
 
 def update_session_transcript(db: DbSession, session_id: UUID, transcript: str) -> Optional[Session]:
     """
-    Update a session's transcript with encryption support.
+    Update a session's transcript.
     
     Args:
         db: Database session.
         session_id: ID of the session.
-        transcript: Transcript text (plain text).
+        transcript: Transcript text.
         
     Returns:
         Updated Session object if found, None otherwise.
     """
-    db_session = db.query(Session).filter(Session.id == session_id).first()
+    db_session = get_session(db, session_id)
     if db_session is None:
         return None
     
-    # If the session is marked as encrypted, encrypt the new transcript
-    if db_session.is_encrypted:
-        try:
-            user_id = str(db_session.user_id)
-            logger.info(f"[UPDATE TRANSCRIPT] Encrypting updated transcript for user {user_id}")
-            encrypted_transcript = encrypt_data(transcript, user_id)
-            db_session.raw_transcript = encrypted_transcript
-            logger.info(f"[UPDATE TRANSCRIPT] Transcript encrypted successfully")
-        except Exception as e:
-            logger.error(f"[UPDATE TRANSCRIPT] Failed to encrypt updated transcript: {e}")
-            # If encryption fails, store as plain text and mark as unencrypted
-            db_session.raw_transcript = transcript
-            db_session.is_encrypted = False
-            _log_migration_error(db, db_session.user_id, session_id, "encryption_failed", str(e))
-    else:
-        # Session is not encrypted, store as plain text
-        db_session.raw_transcript = transcript
-    
+    db_session.raw_transcript = transcript
     db.commit()
     db.refresh(db_session)
     return db_session
