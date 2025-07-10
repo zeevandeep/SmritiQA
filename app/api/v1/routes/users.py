@@ -72,7 +72,7 @@ def authenticate_user(credentials: UserAuthenticate, db: Session = Depends(get_d
 
 
 @router.get("/", response_model=List[UserSchema])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_from_jwt)):
     """
     Get a list of users.
     
@@ -80,29 +80,38 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         skip: Number of users to skip.
         limit: Maximum number of users to return.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         List[User]: List of users.
     """
-    users = user_repository.get_users(db, skip=skip, limit=limit)
-    return users
+    # This endpoint should be restricted to admin users only
+    # For now, we'll disable this endpoint by raising a 403 error
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Administrative access required"
+    )
 
 
 @router.get("/{user_id}", response_model=UserSchema)
-def read_user(user_id: UUID, db: Session = Depends(get_db)):
+def read_user(user_id: UUID, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_from_jwt)):
     """
     Get a user by ID.
     
     Args:
         user_id: ID of the user to retrieve.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         User: User data.
         
     Raises:
-        HTTPException: If the user is not found.
+        HTTPException: If the user is not found or access is denied.
     """
+    # Verify user has access to view this user's data
+    verify_user_access(str(user_id), current_user_id)
+    
     db_user = user_repository.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(
@@ -113,20 +122,24 @@ def read_user(user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}/profile", response_model=UserProfileSchema)
-def read_user_profile(user_id: UUID, db: Session = Depends(get_db)):
+def read_user_profile(user_id: UUID, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_from_jwt)):
     """
     Get a user's profile.
     
     Args:
         user_id: ID of the user.
         db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
         
     Returns:
         UserProfile: User profile data.
         
     Raises:
-        HTTPException: If the user or profile is not found.
+        HTTPException: If the user or profile is not found or access is denied.
     """
+    # Verify user has access to view this user's profile
+    verify_user_access(str(user_id), current_user_id)
+    
     db_user = user_repository.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(
