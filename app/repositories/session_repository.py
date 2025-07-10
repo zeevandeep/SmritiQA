@@ -14,22 +14,39 @@ from app.utils.encryption import encrypt_data, decrypt_data, EncryptionError
 logger = logging.getLogger(__name__)
 
 
-def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
+def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = False) -> Optional[Session]:
     """
-    Get a session by ID with automatic decryption.
+    Get a session by ID with optional decryption for OpenAI processing.
     
     Args:
         db: Database session.
         session_id: ID of the session to retrieve.
+        decrypt_for_processing: If True, returns detached object with decrypted data for OpenAI.
+                               If False (default), returns attached SQLAlchemy object for normal operations.
         
     Returns:
-        Session object if found, None otherwise.
+        Session object (attached or detached based on decrypt_for_processing) if found, None otherwise.
     """
-    db_session = db.query(Session).filter(Session.id == session_id).first()
+    logger.info(f"Getting session: {session_id}, decrypt_for_processing: {decrypt_for_processing}")
     
-    if db_session and db_session.is_encrypted and db_session.raw_transcript:
+    db_session = db.query(Session).filter(Session.id == session_id).first()
+    if not db_session:
+        logger.warning(f"Session not found: {session_id}")
+        return None
+    
+    logger.info(f"Found session {session_id}, is_encrypted: {db_session.is_encrypted}")
+    
+    # If not requesting decryption, return the attached SQLAlchemy object
+    if not decrypt_for_processing:
+        logger.info(f"Returning attached SQLAlchemy object for session {session_id}")
+        return db_session
+    
+    # For OpenAI processing - return detached object with decrypted data if encrypted
+    if db_session.is_encrypted and db_session.raw_transcript:
         try:
             user_id = str(db_session.user_id)
+            logger.info(f"Decrypting session {session_id} for OpenAI processing (user {user_id})")
+            
             # CRITICAL FIX: Create a copy to avoid overwriting database
             # DO NOT modify db_session.raw_transcript directly as it will save back to database
             decrypted_text = decrypt_data(db_session.raw_transcript, user_id)
@@ -46,15 +63,16 @@ def get_session(db: DbSession, session_id: UUID) -> Optional[Session]:
                 is_processed=db_session.is_processed
             )
             
-            # This object is not attached to SQLAlchemy session, so no risk of accidental saves
+            logger.info(f"Successfully decrypted session {session_id} for processing, decrypted length: {len(decrypted_text)}")
             return decrypted_session
             
         except EncryptionError as e:
             logger.error(f"Failed to decrypt session {session_id} for user {user_id}: {e}")
             _log_migration_error(db, db_session.user_id, session_id, "decryption_failed", str(e))
-            # Return None to indicate the session is corrupted
+            # Return None to indicate the session is corrupted for processing
             return None
     
+    # For unencrypted sessions or when requesting processing mode, return the attached object
     return db_session
 
 

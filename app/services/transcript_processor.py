@@ -36,8 +36,8 @@ def process_transcript(db: DbSession, session_id: UUID) -> bool:
     """
     logger.info(f"Starting to process transcript for session: {session_id}")
     
-    # Get the session
-    db_session = session_repository.get_session(db, session_id)
+    # Get the session with decrypted data for OpenAI processing
+    db_session = session_repository.get_session(db, session_id, decrypt_for_processing=True)
     if db_session is None or not db_session.raw_transcript:
         # Session not found or no transcript
         logger.error(f"Session not found or no transcript for session: {session_id}")
