@@ -208,26 +208,33 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     db.commit()
     logger.info(f"[SESSION CREATE] After db.commit(), raw_transcript length: {len(db_session.raw_transcript or '')}")
     
-    # Check what's actually in the database immediately after commit
+    # CRITICAL: Check what's actually in the database immediately after commit
     from sqlalchemy import text
     result = db.execute(text("SELECT LENGTH(raw_transcript), is_encrypted, LEFT(raw_transcript, 50), raw_transcript FROM sessions WHERE id = :session_id"), 
                        {"session_id": str(db_session.id)}).fetchone()
     if result:
-        logger.info(f"[SESSION CREATE] Database verification - length: {result[0]}, is_encrypted: {result[1]}, sample: {result[2]}")
+        logger.warning(f"[DATABASE REALITY] length: {result[0]}, is_encrypted: {result[1]}")
+        logger.warning(f"[DATABASE REALITY] sample: {result[2]}")
         
         # Calculate hash of what's actually in database
         import hashlib
         hash_db = hashlib.sha256(result[3].encode()).hexdigest()
-        logger.info(f"[SESSION FINGERPRINT] Database hash: {hash_db}")
+        logger.warning(f"[DATABASE HASH] {hash_db}")
         
-        # Check if it matches what we intended to save
+        # Check against what we intended (encrypted)
         intended_hash = hashlib.sha256((db_session.raw_transcript or '').encode()).hexdigest()
-        logger.info(f"[SESSION FINGERPRINT] Intended hash: {intended_hash}")
+        logger.warning(f"[INTENDED HASH] {intended_hash}")
+        
+        # Check against original plain text  
+        original_hash = hashlib.sha256(original_transcript.encode()).hexdigest()
+        logger.warning(f"[ORIGINAL HASH] {original_hash}")
         
         if hash_db == intended_hash:
-            logger.info(f"[SESSION FINGERPRINT] ✓ MATCH - Database contains what we intended")
+            logger.warning(f"[HASH RESULT] ✓ ENCRYPTED DATA in database")
+        elif hash_db == original_hash:
+            logger.error(f"[HASH RESULT] ✗ PLAIN TEXT in database - ENCRYPTION BYPASSED!")
         else:
-            logger.error(f"[SESSION FINGERPRINT] ✗ MISMATCH - Database was overwritten!")
+            logger.error(f"[HASH RESULT] ✗ UNKNOWN DATA in database")
     
     db.refresh(db_session)
     logger.info(f"[SESSION CREATE] After db.refresh(), raw_transcript length: {len(db_session.raw_transcript or '')}")
