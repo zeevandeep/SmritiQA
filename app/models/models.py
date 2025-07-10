@@ -64,6 +64,7 @@ class Session(Base):
     raw_transcript = Column(Text)
     created_at = Column(DateTime, default=func.now())
     is_processed = Column(Boolean, default=False)
+    is_encrypted = Column(Boolean, default=False)  # Track encryption status
     
     # Relationships
     user = relationship("User", back_populates="sessions")
@@ -192,3 +193,15 @@ class Feedback(Base):
     
     # Relationships
     user = relationship("User", back_populates="feedback")
+
+
+class MigrationError(Base):
+    """Track encryption migration errors for manual review."""
+    __tablename__ = "migration_errors"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    session_id = Column(UUID(as_uuid=True), nullable=False)
+    error_type = Column(String(100), nullable=False)
+    error_message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=func.now())
