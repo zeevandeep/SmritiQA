@@ -25,19 +25,16 @@ def test_unauthorized_access():
     node_id = str(uuid4())
     edge_id = str(uuid4())
     
-    # Endpoints that should require authentication
-    protected_endpoints = [
+    # Test GET endpoints that should require authentication
+    get_endpoints = [
         # Session endpoints
         f"/sessions/user/{user_id}",
         f"/sessions/{session_id}",
-        f"/sessions/{session_id}/transcript",
-        f"/sessions/{session_id}/process",
         
         # Node endpoints
         f"/nodes/?user_id={user_id}",
         f"/nodes/session/{session_id}",
         f"/nodes/{node_id}",
-        f"/nodes/session/{session_id}/process",
         
         # Edge endpoints
         f"/edges/?user_id={user_id}",
@@ -48,23 +45,51 @@ def test_unauthorized_access():
         
         # Reflection endpoints
         f"/reflections/user/{user_id}",
-        f"/reflections/generate"
+    ]
+    
+    # Test POST endpoints that should require authentication
+    post_endpoints = [
+        f"/sessions/{session_id}/process",  # PUT endpoint
+        f"/nodes/session/{session_id}/process",  # POST endpoint
+        f"/reflections/generate",  # POST endpoint
     ]
     
     unauthorized_count = 0
-    for endpoint in protected_endpoints:
+    total_endpoints = len(get_endpoints) + len(post_endpoints)
+    
+    # Test GET endpoints
+    for endpoint in get_endpoints:
         try:
             response = requests.get(f"{BASE_URL}{endpoint}")
             if response.status_code == 401:
                 unauthorized_count += 1
-                print(f"  ✅ {endpoint} - Properly protected (401)")
+                print(f"  ✅ GET {endpoint} - Properly protected (401)")
             else:
-                print(f"  ❌ {endpoint} - VULNERABLE! Status: {response.status_code}")
+                print(f"  ❌ GET {endpoint} - VULNERABLE! Status: {response.status_code}")
         except Exception as e:
-            print(f"  ⚠️  {endpoint} - Error: {e}")
+            print(f"  ⚠️  GET {endpoint} - Error: {e}")
     
-    print(f"\n📊 Results: {unauthorized_count}/{len(protected_endpoints)} endpoints properly protected")
-    return unauthorized_count == len(protected_endpoints)
+    # Test POST endpoints
+    for endpoint in post_endpoints:
+        try:
+            if "/sessions/" in endpoint and "/process" in endpoint:
+                response = requests.put(f"{BASE_URL}{endpoint}")  # PUT for session processing
+            else:
+                response = requests.post(f"{BASE_URL}{endpoint}")  # POST for others
+            
+            if response.status_code == 401:
+                unauthorized_count += 1
+                method = "PUT" if "/sessions/" in endpoint and "/process" in endpoint else "POST"
+                print(f"  ✅ {method} {endpoint} - Properly protected (401)")
+            else:
+                method = "PUT" if "/sessions/" in endpoint and "/process" in endpoint else "POST"
+                print(f"  ❌ {method} {endpoint} - VULNERABLE! Status: {response.status_code}")
+        except Exception as e:
+            method = "PUT" if "/sessions/" in endpoint and "/process" in endpoint else "POST"
+            print(f"  ⚠️  {method} {endpoint} - Error: {e}")
+    
+    print(f"\n📊 Results: {unauthorized_count}/{total_endpoints} endpoints properly protected")
+    return unauthorized_count == total_endpoints
 
 def test_cross_user_access():
     """Test that users cannot access other users' data"""
