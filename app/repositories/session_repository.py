@@ -89,8 +89,14 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
+    logger.info(f"[SESSION DEBUG] create_session called with session type: {type(session)}")
+    logger.info(f"[SESSION DEBUG] session user_id: {session.user_id}")
+    logger.info(f"[SESSION DEBUG] session raw_transcript length: {len(session.raw_transcript or '')}")
+    
     # Get base session data but don't use it directly to avoid overriding encrypted data
     base_data = session.model_dump()
+    logger.info(f"[SESSION DEBUG] base_data keys: {base_data.keys()}")
+    logger.info(f"[SESSION DEBUG] base_data raw_transcript length: {len(base_data.get('raw_transcript', ''))}")
     
     # Start with clean session data for database model
     session_data = {
@@ -99,6 +105,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
         'raw_transcript': base_data.get('raw_transcript'),
         'is_encrypted': False  # Default to False
     }
+    logger.info(f"[SESSION DEBUG] initial session_data raw_transcript length: {len(session_data.get('raw_transcript', ''))}")
     
     # Encrypt raw_transcript if it exists
     if session_data.get('raw_transcript') and session_data.get('user_id'):
