@@ -613,9 +613,23 @@
         async function retryApiCall(apiCall, stepName, maxRetries = 3) {
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    return await apiCall();
+                    console.log(`[DEBUG] ${stepName} attempt ${attempt} starting at ${new Date().toISOString()}`);
+                    const startTime = Date.now();
+                    
+                    const result = await apiCall();
+                    
+                    const duration = Date.now() - startTime;
+                    console.log(`[DEBUG] ${stepName} attempt ${attempt} SUCCESS in ${duration}ms`);
+                    return result;
                 } catch (error) {
-                    console.log(`${stepName} attempt ${attempt} failed:`, error);
+                    const duration = Date.now() - startTime;
+                    console.log(`[DEBUG] ${stepName} attempt ${attempt} FAILED after ${duration}ms:`, error);
+                    console.log(`[DEBUG] Error details:`, {
+                        message: error.message,
+                        status: error.status,
+                        response: error.response,
+                        stack: error.stack?.substring(0, 200)
+                    });
                     
                     if (attempt === maxRetries) {
                         throw new Error(`${stepName} failed after ${maxRetries} attempts`);
@@ -623,6 +637,7 @@
                     
                     // Wait before retrying (exponential backoff: 1s, 2s, 4s)
                     const delay = Math.pow(2, attempt - 1) * 1000;
+                    console.log(`[DEBUG] ${stepName} waiting ${delay}ms before retry...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
@@ -631,27 +646,43 @@
         // Function to trigger real-time processing pipeline
         async function triggerProcessingPipeline(sessionId, userId) {
             try {
+                console.log(`[PIPELINE] Starting processing pipeline for session ${sessionId} user ${userId}`);
+                
                 // Step 1: Extract nodes
                 showProcessingMessage('Analyzing your thoughts...');
+                console.log(`[PIPELINE] Step 1: Node extraction starting`);
                 await retryApiCall(async () => {
                     const response = await fetch(`/api/v1/nodes/session/${sessionId}/process?v=2`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
                     });
-                    if (!response.ok) throw new Error(`Status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.log(`[PIPELINE] Node processing response error:`, errorText);
+                        throw new Error(`Status: ${response.status}, Body: ${errorText}`);
+                    }
+                    const result = await response.json();
+                    console.log(`[PIPELINE] Node processing response:`, result);
                     return response;
                 }, 'Node processing');
                 
                 // Step 2: Generate embeddings
                 showProcessingMessage('Creating thought bubbles...');
+                console.log(`[PIPELINE] Step 2: Embedding generation starting`);
                 await retryApiCall(async () => {
                     const response = await fetch('/api/v1/nodes/embeddings/process', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
                     });
-                    if (!response.ok) throw new Error(`Status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.log(`[PIPELINE] Embedding processing response error:`, errorText);
+                        throw new Error(`Status: ${response.status}, Body: ${errorText}`);
+                    }
+                    const result = await response.json();
+                    console.log(`[PIPELINE] Embedding processing response:`, result);
                     return response;
                 }, 'Embedding processing');
                 

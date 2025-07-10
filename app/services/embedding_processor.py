@@ -83,13 +83,18 @@ def process_embeddings_batch(
     Returns:
         Dictionary with processing statistics.
     """
-    logger.info(f"Starting batch embedding processing with batch size {batch_size}")
+    import time
+    start_time = time.time()
+    logger.info(f"[EMBEDDING-DEBUG] Starting batch embedding processing with batch size {batch_size} at {time.strftime('%H:%M:%S')}")
     
     # Get nodes without embeddings
     node_data = get_unprocessed_nodes(db, batch_size)
+    fetch_time = time.time() - start_time
+    logger.info(f"[EMBEDDING-DEBUG] Fetched nodes in {fetch_time:.2f}s")
     
     if not node_data:
-        logger.info("No nodes found without embeddings")
+        total_time = time.time() - start_time
+        logger.info(f"[EMBEDDING-DEBUG] No nodes found without embeddings (completed in {total_time:.2f}s)")
         return {
             "processed": 0,
             "success": 0,
@@ -99,9 +104,13 @@ def process_embeddings_batch(
     
     # Extract node IDs and texts
     node_ids, texts = zip(*node_data)
+    logger.info(f"[EMBEDDING-DEBUG] Processing {len(node_ids)} nodes: {[str(nid)[:8] for nid in node_ids]}")
     
     # Generate embeddings for all texts in batch
+    embedding_start = time.time()
     embeddings = generate_embeddings_batch(texts)
+    embedding_time = time.time() - embedding_start
+    logger.info(f"[EMBEDDING-DEBUG] OpenAI embedding generation completed in {embedding_time:.2f}s")
     
     # Process results
     success_count = 0
@@ -120,12 +129,21 @@ def process_embeddings_batch(
             error_count += 1
     
     # Commit changes
+    commit_start = time.time()
     db.commit()
+    commit_time = time.time() - commit_start
     
-    logger.info(f"Batch processing complete: {success_count} successful, {error_count} failed")
+    total_time = time.time() - start_time
+    logger.info(f"[EMBEDDING-DEBUG] Batch processing complete in {total_time:.2f}s: {success_count} successful, {error_count} failed (commit: {commit_time:.2f}s)")
     return {
         "processed": len(node_data),
         "success": success_count,
         "error": error_count,
-        "message": f"Processed {len(node_data)} nodes: {success_count} successful, {error_count} failed"
+        "message": f"Processed {len(node_data)} nodes: {success_count} successful, {error_count} failed",
+        "timing": {
+            "total_time": total_time,
+            "fetch_time": fetch_time,
+            "embedding_time": embedding_time,
+            "commit_time": commit_time
+        }
     }
