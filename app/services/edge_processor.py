@@ -112,7 +112,7 @@ def get_unprocessed_nodes(db: DbSession, user_id: UUID, limit: int = 10) -> List
         # Check if this node already has the maximum number of edges
         edge_count = len(edge_repository.get_node_edges(db, node.id))
         if edge_count >= MAX_EDGES_PER_NODE:
-            logger.info(f"Node {node.id} already has {edge_count} edges (max: {MAX_EDGES_PER_NODE})")
+            logger.info(f"[EDGE_TRACE] Node {node.id} already has {edge_count} edges (max: {MAX_EDGES_PER_NODE}) - marking as processed")
             # Mark node as processed since it has reached its maximum edges
             node_repository.mark_node_processed(db, node.id)
             continue
@@ -413,14 +413,14 @@ def process_edges_batch(
     
     # Process each node
     for current_node in current_nodes:
-        logger.info(f"Processing node {current_node['id']}")
+        logger.info(f"[EDGE_TRACE] Processing node {current_node['id']} (theme: {current_node.get('theme', 'unknown')})")
         node_id = current_node["id"]
         
         # Find candidate nodes using the refined algorithm
         candidates = find_candidate_nodes(db, current_node)
         
         if not candidates:
-            logger.info(f"No qualified candidates found for node {node_id}")
+            logger.info(f"[EDGE_TRACE] No qualified candidates found for node {node_id} - marking as processed")
             # Only mark as processed if we have no candidates (not an API failure)
             node_repository.mark_node_processed(db, node_id)
             processed_count += 1
@@ -436,14 +436,14 @@ def process_edges_batch(
         # Only mark as processed if we actually got edges (not an API failure)
         if created_edges is not None:
             edges_created = len(created_edges)
-            logger.info(f"Created {edges_created} edges for node {node_id}")
+            logger.info(f"[EDGE_TRACE] Created {edges_created} edges for node {node_id} - marking as processed")
             total_edges_created += edges_created
             
             # Mark node as processed after successful edge creation
             node_repository.mark_node_processed(db, node_id)
             processed_count += 1
         else:
-            logger.warning(f"OpenAI API call failed for node {node_id}, not marking as processed")
+            logger.warning(f"[EDGE_TRACE] OpenAI API call failed for node {node_id} - NOT marking as processed")
             # Node remains unprocessed so it can be tried again later
     
     elapsed_time = time.time() - start_time
