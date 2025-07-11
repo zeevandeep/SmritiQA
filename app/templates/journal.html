@@ -689,7 +689,7 @@
                 // Step 3: Create edges
                 showProcessingMessage('Establishing memory linkages...');
                 await retryApiCall(async () => {
-                    const response = await fetch(`/api/v1/edges/process/${userId}`, {
+                    const response = await fetch(`/api/v1/edges/process/${userId}?batch_size=10`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
