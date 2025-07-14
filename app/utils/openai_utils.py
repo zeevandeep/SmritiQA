@@ -33,7 +33,7 @@ OPENAI_CONFIDENCE_THRESHOLD = float(os.environ.get("OPENAI_CONFIDENCE_THRESHOLD"
 
 # Session window parameters
 MAX_SESSIONS_TO_CONSIDER = int(os.environ.get("MAX_SESSIONS_TO_CONSIDER", "25"))
-MAX_DAYS_TO_CONSIDER = int(os.environ.get("MAX_DAYS_TO_CONSIDER", "30"))
+MAX_DAYS_TO_CONSIDER = int(os.environ.get("MAX_DAYS_TO_CONSIDER", "14"))
 MAX_CANDIDATE_NODES = int(os.environ.get("MAX_CANDIDATE_NODES", "12"))
 
 # Boost and penalty factors
