@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 # Define constants
-EMBEDDING_MODEL = "text-embedding-ada-002"
+EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "50"))
 
 # Edge creation thresholds and parameters
