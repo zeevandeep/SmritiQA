@@ -254,10 +254,10 @@ def find_candidate_nodes(
         reverse=True
     )
     
-    # Take top N candidates
-    top_candidates = qualified_candidates[:max_candidates]
+    # Take ALL qualified candidates (no limit)
+    top_candidates = qualified_candidates
     
-    logger.info(f"Selected top {len(top_candidates)} candidates for edge creation")
+    logger.info(f"Selected ALL {len(top_candidates)} qualified candidates for edge creation")
     
     return top_candidates
 
@@ -300,32 +300,31 @@ def create_edges_batch(
         
         # Ensure we only create edges with match_strength >= 0.7
         if match_strength < 0.7:
-            logger.info(f"Skipping edge with match_strength {match_strength} < 0.7")
+            logger.info(f"Skipping edge with low match_strength: {match_strength}")
             continue
-            
-        # Get explanation, ensuring it's a string
-        explanation = edge_data.get("explanation", "")
-        if explanation is None:
-            explanation = ""
-            
-        # Create EdgeCreate object
+        
+        # Determine session relation
+        session_relation = "cross_session" if candidate["session_id"] != current_node["session_id"] else "same_session"
+        
+        # Create edge with similarity-based data
         edge_create = EdgeCreate(
-            from_node=from_node_id,
-            to_node=to_node_id,
+            from_node=from_node_id,  # candidate -> current
+            to_node=to_node_id,      # current node
             user_id=current_node["user_id"],
-            edge_type=edge_type,
-            match_strength=match_strength,
-            session_relation=edge_data.get("session_relation", "cross_session"),
-            explanation=explanation
+            edge_type="default",     # all edges are "default" type
+            match_strength=match_strength,  # adjusted similarity score
+            session_relation=session_relation,
+            explanation=None  # keep null as requested
         )
         
         # Create in database
         try:
             db_edge = edge_repository.create_edge(db, edge_create)
-            logger.info(f"Created edge {db_edge.id} of type {db_edge.edge_type}")
+            logger.info(f"Created edge {db_edge.id} of type {db_edge.edge_type} with strength {match_strength:.3f}")
             created_edges.append(db_edge)
         except Exception as e:
             logger.error(f"Error creating edge: {e}", exc_info=True)
+            # Continue processing other candidates even if one fails
     
     logger.info(f"Created {len(created_edges)} edges for node {current_node['id']}")
     return created_edges
@@ -337,71 +336,67 @@ def process_edges_batch(
     batch_size: int = 5
 ) -> Dict[str, Any]:
     """
-    Process a batch of nodes to create edges.
+    Process ALL unprocessed nodes to create edges until all are processed.
     
     Args:
         db: Database session.
         user_id: ID of the user.
-        batch_size: Number of source nodes to process.
+        batch_size: Ignored - all nodes are processed until complete.
         
     Returns:
         Dictionary with processing statistics.
     """
     start_time = time.time()
-    logger.info(f"Starting batch edge processing for user {user_id}, batch size {batch_size}")
-    
-    # Get unprocessed nodes
-    current_nodes = get_unprocessed_nodes(db, user_id, batch_size)
-    
-    if not current_nodes:
-        logger.info("No unprocessed nodes found")
-        return {
-            "processed_nodes": 0,
-            "created_edges": 0,
-            "elapsed_time": 0,
-            "message": "No unprocessed nodes found"
-        }
-    
-    logger.info(f"Processing edges for {len(current_nodes)} nodes")
+    logger.info(f"Starting complete edge processing for user {user_id} (batch_size ignored)")
     
     # Track statistics
     processed_count = 0
     total_edges_created = 0
     
-    # Process each node
-    for current_node in current_nodes:
-        logger.info(f"[EDGE_TRACE] Processing node {current_node['id']} (theme: {current_node.get('theme', 'unknown')})")
-        node_id = current_node["id"]
+    # Continue processing until all nodes are processed
+    while True:
+        # Get unprocessed nodes (no limit - process all)
+        current_nodes = get_unprocessed_nodes(db, user_id, limit=1000)
         
-        # Find candidate nodes using the refined algorithm
-        candidates = find_candidate_nodes(db, current_node)
+        if not current_nodes:
+            logger.info("No more unprocessed nodes found - processing complete")
+            break
         
-        if not candidates:
-            logger.info(f"[EDGE_TRACE] No qualified candidates found for node {node_id} - marking as processed")
-            # Only mark as processed if we have no candidates (not an API failure)
-            node_repository.mark_node_processed(db, node_id)
-            processed_count += 1
-            continue
+        logger.info(f"Processing edges for {len(current_nodes)} nodes")
         
-        # Create edges in batch using OpenAI analysis
-        logger.info(f"Found {len(candidates)} qualified candidates for node {node_id}")
-        
-        # Create edges between current node and candidates
-        created_edges = create_edges_batch(db, current_node, candidates)
-        
-        # If the OpenAI API call was successful (returned edges), mark as processed
-        # Only mark as processed if we actually got edges (not an API failure)
-        if created_edges is not None:
-            edges_created = len(created_edges)
-            logger.info(f"[EDGE_TRACE] Created {edges_created} edges for node {node_id} - marking as processed")
-            total_edges_created += edges_created
+        # Process each node
+        for current_node in current_nodes:
+            logger.info(f"[EDGE_TRACE] Processing node {current_node['id']} (theme: {current_node.get('theme', 'unknown')})")
+            node_id = current_node["id"]
             
-            # Mark node as processed after successful edge creation
-            node_repository.mark_node_processed(db, node_id)
-            processed_count += 1
-        else:
-            logger.warning(f"[EDGE_TRACE] OpenAI API call failed for node {node_id} - NOT marking as processed")
-            # Node remains unprocessed so it can be tried again later
+            # Find candidate nodes using the refined algorithm
+            candidates = find_candidate_nodes(db, current_node)
+            
+            if not candidates:
+                logger.info(f"[EDGE_TRACE] No qualified candidates found for node {node_id} - marking as processed")
+                # Mark as processed if we have no candidates
+                node_repository.mark_node_processed(db, node_id)
+                processed_count += 1
+                continue
+            
+            # Create edges using similarity-based analysis
+            logger.info(f"Found {len(candidates)} qualified candidates for node {node_id}")
+            
+            # Create edges between current node and candidates
+            created_edges = create_edges_batch(db, current_node, candidates)
+            
+            # Check if edge creation was successful
+            if created_edges is not None:
+                edges_created = len(created_edges)
+                logger.info(f"[EDGE_TRACE] Created {edges_created} edges for node {node_id} - marking as processed")
+                total_edges_created += edges_created
+                
+                # Mark node as processed after successful edge creation
+                node_repository.mark_node_processed(db, node_id)
+                processed_count += 1
+            else:
+                logger.warning(f"[EDGE_TRACE] Edge creation failed for node {node_id} - NOT marking as processed")
+                # Node remains unprocessed so it can be tried again later
     
     elapsed_time = time.time() - start_time
     
