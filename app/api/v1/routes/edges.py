@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.repositories import edge_repository, node_repository, user_repository, session_repository
-from app.services.edge_processor import process_edges_batch
+from app.services.edge_processor import process_edges_batch, process_edges_for_session
 from app.services.edge_chain_processor import process_chain_linked_edges
 from app.schemas.schemas import Edge as EdgeSchema, EdgeCreate
 from app.utils.api_auth import get_current_user_from_jwt, verify_user_access
@@ -350,6 +350,59 @@ def process_edges(
         )
     
     return process_edges_batch(db, user_id, batch_size)
+
+
+@router.post("/process/session/{user_id}/{session_id}", response_model=Dict[str, Any])
+def process_session_edges(
+    user_id: UUID,
+    session_id: UUID,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_from_jwt)
+):
+    """
+    Process edges only for nodes from a specific session.
+    
+    This endpoint provides fast, bounded processing for new journal entries
+    by only processing nodes from the current session rather than all unprocessed nodes.
+    
+    Args:
+        user_id: ID of the user whose nodes will be processed.
+        session_id: ID of the session to process.
+        db: Database session.
+        current_user_id: Current authenticated user ID from JWT.
+        
+    Returns:
+        Dict: Processing statistics.
+        
+    Raises:
+        HTTPException: If the user or session is not found or access is denied.
+    """
+    # Verify user has access to process edges for this user ID
+    verify_user_access(str(user_id), current_user_id)
+    
+    # Verify that the user exists
+    db_user = user_repository.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Verify that the session exists and belongs to this user
+    db_session = session_repository.get_session(db, session_id=session_id)
+    if db_session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+    
+    if db_session.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Session does not belong to this user"
+        )
+    
+    return process_edges_for_session(db=db, user_id=user_id, session_id=session_id)
 
 
 @router.post("/chain_process/{user_id}", response_model=Dict[str, Any])

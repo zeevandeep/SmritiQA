@@ -686,10 +686,10 @@
                     return response;
                 }, 'Embedding processing');
                 
-                // Step 3: Create edges
+                // Step 3: Create edges (session-only for fast processing)
                 showProcessingMessage('Establishing memory linkages...');
                 await retryApiCall(async () => {
-                    const response = await fetch(`/api/v1/edges/process/${userId}?batch_size=10`, {
+                    const response = await fetch(`/api/v1/edges/process/session/${userId}/${sessionId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'

@@ -338,6 +338,118 @@ def create_edges_batch(
     return created_edges
 
 
+def process_edges_for_session(
+    db: DbSession,
+    user_id: UUID,
+    session_id: UUID
+) -> Dict[str, Any]:
+    """
+    Process edges only for nodes from a specific session.
+    This provides fast, bounded processing for new journal entries.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user.
+        session_id: ID of the session to process.
+        
+    Returns:
+        Dictionary with processing statistics.
+    """
+    start_time = time.time()
+    logger.info(f"Starting session-only edge processing for session {session_id}")
+    
+    # Track statistics
+    processed_count = 0
+    total_edges_created = 0
+    
+    # Get unprocessed nodes from this session only
+    session_nodes = db.query(Node).filter(
+        Node.user_id == user_id,
+        Node.session_id == session_id,
+        Node.embedding.is_not(None),
+        Node.is_processed == False
+    ).order_by(Node.created_at.asc()).all()
+    
+    if not session_nodes:
+        logger.info(f"No unprocessed nodes found for session {session_id}")
+        return {
+            "processed_nodes": 0,
+            "created_edges": 0,
+            "elapsed_time": time.time() - start_time,
+            "message": "No nodes to process in this session"
+        }
+    
+    logger.info(f"Processing {len(session_nodes)} nodes from session {session_id}")
+    
+    # Convert to dictionaries for consistency with existing code
+    current_nodes = []
+    for node in session_nodes:
+        node_dict = {
+            "id": node.id,
+            "user_id": node.user_id,
+            "session_id": node.session_id,
+            "text": node.text,
+            "emotion": node.emotion,
+            "theme": node.theme,
+            "cognition_type": node.cognition_type,
+            "belief_value": node.belief_value,
+            "contradiction_flag": node.contradiction_flag,
+            "embedding": deserialize_embedding(node.embedding),
+            "created_at": node.created_at
+        }
+        current_nodes.append(node_dict)
+    
+    # Process each node individually with error handling
+    for current_node in current_nodes:
+        logger.info(f"[SESSION_EDGE] Processing node {current_node['id']} (theme: {current_node.get('theme', 'unknown')})")
+        node_id = current_node["id"]
+        
+        try:
+            # Find candidate nodes using the refined algorithm
+            candidates = find_candidate_nodes(db, current_node)
+            
+            if not candidates:
+                logger.info(f"[SESSION_EDGE] No qualified candidates found for node {node_id} - marking as processed")
+                # Mark as processed even with no candidates - this is normal behavior
+                node_repository.mark_node_processed(db, node_id)
+                processed_count += 1
+                continue
+            
+            # Create edges using similarity-based analysis
+            logger.info(f"Found {len(candidates)} qualified candidates for node {node_id}")
+            
+            # Create edges between current node and candidates
+            created_edges = create_edges_batch(db, current_node, candidates)
+            
+            # Edge creation completed - mark as processed regardless of count
+            edges_created = len(created_edges) if created_edges else 0
+            logger.info(f"[SESSION_EDGE] Created {edges_created} edges for node {node_id} - marking as processed")
+            total_edges_created += edges_created
+            
+            # Always mark node as processed after attempting edge creation
+            node_repository.mark_node_processed(db, node_id)
+            processed_count += 1
+            
+        except Exception as e:
+            logger.error(f"[SESSION_EDGE] Error processing node {node_id}: {e}", exc_info=True)
+            logger.warning(f"[SESSION_EDGE] Node {node_id} remains unprocessed due to error")
+            # Only leave unprocessed if there was an actual error
+    
+    elapsed_time = time.time() - start_time
+    
+    result = {
+        "processed_nodes": processed_count,
+        "created_edges": total_edges_created,
+        "elapsed_time": elapsed_time,
+        "message": f"Processed {processed_count} nodes from session, created {total_edges_created} edges in {elapsed_time:.2f} seconds"
+    }
+    
+    logger.info(f"Session edge processing completed in {elapsed_time:.2f} seconds")
+    logger.info(f"Processed {processed_count} nodes, created {total_edges_created} edges")
+    
+    return result
+
+
 def process_edges_batch(
     db: DbSession,
     user_id: UUID,
@@ -346,6 +458,7 @@ def process_edges_batch(
     """
     Process ALL unprocessed nodes to create edges until all are processed.
     Uses internal batching to prevent worker timeouts while ensuring complete processing.
+    This is for background cleanup, not real-time journal processing.
     
     Args:
         db: Database session.
