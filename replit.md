@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Text-Embedding-3-Small Upgrade Complete**: Upgraded from text-embedding-ada-002 to text-embedding-3-small for all users. This provides +40% multilingual performance improvement, 5x cost reduction ($0.00002 vs $0.0001 per 1K tokens), and significantly better support for Hindi, Spanish, Hinglish, and 16 other languages. Existing embeddings remain unchanged; all new journal entries use the enhanced model
 - **Confidence Score Removal Complete**: Removed confidence scores from reflection generation UI while maintaining backend storage for future analytics. Updated OpenAI prompts, API responses, and frontend display to exclude confidence scores from user interface
 - **Edge Similarity Thresholds Increased**: Raised initial threshold from 0.5 to 0.7 and final threshold from 0.75 to 0.84 to improve edge quality by requiring stronger connections between nodes
 - **OpenAI-Free Edge Creation System Complete**: Completely removed OpenAI calls from edge processing. Edges now created directly using adjusted cosine similarity scores as match_strength with edge_type="default". Eliminates timeout issues and dramatically improves performance while maintaining connection quality through advanced similarity scoring
@@ -141,7 +142,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ### AI Services
 - **OpenAI API**: Primary AI provider for text analysis, embedding generation, and reflection creation
-- **Models Used**: GPT-4 for text analysis, text-embedding-ada-002 for embeddings
+- **Models Used**: GPT-4 for text analysis, text-embedding-3-small for embeddings
 
 ### Database Systems
 - **PostgreSQL**: Primary relational database for structured data
@@ -181,6 +182,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Changelog
 
+- July 14, 2025: Text-embedding-3-small upgrade complete - all new journal entries now use enhanced embedding model with +40% multilingual performance and 5x cost reduction
 - July 14, 2025: Confidence score removal from UI complete - updated OpenAI prompts, API responses, and frontend display  
 - July 14, 2025: Major edge creation system overhaul - implemented OpenAI-free session-only processing with 14-day candidate window and 0.84+ similarity threshold for 2-7 second processing times
 - June 25, 2025: Corrected documentation - Phase 3.25 chain-linked edge processing is fully implemented and auto-triggered during journal submissions
