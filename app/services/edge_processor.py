@@ -296,22 +296,22 @@ def create_edges_batch(
             continue
         
         # Use adjusted similarity score as match_strength
-        match_strength = candidate.get("adjusted_similarity", 0.7)
+        match_strength = candidate.get("adjusted_similarity", 0.75)
         
         # Ensure we only create edges with match_strength >= 0.75
         if match_strength < 0.75:
             logger.info(f"Skipping edge with low match_strength: {match_strength}")
             continue
         
-        # Determine session relation
-        session_relation = "cross_session" if candidate["session_id"] != current_node["session_id"] else "same_session"
+        # Determine session relation using database-valid values
+        session_relation = "cross_session" if candidate["session_id"] != current_node["session_id"] else "intra_session"
         
         # Create edge with similarity-based data
         edge_create = EdgeCreate(
             from_node=from_node_id,  # candidate -> current
             to_node=to_node_id,      # current node
             user_id=current_node["user_id"],
-            edge_type="default",     # all edges are "default" type
+            edge_type="thought_progression",  # Use valid edge type
             match_strength=match_strength,  # adjusted similarity score
             session_relation=session_relation,
             explanation=None  # keep null as requested
