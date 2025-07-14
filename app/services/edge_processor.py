@@ -345,32 +345,35 @@ def process_edges_batch(
 ) -> Dict[str, Any]:
     """
     Process ALL unprocessed nodes to create edges until all are processed.
+    Uses internal batching to prevent worker timeouts while ensuring complete processing.
     
     Args:
         db: Database session.
         user_id: ID of the user.
-        batch_size: Ignored - all nodes are processed until complete.
+        batch_size: Ignored - uses internal batching for timeout prevention.
         
     Returns:
         Dictionary with processing statistics.
     """
     start_time = time.time()
-    logger.info(f"Starting complete edge processing for user {user_id} (batch_size ignored)")
+    logger.info(f"Starting complete edge processing for user {user_id} (internal batching enabled)")
     
     # Track statistics
     processed_count = 0
     total_edges_created = 0
     
-    # Continue processing until ALL nodes are processed
+    # Continue processing until ALL nodes are processed (in batches to avoid timeouts)
+    batch_count = 0
     while True:
-        # Get ALL unprocessed nodes (no limit)
-        current_nodes = get_unprocessed_nodes(db, user_id, limit=None)
+        # Get current batch of unprocessed nodes (limit to prevent timeouts)
+        current_nodes = get_unprocessed_nodes(db, user_id, limit=10)
         
         if not current_nodes:
             logger.info("No more unprocessed nodes found - processing complete")
             break
         
-        logger.info(f"Processing edges for ALL {len(current_nodes)} unprocessed nodes")
+        batch_count += 1
+        logger.info(f"Processing batch {batch_count}: {len(current_nodes)} unprocessed nodes")
         
         # Process each node individually with error handling
         for current_node in current_nodes:
