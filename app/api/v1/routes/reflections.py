@@ -176,7 +176,6 @@ def generate_session_reflection(
                 return {
                     "success": True,
                     "reflection_text": reflection_data['generated_text'],
-                    "confidence_score": reflection_data.get('confidence_score'),
                     "reflection_id": reflection_data['id'],
                     "generated_at": reflection_data['generated_at']
                 }

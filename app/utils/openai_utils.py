@@ -442,9 +442,8 @@ def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[s
     2. Note any contradictions or emotional shifts
     3. Offer a perspective that might be helpful for self-awareness
     4. Be empathetic and non-judgmental
-    5. Include a confidence score (0.0 to 1.0) about how meaningful this reflection is
     
-    Format your response as a JSON object with generated_text and confidence_score fields.
+    Format your response as a JSON object with only a generated_text field.
     """
     
     try:
@@ -467,14 +466,13 @@ def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[s
         response_content = response.choices[0].message.content
         result = json.loads(response_content)
         
-        logger.info(f"Generated reflection with confidence score: {result.get('confidence_score')}")
+        logger.info(f"Generated reflection successfully")
         return result
     except Exception as e:
         # Log the error and return a default reflection
         logger.error(f"Error generating reflection: {e}", exc_info=True)
         return {
-            "generated_text": "I noticed a pattern in your thoughts that might be worth reflecting on. Consider revisiting these ideas when you're ready.",
-            "confidence_score": 0.3
+            "generated_text": "I noticed a pattern in your thoughts that might be worth reflecting on. Consider revisiting these ideas when you're ready."
         }
 
 
