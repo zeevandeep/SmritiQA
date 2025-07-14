@@ -268,7 +268,7 @@ def create_edges_batch(
     candidate_nodes: List[Dict[str, Any]]
 ) -> List[Edge]:
     """
-    Create edges between the current node and multiple candidate nodes.
+    Create edges between the current node and multiple candidate nodes using similarity scores.
     
     Args:
         db: Database session.
@@ -282,65 +282,22 @@ def create_edges_batch(
         logger.info(f"No candidate nodes provided for edge creation with node {current_node['id']}")
         return []
     
-    logger.info(f"Creating edges for node {current_node['id']} with {len(candidate_nodes)} candidates")
+    logger.info(f"Creating similarity-based edges for node {current_node['id']} with {len(candidate_nodes)} candidates")
     
-    # Use OpenAI to analyze relationships and determine edge types
-    try:
-        edge_data_list = create_edges_between_nodes(current_node, candidate_nodes)
-        logger.info(f"OpenAI returned {len(edge_data_list)} potential edges")
-    except Exception as e:
-        logger.error(f"Error getting edge data from OpenAI: {e}", exc_info=True)
-        # Return None specifically to indicate API failure (not just empty results)
-        return None
-    
-    # Create edges in the database
+    # Create edges in the database using similarity scores directly
     created_edges = []
-    for edge_data in edge_data_list:
-        # Extract from_node_id and to_node_id
-        from_node_id = edge_data.get("from_node_id")
+    for candidate in candidate_nodes:
+        from_node_id = candidate["id"]
         to_node_id = current_node["id"]  # The current node is always the target
-        
-        if not from_node_id:
-            logger.warning("Missing from_node_id in edge data")
-            continue
-            
-        # Validate the from_node_id is a valid UUID
-        try:
-            # Check if the UUID is properly formatted
-            if len(from_node_id) != 36 or from_node_id.count("-") != 4:
-                logger.warning(f"Invalid UUID format for from_node_id: {from_node_id}")
-                continue
-                
-            # Try to parse it as a UUID
-            uuid_obj = UUID(from_node_id)
-            # Ensure the string representation matches the original
-            if str(uuid_obj) != from_node_id:
-                logger.warning(f"UUID formatting mismatch: {from_node_id} vs {uuid_obj}")
-                continue
-        except (ValueError, TypeError) as e:
-            logger.warning(f"Invalid UUID for from_node_id: {from_node_id}, Error: {e}")
-            continue
         
         # Check if edge already exists
         if edge_repository.check_edge_exists(db, from_node_id, to_node_id):
             logger.info(f"Edge already exists between {from_node_id} and {to_node_id}")
             continue
         
-        # Get the edge type, handling different field names
-        edge_type = edge_data.get("edge_type")
-        if not edge_type:
-            edge_type = edge_data.get("type") or edge_data.get("connection_type") or "thought_progression"
-            
-        # Get match_strength, ensuring it's a valid float
-        match_strength = edge_data.get("match_strength")
-        if match_strength is not None:
-            try:
-                match_strength = float(match_strength)
-            except (ValueError, TypeError):
-                match_strength = 0.7
-        else:
-            match_strength = 0.7
-            
+        # Use adjusted similarity score as match_strength
+        match_strength = candidate.get("adjusted_similarity", 0.7)
+        
         # Ensure we only create edges with match_strength >= 0.7
         if match_strength < 0.7:
             logger.info(f"Skipping edge with match_strength {match_strength} < 0.7")
