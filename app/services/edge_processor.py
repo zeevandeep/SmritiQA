@@ -306,8 +306,8 @@ def create_edges_batch(
         # Use adjusted similarity score as match_strength (capped at 1.0)
         match_strength = min(candidate.get("adjusted_similarity", 0.75), 1.0)
         
-        # Ensure we only create edges with match_strength >= 0.75
-        if match_strength < 0.75:
+        # Ensure we only create edges with match_strength >= 0.84
+        if match_strength < 0.84:
             logger.info(f"Skipping edge with low match_strength: {match_strength}")
             continue
         

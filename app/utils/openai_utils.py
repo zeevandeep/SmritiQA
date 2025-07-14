@@ -27,8 +27,8 @@ EMBEDDING_MODEL = "text-embedding-ada-002"
 DEFAULT_BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "50"))
 
 # Edge creation thresholds and parameters
-INITIAL_SIMILARITY_THRESHOLD = float(os.environ.get("INITIAL_SIMILARITY_THRESHOLD", "0.5"))
-FINAL_SIMILARITY_THRESHOLD = float(os.environ.get("FINAL_SIMILARITY_THRESHOLD", "0.75"))
+INITIAL_SIMILARITY_THRESHOLD = float(os.environ.get("INITIAL_SIMILARITY_THRESHOLD", "0.7"))
+FINAL_SIMILARITY_THRESHOLD = float(os.environ.get("FINAL_SIMILARITY_THRESHOLD", "0.84"))
 OPENAI_CONFIDENCE_THRESHOLD = float(os.environ.get("OPENAI_CONFIDENCE_THRESHOLD", "0.85"))
 
 # Session window parameters
