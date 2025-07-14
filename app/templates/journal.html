@@ -688,13 +688,20 @@
                 
                 // Step 3: Create edges (session-only for fast processing)
                 showProcessingMessage('Establishing memory linkages...');
+                console.log(`[PIPELINE] Step 3: Session-only edge processing starting for session ${sessionId}`);
                 await retryApiCall(async () => {
                     const response = await fetch(`/api/v1/edges/process/session/${userId}/${sessionId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
                     });
-                    if (!response.ok) throw new Error(`Status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.log(`[PIPELINE] Session edge processing response error:`, errorText);
+                        throw new Error(`Status: ${response.status}, Body: ${errorText}`);
+                    }
+                    const result = await response.json();
+                    console.log(`[PIPELINE] Session edge processing response:`, result);
                     return response;
                 }, 'Edge processing');
                 
