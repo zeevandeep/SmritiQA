@@ -392,8 +392,6 @@ def process_edges_for_session(
             "emotion": node.emotion,
             "theme": node.theme,
             "cognition_type": node.cognition_type,
-            "belief_value": node.belief_value,
-            "contradiction_flag": node.contradiction_flag,
             "embedding": deserialize_embedding(node.embedding),
             "created_at": node.created_at
         }
