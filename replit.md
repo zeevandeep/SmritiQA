@@ -6,9 +6,10 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Confidence Score Removal Complete**: Removed confidence scores from reflection generation UI while maintaining backend storage for future analytics. Updated OpenAI prompts, API responses, and frontend display to exclude confidence scores from user interface
 - **Edge Similarity Thresholds Increased**: Raised initial threshold from 0.5 to 0.7 and final threshold from 0.75 to 0.84 to improve edge quality by requiring stronger connections between nodes
-- **OpenAI-Free Edge Creation System**: Completely removed OpenAI calls from edge processing. Edges now created directly using adjusted cosine similarity scores as match_strength with edge_type="default". Eliminates timeout issues and dramatically improves performance while maintaining connection quality through advanced similarity scoring
-- **Session-Only Edge Processing Implementation Complete**: Successfully separated immediate journal entry processing from background batch processing. New journal entries now only process their own nodes (1-3 per session) for instant completion in ~7 seconds, while background system handles historical backlog separately. Eliminates timeout issues and provides predictable performance regardless of user's journal history. Fixed Node model attribute compatibility issue
+- **OpenAI-Free Edge Creation System Complete**: Completely removed OpenAI calls from edge processing. Edges now created directly using adjusted cosine similarity scores as match_strength with edge_type="default". Eliminates timeout issues and dramatically improves performance while maintaining connection quality through advanced similarity scoring
+- **Session-Only Edge Processing Implementation Complete**: Successfully separated immediate journal entry processing from background batch processing. New journal entries now only process their own nodes (1-6 per session) for instant completion in ~7 seconds, while background system handles historical backlog separately. Eliminates timeout issues and provides predictable performance regardless of user's journal history. Fixed Node model attribute compatibility issue
 - **Unlimited Candidate Processing**: Removed MAX_CANDIDATE_NODES limit so edges are created with ALL qualified candidates above similarity threshold, maximizing connection discovery
 - **Candidate Discovery Window Reduced**: Changed MAX_DAYS_TO_CONSIDER from 30 to 14 days to reduce candidate search window and improve edge processing performance by limiting historical nodes considered for connections
 - **Edge Processing Batch Size Fix**: Fixed critical issue where edge processor only processed 1 node per journal entry instead of all unprocessed nodes. Root cause: frontend called edge API with default batch_size=1, causing SQL LIMIT 1 to fetch only oldest unprocessed node. Updated frontend to use batch_size=10 ensuring all user's unprocessed nodes get processed together, eliminating mixed is_processed states
@@ -92,10 +93,13 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
    - Enables efficient similarity calculations for edge creation
 
 4. **Edge Creation**
-   - Identifies psychological connections between thoughts
-   - Supports 7 edge types: thought_progression, emotion_shift, theme_repetition, identity_drift, emotional_contradiction, belief_contradiction, unresolved_loop
-   - Uses cosine similarity and AI analysis for relationship classification
-   - Processes both intra-session and cross-session connections
+   - **OpenAI-Free System**: Uses pure cosine similarity calculations without AI analysis for faster, more reliable processing
+   - **Single Edge Type**: All edges use "default" type with adjusted cosine similarity scores as match_strength
+   - **Session-Only Processing**: New journal entries only process their own nodes (1-6 per session) instead of entire user backlog
+   - **14-Day Candidate Window**: Searches for connection candidates within 14 days (reduced from 30 days) for optimal performance
+   - **High Similarity Threshold**: Requires 0.84+ similarity scores to ensure only meaningful connections are created
+   - **Unlimited Qualified Candidates**: Creates edges with ALL candidates above threshold (no artificial limits)
+   - **Performance Optimized**: Completes edge processing in 2-7 seconds instead of potentially timing out
 
 5. **Chain-Linked Edge Processing (Phase 3.25)**
    - Identifies edges that form potential chains (A→B, B→C patterns)
@@ -111,7 +115,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
    - **Random Backward Traversal**: Randomly selects from available incoming edges to build causal history
    - **Chain Requirements**: Minimum 3 nodes, maximum 20 nodes, nodes must be ≤90 days old
    - **Attempt Limits**: Maximum 10 edge attempts (configurable via MAX_REFLECTION_ATTEMPTS env var)
-   - **AI Generation**: GPT-4o creates empathetic reflections from thought sequences with confidence scores
+   - **AI Generation**: GPT-4o creates empathetic reflections from thought sequences (confidence scores removed from UI)
 
 ### Database Schema
 
@@ -128,7 +132,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 1. **Input**: User creates journal session via voice/text
 2. **Processing**: Raw transcript processed through OpenAI to extract nodes
 3. **Embedding**: Nodes converted to vector embeddings for similarity analysis
-4. **Connection**: Edges created between semantically and emotionally related nodes
+4. **Session-Only Edge Creation**: Current session's nodes connected to historical nodes using cosine similarity (14-day window, 0.84+ threshold)
 5. **Chain Analysis**: System identifies and marks chain-linked edges (A→B→C patterns)
 6. **Insight**: Personalized reflections generated using chain markers and dynamic discovery
 7. **Output**: User receives insights and can provide feedback
@@ -177,6 +181,8 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Changelog
 
+- July 14, 2025: Confidence score removal from UI complete - updated OpenAI prompts, API responses, and frontend display  
+- July 14, 2025: Major edge creation system overhaul - implemented OpenAI-free session-only processing with 14-day candidate window and 0.84+ similarity threshold for 2-7 second processing times
 - June 25, 2025: Corrected documentation - Phase 3.25 chain-linked edge processing is fully implemented and auto-triggered during journal submissions
 - June 25, 2025: Implemented nuclear scroll fix solution - comprehensive event blocking, 500ms monitoring with exponential backoff, multiple reset methods, transitioning class management
 - June 25, 2025: Fixed reflections page sticky header by identifying correct template file (clean_reflections.html) and implementing proper sticky positioning
