@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Edge Similarity Threshold Increased**: Raised final similarity threshold from 0.7 to 0.75 to improve edge quality by requiring stronger connections between nodes
 - **OpenAI-Free Edge Creation System**: Completely removed OpenAI calls from edge processing. Edges now created directly using adjusted cosine similarity scores as match_strength with edge_type="default". Eliminates timeout issues and dramatically improves performance while maintaining connection quality through advanced similarity scoring
 - **Complete Node Processing**: Modified edge processor to process ALL unprocessed nodes until every node has is_processed=true, eliminating mixed processing states. System now loops until no unprocessed nodes remain
 - **Unlimited Candidate Processing**: Removed MAX_CANDIDATE_NODES limit so edges are created with ALL qualified candidates above similarity threshold, maximizing connection discovery
