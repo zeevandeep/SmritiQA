@@ -77,7 +77,7 @@ def get_nodes_with_embeddings(db: DbSession, user_id: UUID, limit: int = 100) ->
     return nodes
 
 
-def get_unprocessed_nodes(db: DbSession, user_id: UUID, limit: int = 10) -> List[Dict[str, Any]]:
+def get_unprocessed_nodes(db: DbSession, user_id: UUID, limit: Optional[int] = None) -> List[Dict[str, Any]]:
     """
     Get a batch of nodes that haven't been processed for edge creation.
     
@@ -92,15 +92,23 @@ def get_unprocessed_nodes(db: DbSession, user_id: UUID, limit: int = 10) -> List
     Returns:
         List of node dictionaries.
     """
-    logger.info(f"Fetching up to {limit} unprocessed nodes for user {user_id}")
+    if limit is None:
+        logger.info(f"Fetching ALL unprocessed nodes for user {user_id}")
+    else:
+        logger.info(f"Fetching up to {limit} unprocessed nodes for user {user_id}")
     
     # Get nodes with embeddings that haven't been processed yet
     # Sort by created_at in ascending order to process oldest nodes first
-    db_nodes = db.query(Node).filter(
+    query = db.query(Node).filter(
         Node.user_id == user_id,
         Node.embedding.is_not(None),
         Node.is_processed == False
-    ).order_by(Node.created_at.asc()).limit(limit).all()
+    ).order_by(Node.created_at.asc())
+    
+    if limit is not None:
+        query = query.limit(limit)
+    
+    db_nodes = query.all()
     
     if not db_nodes:
         logger.info("No unprocessed nodes with embeddings found")
@@ -353,50 +361,52 @@ def process_edges_batch(
     processed_count = 0
     total_edges_created = 0
     
-    # Continue processing until all nodes are processed
+    # Continue processing until ALL nodes are processed
     while True:
-        # Get unprocessed nodes (no limit - process all)
-        current_nodes = get_unprocessed_nodes(db, user_id, limit=1000)
+        # Get ALL unprocessed nodes (no limit)
+        current_nodes = get_unprocessed_nodes(db, user_id, limit=None)
         
         if not current_nodes:
             logger.info("No more unprocessed nodes found - processing complete")
             break
         
-        logger.info(f"Processing edges for {len(current_nodes)} nodes")
+        logger.info(f"Processing edges for ALL {len(current_nodes)} unprocessed nodes")
         
-        # Process each node
+        # Process each node individually with error handling
         for current_node in current_nodes:
             logger.info(f"[EDGE_TRACE] Processing node {current_node['id']} (theme: {current_node.get('theme', 'unknown')})")
             node_id = current_node["id"]
             
-            # Find candidate nodes using the refined algorithm
-            candidates = find_candidate_nodes(db, current_node)
-            
-            if not candidates:
-                logger.info(f"[EDGE_TRACE] No qualified candidates found for node {node_id} - marking as processed")
-                # Mark as processed if we have no candidates
-                node_repository.mark_node_processed(db, node_id)
-                processed_count += 1
-                continue
-            
-            # Create edges using similarity-based analysis
-            logger.info(f"Found {len(candidates)} qualified candidates for node {node_id}")
-            
-            # Create edges between current node and candidates
-            created_edges = create_edges_batch(db, current_node, candidates)
-            
-            # Check if edge creation was successful
-            if created_edges is not None:
-                edges_created = len(created_edges)
+            try:
+                # Find candidate nodes using the refined algorithm
+                candidates = find_candidate_nodes(db, current_node)
+                
+                if not candidates:
+                    logger.info(f"[EDGE_TRACE] No qualified candidates found for node {node_id} - marking as processed")
+                    # Mark as processed even with no candidates - this is normal behavior
+                    node_repository.mark_node_processed(db, node_id)
+                    processed_count += 1
+                    continue
+                
+                # Create edges using similarity-based analysis
+                logger.info(f"Found {len(candidates)} qualified candidates for node {node_id}")
+                
+                # Create edges between current node and candidates
+                created_edges = create_edges_batch(db, current_node, candidates)
+                
+                # Edge creation completed - mark as processed regardless of count
+                edges_created = len(created_edges) if created_edges else 0
                 logger.info(f"[EDGE_TRACE] Created {edges_created} edges for node {node_id} - marking as processed")
                 total_edges_created += edges_created
                 
-                # Mark node as processed after successful edge creation
+                # Always mark node as processed after attempting edge creation
                 node_repository.mark_node_processed(db, node_id)
                 processed_count += 1
-            else:
-                logger.warning(f"[EDGE_TRACE] Edge creation failed for node {node_id} - NOT marking as processed")
-                # Node remains unprocessed so it can be tried again later
+                
+            except Exception as e:
+                logger.error(f"[EDGE_TRACE] Error processing node {node_id}: {e}", exc_info=True)
+                logger.warning(f"[EDGE_TRACE] Node {node_id} remains unprocessed due to error")
+                # Only leave unprocessed if there was an actual error
     
     elapsed_time = time.time() - start_time
     
