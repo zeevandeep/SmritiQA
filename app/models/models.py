@@ -113,7 +113,9 @@ class Edge(Base):
         CheckConstraint(
             "edge_type IN ('thought_progression', 'emotion_shift', 'belief_mutation', "
             "'contradiction_loop', 'mixed_transition', 'avoidance_drift', "
-            "'recurrence_theme', 'recurrence_emotion', 'recurrence_belief')",
+            "'recurrence_theme', 'recurrence_emotion', 'recurrence_belief', 'default', "
+            "'theme_repetition', 'identity_drift', 'emotional_contradiction', "
+            "'belief_contradiction', 'unresolved_loop', 'belief_evolution')",
             name="check_edge_type"
         ),
         CheckConstraint(

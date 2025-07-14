@@ -311,7 +311,7 @@ def create_edges_batch(
             from_node=from_node_id,  # candidate -> current
             to_node=to_node_id,      # current node
             user_id=current_node["user_id"],
-            edge_type="thought_progression",  # Use valid edge type
+            edge_type="default",     # all edges are "default" type
             match_strength=match_strength,  # adjusted similarity score
             session_relation=session_relation,
             explanation=None  # keep null as requested
