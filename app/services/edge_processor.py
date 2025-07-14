@@ -295,8 +295,8 @@ def create_edges_batch(
             logger.info(f"Edge already exists between {from_node_id} and {to_node_id}")
             continue
         
-        # Use adjusted similarity score as match_strength
-        match_strength = candidate.get("adjusted_similarity", 0.75)
+        # Use adjusted similarity score as match_strength (capped at 1.0)
+        match_strength = min(candidate.get("adjusted_similarity", 0.75), 1.0)
         
         # Ensure we only create edges with match_strength >= 0.75
         if match_strength < 0.75:
