@@ -192,6 +192,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         Transcribed text or None if transcription failed
     """
     logger.info(f"Transcribing audio data of {len(audio_data)} bytes with language: {language}")
+    print(f"AUDIO DEBUG: Starting transcription - {len(audio_data)} bytes, language: {language}")
     
     temp_filepath = None
     try:
@@ -201,6 +202,25 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             temp_file.write(audio_data)
         
         logger.info(f"Temporary audio file created at {temp_filepath}")
+        print(f"AUDIO DEBUG: Temp file created: {temp_filepath} (exists: {os.path.exists(temp_filepath)})")
+        
+        # Check if file is valid audio
+        try:
+            import wave
+            with wave.open(temp_filepath, 'rb') as test_wave:
+                frames = test_wave.getnframes()
+                rate = test_wave.getframerate()
+                duration = frames / rate if rate > 0 else 0
+                print(f"AUDIO DEBUG: Wave file valid - {frames} frames, {rate}Hz, {duration:.2f}s duration")
+        except Exception as wave_e:
+            print(f"AUDIO DEBUG: Wave validation failed: {wave_e}")
+            # Try to get basic file info anyway
+            try:
+                import os
+                file_size = os.path.getsize(temp_filepath)
+                print(f"AUDIO DEBUG: File size: {file_size} bytes")
+            except Exception as size_e:
+                print(f"AUDIO DEBUG: Cannot get file size: {size_e}")
         
         result_with_language = None
         result_auto = None
