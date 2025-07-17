@@ -476,11 +476,10 @@
                     formData.append('file', audioBlob, 'recording.webm');
                     
                     try {
-                        // Send to transcription API
-                        const response = await fetch('/api/v1/audio/transcribe/', {
+                        // Send to transcription API using secureFetch for automatic token refresh
+                        const response = await secureFetch('/api/v1/audio/transcribe/', {
                             method: 'POST',
-                            body: formData,
-                            credentials: 'include'
+                            body: formData
                         });
                         
                         if (!response.ok) {
