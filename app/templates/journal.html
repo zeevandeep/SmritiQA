@@ -503,6 +503,9 @@
                         // Clear the status indicator
                         statusIndicator.textContent = '';
                         
+                        // Update security message visibility
+                        manageSecurityMessage();
+                        
                     } catch (error) {
                         console.error('Error transcribing audio:', error);
                         statusIndicator.textContent = 'Error transcribing audio. Please try again.';
@@ -575,6 +578,9 @@
             micButton.style.display = 'inline-flex';
             statusIndicator.textContent = 'Journal entry discarded. Click to start a new recording.';
             instructionText.style.display = 'block';
+            
+            // Update security message visibility
+            manageSecurityMessage();
         }
         
         // Function to add 5 minutes to recording time
@@ -800,6 +806,9 @@
                 micButton.style.display = 'inline-flex';
                 instructionText.style.display = 'block';
                 
+                // Update security message visibility
+                manageSecurityMessage();
+                
                 // Trigger the real-time processing pipeline
                 const sessionId = data.id;  // Get the session ID from the response
                 triggerProcessingPipeline(sessionId, userId);
@@ -838,6 +847,49 @@
                     });
             });
         }
+
+        // Security message visibility management
+        function manageSecurityMessage() {
+            const securityMessage = document.getElementById('securityMessage');
+            const transcriptContainer = document.getElementById('transcriptContainer');
+            const body = document.body;
+            const windowHeight = window.innerHeight;
+            const documentHeight = body.scrollHeight;
+            
+            // Hide security message if transcript is showing or if content is tall enough to require scrolling
+            if (transcriptContainer && transcriptContainer.style.display !== 'none') {
+                securityMessage.style.opacity = '0';
+                securityMessage.style.pointerEvents = 'none';
+            } else if (documentHeight > windowHeight + 100) { // 100px buffer
+                securityMessage.style.opacity = '0';
+                securityMessage.style.pointerEvents = 'none';
+            } else {
+                securityMessage.style.opacity = '1';
+                securityMessage.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Monitor for content changes and scroll events
+        window.addEventListener('resize', manageSecurityMessage);
+        window.addEventListener('scroll', manageSecurityMessage);
+        
+        // Monitor for transcript container visibility changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    manageSecurityMessage();
+                }
+            });
+        });
+        
+        // Start observing transcript container when it exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const transcriptContainer = document.getElementById('transcriptContainer');
+            if (transcriptContainer) {
+                observer.observe(transcriptContainer, { attributes: true });
+            }
+            manageSecurityMessage(); // Initial check
+        });
     </script>
     
     <!-- Secure Fetch Utility -->
@@ -850,7 +902,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Security Reassurance Text -->
-    <div class="text-center py-3" style="background-color: #f8f9fa; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 0.85rem; position: fixed; bottom: 70px; left: 0; right: 0; z-index: 1000;">
+    <div id="securityMessage" class="text-center py-3" style="background-color: #f8f9fa; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 0.85rem; position: fixed; bottom: 70px; left: 0; right: 0; z-index: 1000; transition: opacity 0.3s ease;">
         <i class="bi bi-shield-check me-2" style="color: var(--primary-color);"></i>
         Your journal entries are encrypted and secure.
     </div>
