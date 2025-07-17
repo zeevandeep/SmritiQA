@@ -1,6 +1,7 @@
 """
 User repository for database operations related to users.
 """
+import logging
 from typing import List, Optional
 from uuid import UUID
 
@@ -9,6 +10,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models.models import User, UserProfile
 from app.schemas.schemas import UserCreate, UserProfileCreate, UserProfileUpdate, UserAuthenticate
+
+logger = logging.getLogger(__name__)
 
 
 def get_user(db: Session, user_id: UUID) -> Optional[User]:
@@ -201,6 +204,25 @@ def update_display_name(db: Session, user_id: UUID, display_name: str) -> bool:
     except Exception as e:
         db.rollback()
         return False
+
+
+def get_user_language(db: Session, user_id: UUID) -> Optional[str]:
+    """
+    Get user's language preference efficiently.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user.
+        
+    Returns:
+        Language code (ISO 639-1) or None if not found.
+    """
+    try:
+        result = db.query(UserProfile.language).filter(UserProfile.user_id == user_id).first()
+        return result[0] if result else None
+    except Exception as e:
+        logger.error(f"Error getting user language: {e}")
+        return None
 
 
 def update_language_preference(db: Session, user_id: UUID, language: str) -> bool:

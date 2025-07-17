@@ -1,16 +1,26 @@
 """
 Audio processing routes for API v1.
 """
-from fastapi import APIRouter, File, Form, HTTPException, status, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, status, UploadFile, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.utils.audio_utils import transcribe_audio
+from app.db.database import get_db
+from app.repositories import user_repository
+from app.utils.api_auth import get_current_user_from_jwt
 
 router = APIRouter()
 
 
 @router.post("/transcribe/", status_code=status.HTTP_200_OK)
-async def transcribe_audio_file(file: UploadFile = File(...), duration_seconds: int = Form(None)):
+async def transcribe_audio_file(
+    file: UploadFile = File(...), 
+    duration_seconds: int = Form(None),
+    current_user_id: str = Depends(get_current_user_from_jwt),
+    db: Session = Depends(get_db)
+):
     """
     Transcribe an audio file using OpenAI's Whisper model.
     
@@ -36,12 +46,22 @@ async def transcribe_audio_file(file: UploadFile = File(...), duration_seconds: 
             detail="File must be an audio file"
         )
     
+    # Get user's language preference from database
+    user_id_uuid = UUID(current_user_id)
+    user_language = user_repository.get_user_language(db, user_id_uuid)
+    logger.info(f"User language preference: {user_language}")
+    
     # Read the file content
     file_content = await file.read()
     
-    # Transcribe the audio
+    # Transcribe the audio with user's language preference
     filename = file.filename if file.filename else "audio.webm"
-    transcribed_text = transcribe_audio(file_content, filename=filename)
+    transcribed_text = transcribe_audio(
+        file_content, 
+        filename=filename, 
+        user_language=user_language,
+        duration_seconds=duration_seconds
+    )
     
     if transcribed_text is None:
         raise HTTPException(
