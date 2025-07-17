@@ -397,13 +397,14 @@ def create_edges_between_nodes(current_node: Dict[str, Any], candidate_nodes: Li
     return []
 
 
-def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[str, Any]]] = None, user_language: str = 'en') -> Dict[str, Any]:
     """
     Generate a reflection based on a set of nodes and optional edges.
     
     Args:
         nodes: The list of nodes to generate a reflection for.
         edges: Optional list of edges between the nodes.
+        user_language: Language code for generating reflection (e.g., 'en', 'hi', 'es').
         
     Returns:
         Dictionary containing the generated reflection and confidence score.
@@ -430,6 +431,38 @@ def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[s
     if emotions:
         context_info += f"\nEmotions: {', '.join(emotions)}"
     
+    # Language-specific instructions
+    language_instructions = {
+        'en': "Respond in English.",
+        'hi': "हिंदी में जवाब दें। Be empathetic and use appropriate cultural context.",
+        'es': "Responde en español. Sé empático y usa el contexto cultural apropiado.",
+        'fr': "Répondez en français. Soyez empathique et utilisez le contexte culturel approprié.",
+        'de': "Antworten Sie auf Deutsch. Seien Sie einfühlsam und verwenden Sie den entsprechenden kulturellen Kontext.",
+        'it': "Rispondi in italiano. Sii empatico e usa il contesto culturale appropriato.",
+        'pt': "Responda em português. Seja empático e use o contexto cultural apropriado.",
+        'ru': "Отвечайте на русском языке. Будьте чуткими и используйте соответствующий культурный контекст.",
+        'ja': "日本語で回答してください。共感的で、適切な文化的文脈を使用してください。",
+        'ko': "한국어로 답변하세요. 공감적이고 적절한 문화적 맥락을 사용하세요.",
+        'zh': "用中文回答。要有同理心，并使用适当的文化背景。",
+        'ar': "أجب باللغة العربية. كن متعاطفاً واستخدم السياق الثقافي المناسب.",
+        'th': "ตอบเป็นภาษาไทย จงมีความเห็นอกเห็นใจและใช้บริบททางวัฒนธรรมที่เหมาะสม",
+        'vi': "Trả lời bằng tiếng Việt. Hãy đồng cảm và sử dụng bối cảnh văn hóa phù hợp.",
+        'tr': "Türkçe cevap verin. Empatik olun ve uygun kültürel bağlamı kullanın.",
+        'pl': "Odpowiedz po polsku. Bądź empatyczny i używaj odpowiedniego kontekstu kulturowego.",
+        'nl': "Antwoord in het Nederlands. Wees empathisch en gebruik de juiste culturele context.",
+        'sv': "Svara på svenska. Var empatisk och använd lämplig kulturell kontext.",
+        'da': "Svar på dansk. Vær empatisk og brug passende kulturel kontekst.",
+        'no': "Svar på norsk. Vær empatisk og bruk passende kulturell kontekst.",
+        'fi': "Vastaa suomeksi. Ole empaattinen ja käytä sopivaa kulttuurista kontekstia.",
+        'he': "ענה בעברית. היה אמפתי והשתמש בהקשר התרבותי המתאים.",
+        'ur': "اردو میں جواب دیں۔ ہمدردی کا مظاہرہ کریں اور مناسب ثقافتی تناظر استعمال کریں۔",
+        'ta': "தமிழில் பதிலளிக்கவும். பச்சாதாபமுடன் இருங்கள் மற்றும் பொருத்தமான கலாச்சார சூழலைப் பயன்படுத்துங்கள்.",
+        'mr': "मराठीत उत्तर द्या. सहानुभूतीशील राहा आणि योग्य सांस्कृतिक संदर्भ वापरा.",
+        'kn': "ಕನ್ನಡದಲ್ಲಿ ಉತ್ತರಿಸಿ. ಸಹಾನುಭೂತಿಯಿಂದ ಇರಿ ಮತ್ತು ಸೂಕ್ತವಾದ ಸಾಂಸ್ಕೃತಿಕ ಸಂದರ್ಭವನ್ನು ಬಳಸಿ."
+    }
+    
+    language_instruction = language_instructions.get(user_language, language_instructions['en'])
+    
     prompt = f"""
     Based on the following sequence of thoughts, generate a thoughtful reflection.
     
@@ -442,6 +475,8 @@ def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[s
     2. Note any contradictions or emotional shifts
     3. Offer a perspective that might be helpful for self-awareness
     4. Be empathetic and non-judgmental
+    
+    IMPORTANT: {language_instruction}
     
     Format your response as a JSON object with only a generated_text field.
     """

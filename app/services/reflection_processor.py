@@ -17,7 +17,7 @@ import os
 from sqlalchemy.orm import Session as DbSession
 from sqlalchemy import Column
 
-from app.repositories import edge_repository, node_repository, reflection_repository
+from app.repositories import edge_repository, node_repository, reflection_repository, user_repository
 from app.utils.openai_utils import generate_reflection
 from app.schemas.schemas import ReflectionCreate
 from app.models.models import Edge
@@ -285,7 +285,7 @@ def collect_edges_for_chain(db: DbSession, node_ids: List[UUID]) -> List[Dict[st
     return edges
 
 
-def generate_reflection_from_chain(chain: List[Dict[str, Any]], edges: List[Dict[str, Any]], user_id: UUID) -> Dict[str, Any]:
+def generate_reflection_from_chain(chain: List[Dict[str, Any]], edges: List[Dict[str, Any]], user_id: UUID, user_language: str = 'en') -> Dict[str, Any]:
     """
     Generate a reflection based on a chain of nodes.
     
@@ -293,6 +293,7 @@ def generate_reflection_from_chain(chain: List[Dict[str, Any]], edges: List[Dict
         chain: List of node dictionaries in the chain.
         edges: List of edge dictionaries connecting the nodes.
         user_id: The user ID to associate with the reflection.
+        user_language: Language code for generating reflection (e.g., 'en', 'hi', 'es').
         
     Returns:
         Dictionary containing the created reflection data.
@@ -310,7 +311,7 @@ def generate_reflection_from_chain(chain: List[Dict[str, Any]], edges: List[Dict
     
     while retry_count < max_retries:
         try:
-            reflection_result = generate_reflection(chain, edges)
+            reflection_result = generate_reflection(chain, edges, user_language)
             break
         except Exception as e:
             retry_count += 1
@@ -401,6 +402,17 @@ def generate_single_reflection_for_user(
     """
     logger.info(f"Generating single reflection for user: {user_id}")
     
+    # Get user's language preference
+    user_language = 'en'  # Default to English
+    try:
+        user_profile = user_repository.get_user_profile(db, user_id)
+        if user_profile and user_profile.language:
+            user_language = user_profile.language
+            logger.info(f"Using user language preference: {user_language}")
+    except Exception as e:
+        logger.warning(f"Could not fetch user language preference, using default: {e}")
+        user_language = 'en'
+    
     stats = {
         'reflections_created': 0,
         'edges_processed': 0,
@@ -478,7 +490,7 @@ def generate_single_reflection_for_user(
             edges_for_chain = collect_edges_for_chain(db, node_ids)
             
             # Generate a reflection from the chain
-            reflection_data = generate_reflection_from_chain(chain, edges_for_chain, user_id)
+            reflection_data = generate_reflection_from_chain(chain, edges_for_chain, user_id, user_language)
             
             if reflection_data and isinstance(reflection_data, dict) and reflection_data.get('success', False):
                 # SUCCESS: Create proper ReflectionCreate object from the dict
