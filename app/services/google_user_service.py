@@ -16,7 +16,7 @@ from app.utils.google_oauth import log_oauth_event
 logger = logging.getLogger(__name__)
 
 
-async def find_or_create_google_user(google_user_info: Dict[str, Any], db: Session, request) -> User:
+async def find_or_create_google_user(google_user_info: Dict[str, Any], db: Session, request) -> tuple[User, bool]:
     """
     Find existing user or create new one from Google OAuth data.
     Implements secure account linking by email address.
@@ -27,7 +27,7 @@ async def find_or_create_google_user(google_user_info: Dict[str, Any], db: Sessi
         request: FastAPI request object for audit logging
         
     Returns:
-        User object (existing or newly created)
+        Tuple of (User object, is_new_user boolean)
     """
     # Validate input data
     if not google_user_info:
@@ -54,7 +54,7 @@ async def find_or_create_google_user(google_user_info: Dict[str, Any], db: Sessi
         # Update profile with Google data if needed
         await update_user_profile_from_google(existing_user, google_user_info, db)
         
-        return existing_user
+        return existing_user, False  # Existing user, not new
     
     # Create new user
     logger.info(f"Creating new user for Google OAuth: {email}")
@@ -77,7 +77,7 @@ async def find_or_create_google_user(google_user_info: Dict[str, Any], db: Sessi
     log_oauth_event(email, request, had_existing_password=False)
     
     logger.info(f"Successfully created new user: {new_user.id}")
-    return new_user
+    return new_user, True  # New user created
 
 
 async def create_user_profile_from_google(user: User, google_data: Dict[str, Any], db: Session) -> UserProfile:

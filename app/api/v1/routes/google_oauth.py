@@ -108,14 +108,24 @@ async def google_callback(
             return RedirectResponse(url="/login?error=oauth_email_missing", status_code=302)
         
         # Find or create user account
-        user = await find_or_create_google_user(google_user_info, db, request)
+        user, is_new_user = await find_or_create_google_user(google_user_info, db, request)
         
         # Generate JWT tokens
         access_token = generate_access_token(str(user.id), str(user.email))
         refresh_token = generate_refresh_token(str(user.id))
         
+        # Determine redirect URL based on user status
+        if is_new_user:
+            # New users need to select their language preference
+            redirect_url = "/oauth-success?new_user=true"
+            logger.info(f"New user created via Google OAuth, will redirect to language selection: {user.email}")
+        else:
+            # Existing users go directly to journal
+            redirect_url = "/oauth-success"
+            logger.info(f"Existing user authenticated via Google OAuth: {user.email}")
+        
         # For popup OAuth flow, redirect to a success page that closes the popup
-        response = RedirectResponse(url="/oauth-success", status_code=302)
+        response = RedirectResponse(url=redirect_url, status_code=302)
         
         # Access token (shorter expiry)
         response.set_cookie(

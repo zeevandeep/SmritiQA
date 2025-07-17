@@ -230,8 +230,14 @@
         // Listen for OAuth success messages from popup
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
-                // OAuth completed successfully, refresh the page
-                window.location.href = '/';
+                // Check if this is a new user who needs language selection
+                if (event.data.isNewUser) {
+                    // New user: redirect to language selection
+                    window.location.href = '/select-language';
+                } else {
+                    // Existing user: redirect to journal
+                    window.location.href = '/journal';
+                }
             }
         });
 
@@ -247,9 +253,9 @@
                     var checkClosed = setInterval(() => {
                         if (popup.closed) {
                             clearInterval(checkClosed);
-                            // Give a small delay for cookies to be set, then refresh
+                            // Give a small delay for cookies to be set, then redirect to journal
                             setTimeout(() => {
-                                window.location.href = '/';
+                                window.location.href = '/journal';
                             }, 500);
                         }
                     }, 1000);

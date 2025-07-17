@@ -724,6 +724,83 @@ async def settings_post(
     
     return RedirectResponse(url="/settings", status_code=303)
 
+@app.get("/select-language")
+async def select_language_page(request: Request):
+    """Show language selection page for new users (primarily from Google OAuth)."""
+    # Check if user is authenticated
+    user_id = get_current_user_id(request)
+    if not user_id:
+        # If not authenticated, redirect to login
+        return RedirectResponse(url="/login", status_code=303)
+    
+    return templates.TemplateResponse("select_language.html", {
+        "request": request
+    })
+
+@app.post("/select-language")
+async def select_language_post(
+    request: Request,
+    language: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Handle language selection form submission."""
+    # Check authentication
+    user_id = get_current_user_id(request)
+    if not user_id:
+        flash(request, 'error', 'Please log in to select your language')
+        return RedirectResponse(url="/login", status_code=303)
+    
+    # Validate language selection
+    if not language or language.strip() == "":
+        flash(request, 'error', 'Please select a language')
+        return RedirectResponse(url="/select-language", status_code=303)
+    
+    try:
+        from app.models.models import UserProfile
+        from sqlalchemy import func
+        from uuid import UUID
+        
+        # Convert user_id to UUID
+        user_uuid = UUID(user_id)
+        
+        # Update user's language preference
+        db.query(UserProfile).filter(UserProfile.user_id == user_uuid).update({
+            'language': language,
+            'language_preference': language,
+            'updated_at': func.now()
+        })
+        db.commit()
+        
+        # Get language name for success message
+        language_names = {
+            'en': 'English', 'af': 'Afrikaans', 'ar': 'Arabic', 'hy': 'Armenian',
+            'az': 'Azerbaijani', 'be': 'Belarusian', 'bn': 'Bengali', 'bs': 'Bosnian',
+            'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian',
+            'cs': 'Czech', 'da': 'Danish', 'nl': 'Dutch', 'et': 'Estonian',
+            'fi': 'Finnish', 'fr': 'French', 'gl': 'Galician', 'de': 'German',
+            'el': 'Greek', 'he': 'Hebrew', 'hi': 'Hindi', 'hu': 'Hungarian',
+            'is': 'Icelandic', 'id': 'Indonesian', 'it': 'Italian', 'ja': 'Japanese',
+            'kn': 'Kannada', 'kk': 'Kazakh', 'ko': 'Korean', 'lv': 'Latvian',
+            'lt': 'Lithuanian', 'mk': 'Macedonian', 'ms': 'Malay', 'mi': 'Maori',
+            'mr': 'Marathi', 'ne': 'Nepali', 'no': 'Norwegian', 'fa': 'Persian',
+            'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
+            'sr': 'Serbian', 'sk': 'Slovak', 'sl': 'Slovenian', 'es': 'Spanish',
+            'sw': 'Swahili', 'sv': 'Swedish', 'tl': 'Tagalog', 'ta': 'Tamil',
+            'th': 'Thai', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu',
+            'vi': 'Vietnamese', 'cy': 'Welsh'
+        }
+        
+        language_name = language_names.get(language, language)
+        flash(request, 'success', f'Language preference set to {language_name}!')
+        
+        # Redirect to journal page
+        return RedirectResponse(url="/journal", status_code=303)
+        
+    except Exception as e:
+        logger.error(f"Failed to update language preference: {e}")
+        flash(request, 'error', 'Failed to update language preference. Please try again.')
+        return RedirectResponse(url="/select-language", status_code=303)
+
 @app.get("/logout")
 async def logout(request: Request):
     """Log the user out."""

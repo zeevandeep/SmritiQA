@@ -44,19 +44,28 @@
     </div>
 
     <script>
+        // Check if this is a new user from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const isNewUser = urlParams.get('new_user') === 'true';
+        
         // Close popup and refresh parent window
         if (window.opener) {
             // Signal parent window that auth is complete
             window.opener.postMessage({
-                type: 'GOOGLE_OAUTH_SUCCESS'
+                type: 'GOOGLE_OAUTH_SUCCESS',
+                isNewUser: isNewUser
             }, '*');
             
             // Close this popup window
             window.close();
         } else {
-            // If not a popup, redirect to home page
+            // If not a popup, redirect based on user status
             setTimeout(() => {
-                window.location.href = '/';
+                if (isNewUser) {
+                    window.location.href = '/select-language';
+                } else {
+                    window.location.href = '/journal';
+                }
             }, 2000);
         }
     </script>

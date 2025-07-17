@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Language - Smriti</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#fd7e14">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    
+    <style>
+        :root {
+            --primary-orange: #fd7e14;
+            --light-orange: #fff3e0;
+            --text-gray: #6c757d;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-orange) 0%, #ffffff 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .language-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .language-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(253, 126, 20, 0.1);
+            padding: 3rem 2rem;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .language-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .language-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .language-subtitle {
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .language-select {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .language-select:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+        }
+        
+        .btn-orange {
+            background: var(--primary-orange);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-orange:hover {
+            background: #e8690b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 126, 20, 0.3);
+            color: white;
+        }
+        
+        .skip-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+        
+        .skip-link:hover {
+            color: var(--primary-orange);
+        }
+        
+        .welcome-text {
+            color: var(--primary-orange);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .language-info {
+            background: var(--light-orange);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+        
+        @media (max-width: 576px) {
+            .language-container {
+                padding: 1rem;
+            }
+            
+            .language-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .language-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-container">
+        <div class="language-card">
+            <div class="language-icon">
+                🌍
+            </div>
+            
+            <p class="welcome-text">Welcome to Smriti!</p>
+            <h1 class="language-title">Choose Your Language</h1>
+            <p class="language-subtitle">
+                Select your preferred language for voice transcription and reflections
+            </p>
+            
+            <div class="language-info">
+                <strong>💡 Why this matters:</strong> Your language choice helps us transcribe your voice accurately and generate reflections in your preferred language.
+            </div>
+            
+            <form method="POST" action="/select-language">
+                <select name="language" class="form-select language-select" required>
+                    <option value="">Choose your language...</option>
+                    <option value="en">English</option>
+                    <option value="af">Afrikaans</option>
+                    <option value="ar">Arabic (العربية)</option>
+                    <option value="hy">Armenian (Հայերեն)</option>
+                    <option value="az">Azerbaijani (Azərbaycan)</option>
+                    <option value="be">Belarusian (Беларуская)</option>
+                    <option value="bn">Bengali (বাংলা)</option>
+                    <option value="bs">Bosnian (Bosanski)</option>
+                    <option value="bg">Bulgarian (Български)</option>
+                    <option value="ca">Catalan (Català)</option>
+                    <option value="zh">Chinese (中文)</option>
+                    <option value="hr">Croatian (Hrvatski)</option>
+                    <option value="cs">Czech (Čeština)</option>
+                    <option value="da">Danish (Dansk)</option>
+                    <option value="nl">Dutch (Nederlands)</option>
+                    <option value="et">Estonian (Eesti)</option>
+                    <option value="fi">Finnish (Suomi)</option>
+                    <option value="fr">French (Français)</option>
+                    <option value="gl">Galician (Galego)</option>
+                    <option value="de">German (Deutsch)</option>
+                    <option value="el">Greek (Ελληνικά)</option>
+                    <option value="he">Hebrew (עברית)</option>
+                    <option value="hi">Hindi (हिन्दी)</option>
+                    <option value="hu">Hungarian (Magyar)</option>
+                    <option value="is">Icelandic (Íslenska)</option>
+                    <option value="id">Indonesian (Bahasa Indonesia)</option>
+                    <option value="it">Italian (Italiano)</option>
+                    <option value="ja">Japanese (日本語)</option>
+                    <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                    <option value="kk">Kazakh (Қазақша)</option>
+                    <option value="ko">Korean (한국어)</option>
+                    <option value="lv">Latvian (Latviešu)</option>
+                    <option value="lt">Lithuanian (Lietuvių)</option>
+                    <option value="mk">Macedonian (Македонски)</option>
+                    <option value="ms">Malay (Bahasa Melayu)</option>
+                    <option value="mi">Maori (Te Reo Māori)</option>
+                    <option value="mr">Marathi (मराठी)</option>
+                    <option value="ne">Nepali (नेपाली)</option>
+                    <option value="no">Norwegian (Norsk)</option>
+                    <option value="fa">Persian (فارسی)</option>
+                    <option value="pl">Polish (Polski)</option>
+                    <option value="pt">Portuguese (Português)</option>
+                    <option value="ro">Romanian (Română)</option>
+                    <option value="ru">Russian (Русский)</option>
+                    <option value="sr">Serbian (Српски)</option>
+                    <option value="sk">Slovak (Slovenčina)</option>
+                    <option value="sl">Slovenian (Slovenščina)</option>
+                    <option value="es">Spanish (Español)</option>
+                    <option value="sw">Swahili (Kiswahili)</option>
+                    <option value="sv">Swedish (Svenska)</option>
+                    <option value="tl">Tagalog (Filipino)</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                    <option value="th">Thai (ไทย)</option>
+                    <option value="tr">Turkish (Türkçe)</option>
+                    <option value="uk">Ukrainian (Українська)</option>
+                    <option value="ur">Urdu (اردو)</option>
+                    <option value="vi">Vietnamese (Tiếng Việt)</option>
+                    <option value="cy">Welsh (Cymraeg)</option>
+                </select>
+                
+                <button type="submit" class="btn btn-orange">
+                    Continue to Journal
+                </button>
+            </form>
+            
+            <a href="/journal" class="skip-link">
+                Skip for now (use English)
+            </a>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
