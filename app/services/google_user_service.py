@@ -98,7 +98,6 @@ async def create_user_profile_from_google(user: User, google_data: Dict[str, Any
             'display_name': google_data.get('name', '').strip() or None,
             'profile_image_url': google_data.get('picture'),
             'language': 'en',  # Default language
-            'language_preference': 'en',
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
         }

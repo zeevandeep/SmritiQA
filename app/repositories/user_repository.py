@@ -221,9 +221,8 @@ def update_language_preference(db: Session, user_id: UUID, language: str) -> boo
         if db_profile is None:
             return False
         
-        # Update both language and language_preference fields for consistency
+        # Update language field only
         setattr(db_profile, 'language', language)
-        setattr(db_profile, 'language_preference', language)
         setattr(db_profile, 'updated_at', func.now())
         
         db.commit()

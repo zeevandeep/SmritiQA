@@ -156,7 +156,7 @@ def get_user_profile_data(user_id: str, db: Session) -> Optional[Dict[str, Any]]
             return {
                 "user_id": str(user_profile.user_id),
                 "display_name": user_profile.display_name,
-                "language_preference": user_profile.language_preference
+                "language": user_profile.language
             }
     except Exception as e:
         print(f"Error getting user profile: {e}")
@@ -799,7 +799,6 @@ async def select_language_post(
         # Update user's language preference
         db.query(UserProfile).filter(UserProfile.user_id == user_uuid).update({
             'language': language,
-            'language_preference': language,
             'updated_at': func.now()
         })
         db.commit()

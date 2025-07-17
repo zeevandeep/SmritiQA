@@ -46,7 +46,6 @@ class UserProfile(Base):
     birthdate = Column(Date)
     gender = Column(Text)
     language = Column(Text, default='en')
-    language_preference = Column(Text, default='en')
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
