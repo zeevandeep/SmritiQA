@@ -1050,13 +1050,7 @@
         clearTextButton.addEventListener('click', clearTextEntry);
         submitTextButton.addEventListener('click', submitTextEntry);
         
-        // Allow Enter+Shift for new lines, but Enter alone submits (optional)
-        textAreaInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                submitTextEntry();
-            }
-        });
+        // Allow Enter to create new lines in text area (no auto-submit)
         
         // Event listeners for voice mode
         micButton.addEventListener('click', startRecording);
