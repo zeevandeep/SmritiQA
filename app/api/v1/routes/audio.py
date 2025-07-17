@@ -81,6 +81,7 @@ async def transcribe_audio_file(
         
     except Exception as e:
         logger.error(f"Transcription error: {e}", exc_info=True)
+        print(f"API TRANSCRIPTION ERROR: {e}")  # Force console output
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Transcription failed: {str(e)}"

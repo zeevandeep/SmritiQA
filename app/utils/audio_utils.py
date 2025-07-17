@@ -218,7 +218,8 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                     result_with_language = response.text
                     logger.info(f"Transcription with language '{language}' successful: {len(result_with_language)} characters")
             except Exception as e:
-                logger.warning(f"Transcription with language '{language}' failed: {e}")
+                logger.error(f"Transcription with language '{language}' failed: {e}", exc_info=True)
+                print(f"TRANSCRIPTION ERROR (language): {e}")  # Force console output
         
         # Second attempt: auto-detection (no language specified)
         try:
@@ -231,7 +232,8 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                 result_auto = response.text
                 logger.info(f"Auto-detection transcription successful: {len(result_auto)} characters")
         except Exception as e:
-            logger.warning(f"Auto-detection transcription failed: {e}")
+            logger.error(f"Auto-detection transcription failed: {e}", exc_info=True)
+            print(f"TRANSCRIPTION ERROR (auto): {e}")  # Force console output
         
         # Choose the better result
         final_result = choose_better_transcription(result_with_language, result_auto, language, audio_duration)
@@ -250,6 +252,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             
     except Exception as e:
         logger.error(f"Error in transcription process: {e}", exc_info=True)
+        print(f"TRANSCRIPTION PROCESS ERROR: {e}")  # Force console output
         return None
     finally:
         # Clean up the temporary file
