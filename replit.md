@@ -6,6 +6,7 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Recent Changes
 
+- **Audio Transcription System Fully Operational**: Successfully resolved all critical bugs preventing real user functionality. Fixed three-part issue: authentication (switched to secureFetch for automatic token refresh), Python scoping (removed conflicting import statement), and frontend field mapping (transcript vs transcribed_text). System now properly handles multilingual transcription with automatic language fallback, confirmed working with real user testing
 - **Text-Embedding-3-Small Upgrade Complete**: Successfully upgraded from text-embedding-ada-002 to text-embedding-3-small for all users. Confirmed working with real multilingual testing including Hinglish, Hindi, Urdu, and English mixed content. Delivers +40% multilingual performance improvement, 5x cost reduction ($0.00002 vs $0.0001 per 1K tokens), and enhanced semantic understanding for code-mixed languages. Existing embeddings preserved; all new journal entries use the superior model
 - **Confidence Score Removal Complete**: Removed confidence scores from reflection generation UI while maintaining backend storage for future analytics. Updated OpenAI prompts, API responses, and frontend display to exclude confidence scores from user interface
 - **Edge Similarity Thresholds Increased**: Raised initial threshold from 0.5 to 0.7 and final threshold from 0.75 to 0.84 to improve edge quality by requiring stronger connections between nodes
