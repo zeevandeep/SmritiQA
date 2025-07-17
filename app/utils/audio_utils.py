@@ -17,8 +17,11 @@ from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client with API key from settings
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+# Initialize OpenAI client with API key from settings and extended timeout for audio processing
+client = OpenAI(
+    api_key=settings.OPENAI_API_KEY,
+    timeout=180.0  # 3 minutes for handling longer audio files
+)
 
 # Language script patterns for validation - OpenAI Whisper supported languages only
 SCRIPT_PATTERNS = {
