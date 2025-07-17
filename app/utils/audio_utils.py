@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # Initialize OpenAI client with API key from settings
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-# Language script patterns for validation
+# Language script patterns for validation - OpenAI Whisper supported languages only
 SCRIPT_PATTERNS = {
     'ar': r'[\u0600-\u06FF\u0750-\u077F]',  # Arabic script
     'hi': r'[\u0900-\u097F]',              # Devanagari script (Hindi)
@@ -29,11 +29,10 @@ SCRIPT_PATTERNS = {
     'ja': r'[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]', # Hiragana, Katakana, Kanji
     'ko': r'[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]', # Korean
     'th': r'[\u0e00-\u0e7f]',              # Thai
-    'bn': r'[\u0980-\u09ff]',              # Bengali
     'ta': r'[\u0b80-\u0bff]',              # Tamil
-    'te': r'[\u0c00-\u0c7f]',              # Telugu
     'mr': r'[\u0900-\u097f]',              # Marathi (Devanagari)
     'ne': r'[\u0900-\u097f]',              # Nepali (Devanagari)
+    'kn': r'[\u0c80-\u0cff]',              # Kannada
 }
 
 

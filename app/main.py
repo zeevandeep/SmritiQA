@@ -725,7 +725,7 @@ async def settings_post(
                     # Get language name for success message
                     language_names = {
                         'en': 'English', 'af': 'Afrikaans', 'ar': 'Arabic', 'hy': 'Armenian',
-                        'az': 'Azerbaijani', 'be': 'Belarusian', 'bn': 'Bengali', 'bs': 'Bosnian',
+                        'az': 'Azerbaijani', 'be': 'Belarusian', 'bs': 'Bosnian',
                         'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian',
                         'cs': 'Czech', 'da': 'Danish', 'nl': 'Dutch', 'et': 'Estonian',
                         'fi': 'Finnish', 'fr': 'French', 'gl': 'Galician', 'de': 'German',
@@ -806,7 +806,7 @@ async def select_language_post(
         # Get language name for success message
         language_names = {
             'en': 'English', 'af': 'Afrikaans', 'ar': 'Arabic', 'hy': 'Armenian',
-            'az': 'Azerbaijani', 'be': 'Belarusian', 'bn': 'Bengali', 'bs': 'Bosnian',
+            'az': 'Azerbaijani', 'be': 'Belarusian', 'bs': 'Bosnian',
             'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian',
             'cs': 'Czech', 'da': 'Danish', 'nl': 'Dutch', 'et': 'Estonian',
             'fi': 'Finnish', 'fr': 'French', 'gl': 'Galician', 'de': 'German',
