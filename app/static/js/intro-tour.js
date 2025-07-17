@@ -63,6 +63,9 @@ class SmritiTour {
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
                 }
+                .introjs-tooltipbuttons {
+                    padding: 15px 20px 20px;
+                }
                 .introjs-tooltip-header {
                     background: linear-gradient(135deg, #ff6b35, #f7931e);
                     color: white;
@@ -102,7 +105,8 @@ class SmritiTour {
                     font-size: 14px;
                     font-weight: 400;
                     white-space: nowrap;
-                    min-width: auto;
+                    padding: 10px 16px;
+                    min-width: 85px;
                 }
                 .introjs-skipbutton:hover {
                     background: #f8f9fa;
