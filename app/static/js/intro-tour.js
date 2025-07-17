@@ -67,7 +67,7 @@ class SmritiTour {
                     padding: 12px 20px 16px;
                 }
                 .introjs-tooltip-header {
-                    background: linear-gradient(135deg, #fd7e14, #e67e22);
+                    background: linear-gradient(135deg, #f39c12, #e67e22);
                     color: white;
                     padding: 14px 20px;
                     border-radius: 12px 12px 0 0;
@@ -84,7 +84,7 @@ class SmritiTour {
                     font-size: 15px;
                 }
                 .introjs-button {
-                    background: #fd7e14;
+                    background: #f39c12;
                     color: white;
                     border: none;
                     padding: 10px 20px;
@@ -102,11 +102,12 @@ class SmritiTour {
                     color: #6c757d;
                     background: transparent;
                     border: 1px solid #dee2e6;
-                    font-size: 14px;
+                    font-size: 13px;
                     font-weight: 400;
                     white-space: nowrap;
-                    padding: 10px 16px;
-                    min-width: 85px;
+                    padding: 8px 14px;
+                    min-width: 80px;
+                    height: 36px;
                 }
                 .introjs-skipbutton:hover {
                     background: #f8f9fa;
@@ -132,8 +133,8 @@ class SmritiTour {
             exitOnEsc: true,
             nextLabel: 'Next →',
             prevLabel: '← Back',
-            skipLabel: 'Skip Tour',
-            doneLabel: 'Start Journaling! 🎉',
+            skipLabel: 'Skip',
+            doneLabel: 'Start Exploring! 🎉',
             tooltipClass: 'smriti-tooltip',
             highlightClass: 'smriti-highlight',
             overlayOpacity: 0.4
@@ -205,6 +206,33 @@ class SmritiTour {
                         <h4>✍️ Text Journaling</h4>
                         <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
                         <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
+                    `,
+                    position: 'top'
+                },
+                {
+                    intro: `
+                        <h4>⚡ AI Processing</h4>
+                        <p>After recording or typing, Smriti's AI will:</p>
+                        <ul style="margin: 12px 0; padding-left: 20px;">
+                            <li><strong>Analyze</strong> your thoughts and emotions (~2.4s)</li>
+                            <li><strong>Generate embeddings</strong> for pattern recognition (~1.6s)</li>
+                            <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
+                    `
+                },
+                {
+                    element: '.bottom-nav',
+                    intro: `
+                        <h4>🧭 Navigation</h4>
+                        <p>Use the bottom navigation to explore:</p>
+                        <ul style="margin: 12px 0; padding-left: 20px;">
+                            <li><strong>Journal:</strong> Create new entries (where you are now)</li>
+                            <li><strong>Entries:</strong> View your journal history</li>
+                            <li><strong>Reflections:</strong> Read AI-generated insights</li>
+                            <li><strong>Generate:</strong> Create new reflections from your patterns</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #6c757d;">Let's explore these sections!</p>
                     `,
                     position: 'top'
                 }
