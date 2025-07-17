@@ -83,6 +83,64 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
+        .input-mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 4px;
+            background-color: var(--background-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .toggle-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 2px 4px rgba(104, 104, 230, 0.2);
+        }
+        
+        .toggle-btn:hover:not(.active) {
+            background-color: rgba(104, 104, 230, 0.1);
+        }
+        
+        .text-input-area {
+            display: none;
+        }
+        
+        .text-area {
+            min-height: 200px;
+            border-radius: 12px;
+            padding: 15px;
+            background-color: var(--background-light);
+            border: 2px solid var(--border-color);
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+        
+        .text-area:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(104, 104, 230, 0.1);
+        }
+        
         .mic-btn:hover, .mic-btn:focus {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(104, 104, 230, 0.5);
@@ -265,16 +323,48 @@
         <div class="card voice-input-area">
             <div class="card-body">
                 <h4 class="card-title">New Journal Entry</h4>
+                
+                <!-- Input Mode Toggle -->
+                <div class="input-mode-toggle">
+                    <button id="voiceToggle" class="toggle-btn active">
+                        <i class="bi bi-mic-fill"></i>
+                        Voice
+                    </button>
+                    <button id="textToggle" class="toggle-btn">
+                        <i class="bi bi-keyboard-fill"></i>
+                        Text
+                    </button>
+                </div>
+                
                 <p id="instructionText" class="card-text">Tap the microphone to start recording your thoughts. Your voice will be transcribed automatically.</p>
                 
-                <div class="action-row mb-3">
-                    <!-- Initial button state (not recording) -->
-                    <button id="micButton" class="btn btn-primary mic-btn">
-                        <i class="bi bi-mic-fill fs-1"></i>
-                    </button>
-                    
-                    <div id="statusIndicator" class="status-indicator">
-                        Tap the microphone to start recording in {{ language_display_name }}
+                <!-- Voice Input Area -->
+                <div id="voiceInputArea" class="voice-input-section">
+                    <div class="action-row mb-3">
+                        <!-- Initial button state (not recording) -->
+                        <button id="micButton" class="btn btn-primary mic-btn">
+                            <i class="bi bi-mic-fill fs-1"></i>
+                        </button>
+                        
+                        <div id="statusIndicator" class="status-indicator">
+                            Tap the microphone to start recording in {{ language_display_name }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Text Input Area -->
+                <div id="textInputArea" class="text-input-area">
+                    <div class="action-row mb-3">
+                        <textarea id="textAreaInput" class="text-area" placeholder="Type your journal entry here... Share your thoughts, feelings, or experiences."></textarea>
+                        
+                        <div class="d-flex justify-content-end gap-3 mt-3">
+                            <button id="clearTextButton" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
+                            <button id="submitTextButton" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Save Entry
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -825,7 +915,132 @@
         
         // Journal entries functionality has been moved to a separate page
         
-        // Event listeners
+        // Input Mode Toggle Functionality
+        const voiceToggle = document.getElementById('voiceToggle');
+        const textToggle = document.getElementById('textToggle');
+        const voiceInputArea = document.getElementById('voiceInputArea');
+        const textInputArea = document.getElementById('textInputArea');
+        const instructionText = document.getElementById('instructionText');
+        const textAreaInput = document.getElementById('textAreaInput');
+        const clearTextButton = document.getElementById('clearTextButton');
+        const submitTextButton = document.getElementById('submitTextButton');
+        
+        function switchToVoiceMode() {
+            voiceToggle.classList.add('active');
+            textToggle.classList.remove('active');
+            voiceInputArea.style.display = 'block';
+            textInputArea.style.display = 'none';
+            instructionText.textContent = 'Tap the microphone to start recording your thoughts. Your voice will be transcribed automatically.';
+        }
+        
+        function switchToTextMode() {
+            textToggle.classList.add('active');
+            voiceToggle.classList.remove('active');
+            voiceInputArea.style.display = 'none';
+            textInputArea.style.display = 'block';
+            instructionText.textContent = 'Type your journal entry below. Share your thoughts, feelings, or experiences in writing.';
+            textAreaInput.focus(); // Focus on the text area when switching to text mode
+        }
+        
+        function clearTextEntry() {
+            textAreaInput.value = '';
+            textAreaInput.focus();
+        }
+        
+        async function submitTextEntry() {
+            const textContent = textAreaInput.value.trim();
+            
+            if (!textContent) {
+                alert('Please enter some text for your journal entry.');
+                textAreaInput.focus();
+                return;
+            }
+            
+            if (textContent.length < 10) {
+                alert('Please write at least 10 characters for a meaningful journal entry.');
+                textAreaInput.focus();
+                return;
+            }
+            
+            try {
+                // Disable the submit button to prevent double submission
+                submitTextButton.disabled = true;
+                submitTextButton.innerHTML = '<i class="bi bi-hourglass"></i> Saving...';
+                
+                // For text entries, we use a fixed duration (estimated reading time)
+                // Roughly 200 words per minute reading speed, so words * 60 / 200
+                const wordCount = textContent.split(/\s+/).length;
+                const estimatedDuration = Math.max(Math.ceil(wordCount * 60 / 200), 5); // Minimum 5 seconds
+                
+                const sessionData = {
+                    user_id: userId,
+                    raw_transcript: textContent,
+                    duration_seconds: estimatedDuration
+                };
+                
+                console.log('Saving text journal entry:', sessionData);
+                
+                const response = await secureFetch('/api/v1/sessions/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Clear the text area
+                textAreaInput.value = '';
+                
+                // Show success message
+                instructionText.innerHTML = `
+                    <div class="alert alert-success mb-0 py-2">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Journal entry saved successfully! Processing your thoughts...
+                    </div>
+                `;
+                
+                // Trigger the processing pipeline
+                const sessionId = data.id;
+                triggerProcessingPipeline(sessionId, userId);
+                
+                // Reset instruction text after 5 seconds
+                setTimeout(() => {
+                    instructionText.textContent = 'Type your journal entry below. Share your thoughts, feelings, or experiences in writing.';
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error saving text journal entry:', error);
+                alert('Error saving journal entry. Please try again.');
+            } finally {
+                // Re-enable the submit button
+                submitTextButton.disabled = false;
+                submitTextButton.innerHTML = '<i class="bi bi-check-circle"></i> Save Entry';
+            }
+        }
+        
+        // Event listeners for mode toggle
+        voiceToggle.addEventListener('click', switchToVoiceMode);
+        textToggle.addEventListener('click', switchToTextMode);
+        
+        // Event listeners for text mode
+        clearTextButton.addEventListener('click', clearTextEntry);
+        submitTextButton.addEventListener('click', submitTextEntry);
+        
+        // Allow Enter+Shift for new lines, but Enter alone submits (optional)
+        textAreaInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitTextEntry();
+            }
+        });
+        
+        // Event listeners for voice mode
         micButton.addEventListener('click', startRecording);
         stopButton.addEventListener('click', stopRecording);
         cancelButton.addEventListener('click', cancelRecording);
