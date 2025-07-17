@@ -59,12 +59,14 @@ async def transcribe_audio_file(
     logger.info(f"Starting transcription with file: {filename}, size: {len(file_content)} bytes")
     
     try:
+        print(f"API DEBUG: About to call transcribe_audio with {len(file_content)} bytes, language={user_language}")
         transcribed_text = transcribe_audio(
             file_content, 
             filename=filename, 
             user_language=user_language,
             audio_duration=duration_seconds
         )
+        print(f"API DEBUG: transcribe_audio returned: {transcribed_text is not None}")
         
         if transcribed_text is None:
             logger.error("Transcription returned None - OpenAI API might have failed")

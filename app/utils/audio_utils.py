@@ -300,5 +300,14 @@ def transcribe_audio(audio_data: bytes, filename: str = "audio.webm", user_langu
     Returns:
         Transcribed text or None if transcription failed.
     """
-    # Use the enhanced transcription with language optimization
-    return transcribe_audio_with_language(audio_data, filename, user_language, audio_duration)
+    print(f"TRANSCRIBE_AUDIO DEBUG: Called with {len(audio_data)} bytes, filename={filename}, language={user_language}")
+    try:
+        # Use the enhanced transcription with language optimization
+        result = transcribe_audio_with_language(audio_data, filename, user_language, audio_duration)
+        print(f"TRANSCRIBE_AUDIO DEBUG: Result: {result is not None}")
+        return result
+    except Exception as e:
+        print(f"TRANSCRIBE_AUDIO ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
