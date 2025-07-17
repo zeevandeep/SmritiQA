@@ -88,6 +88,7 @@ class SmritiTour {
                     border-radius: 6px;
                     font-weight: 500;
                     font-size: 14px;
+                    white-space: nowrap;
                     transition: all 0.2s;
                 }
                 .introjs-button:hover {
@@ -100,6 +101,8 @@ class SmritiTour {
                     border: 1px solid #dee2e6;
                     font-size: 14px;
                     font-weight: 400;
+                    white-space: nowrap;
+                    min-width: auto;
                 }
                 .introjs-skipbutton:hover {
                     background: #f8f9fa;
