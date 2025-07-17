@@ -192,7 +192,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         Transcribed text or None if transcription failed
     """
     logger.info(f"Transcribing audio data of {len(audio_data)} bytes with language: {language}")
-    print(f"AUDIO DEBUG: Starting transcription - {len(audio_data)} bytes, language: {language}")
     
     temp_filepath = None
     try:
@@ -202,24 +201,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             temp_file.write(audio_data)
         
         logger.info(f"Temporary audio file created at {temp_filepath}")
-        print(f"AUDIO DEBUG: Temp file created: {temp_filepath} (exists: {os.path.exists(temp_filepath)})")
-        
-        # Check if file is valid audio
-        try:
-            import wave
-            with wave.open(temp_filepath, 'rb') as test_wave:
-                frames = test_wave.getnframes()
-                rate = test_wave.getframerate()
-                duration = frames / rate if rate > 0 else 0
-                print(f"AUDIO DEBUG: Wave file valid - {frames} frames, {rate}Hz, {duration:.2f}s duration")
-        except Exception as wave_e:
-            print(f"AUDIO DEBUG: Wave validation failed: {wave_e}")
-            # Try to get basic file info anyway
-            try:
-                file_size = os.path.getsize(temp_filepath)
-                print(f"AUDIO DEBUG: File size: {file_size} bytes")
-            except Exception as size_e:
-                print(f"AUDIO DEBUG: Cannot get file size: {size_e}")
         
         result_with_language = None
         result_auto = None
@@ -237,8 +218,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                     result_with_language = response.text
                     logger.info(f"Transcription with language '{language}' successful: {len(result_with_language)} characters")
             except Exception as e:
-                logger.error(f"Transcription with language '{language}' failed: {e}", exc_info=True)
-                print(f"TRANSCRIPTION ERROR (language): {e}")  # Force console output
+                logger.warning(f"Transcription with language '{language}' failed: {e}")
         
         # Second attempt: auto-detection (no language specified)
         try:
@@ -251,8 +231,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                 result_auto = response.text
                 logger.info(f"Auto-detection transcription successful: {len(result_auto)} characters")
         except Exception as e:
-            logger.error(f"Auto-detection transcription failed: {e}", exc_info=True)
-            print(f"TRANSCRIPTION ERROR (auto): {e}")  # Force console output
+            logger.warning(f"Auto-detection transcription failed: {e}")
         
         # Choose the better result
         final_result = choose_better_transcription(result_with_language, result_auto, language, audio_duration)
@@ -271,7 +250,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             
     except Exception as e:
         logger.error(f"Error in transcription process: {e}", exc_info=True)
-        print(f"TRANSCRIPTION PROCESS ERROR: {e}")  # Force console output
         return None
     finally:
         # Clean up the temporary file
@@ -299,14 +277,10 @@ def transcribe_audio(audio_data: bytes, filename: str = "audio.webm", user_langu
     Returns:
         Transcribed text or None if transcription failed.
     """
-    print(f"TRANSCRIBE_AUDIO DEBUG: Called with {len(audio_data)} bytes, filename={filename}, language={user_language}")
     try:
         # Use the enhanced transcription with language optimization
         result = transcribe_audio_with_language(audio_data, filename, user_language, audio_duration)
-        print(f"TRANSCRIBE_AUDIO DEBUG: Result: {result is not None}")
         return result
     except Exception as e:
-        print(f"TRANSCRIBE_AUDIO ERROR: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Transcription failed: {e}", exc_info=True)
         raise
