@@ -100,7 +100,7 @@ def assess_transcription_quality(transcript: str, user_language: Optional[str] =
             'script_match': False
         }
     
-    # Check script match for non-Latin languages
+    # Check script match for non-Latin languages (flexible for multilingual content)
     script_match = True
     if user_language and user_language in SCRIPT_PATTERNS:
         pattern = SCRIPT_PATTERNS[user_language]
@@ -109,8 +109,14 @@ def assess_transcription_quality(transcript: str, user_language: Optional[str] =
         
         if total_chars > 0:
             script_ratio = script_chars / total_chars
-            # If less than 30% of characters match the expected script, consider it a mismatch
-            script_match = script_ratio >= 0.3
+            # For Hindi and other code-mixed languages, be more flexible
+            # OpenAI Whisper may return English text for Hindi speech if it's clearer
+            if user_language == 'hi':  # Hindi language
+                # Accept if any Hindi script is present OR if content seems translated
+                script_match = script_ratio >= 0.1 or total_chars > 20  # Very lenient for Hindi
+            else:
+                # For other languages, require 30% script match
+                script_match = script_ratio >= 0.3
         else:
             script_match = False
     
@@ -162,11 +168,10 @@ def choose_better_transcription(result1: Optional[str], result2: Optional[str], 
     
     # If both are good quality, prefer the one with user's language
     if quality1['is_good_quality'] and quality2['is_good_quality']:
-        # Prefer user language result if script matches
-        if quality1['script_match']:
-            return result1
-        else:
-            return result2
+        # For user language transcriptions, prefer them even with script flexibility
+        # OpenAI Whisper may return English text for non-English speech if clearer
+        logger.info(f"Both transcriptions good quality. User language: {user_language}, Script match: {quality1['script_match']}")
+        return result1  # Prefer user's language preference result
     
     # If only one is good quality, return that one
     if quality1['is_good_quality']:
@@ -248,11 +253,13 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         final_result = choose_better_transcription(result_with_language, result_auto, language, audio_duration)
         
         if final_result:
-            # Log which approach was used
+            # Log which approach was used with detailed reasoning
             if final_result == result_with_language and language:
-                logger.info(f"Selected user language '{language}' transcription")
+                logger.info(f"✓ Selected user language '{language}' transcription: '{final_result[:100]}...'")
+            elif result_auto:
+                logger.info(f"✓ Selected auto-detection transcription: '{final_result[:100]}...'")
             else:
-                logger.info("Selected auto-detection transcription")
+                logger.info(f"✓ Selected language-specific transcription (no auto-detection attempted): '{final_result[:100]}...'")
             
             return final_result
         else:
