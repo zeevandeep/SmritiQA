@@ -17,8 +17,12 @@ from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client with API key from settings
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+# Initialize OpenAI client with extended timeout for longer audio files
+client = OpenAI(
+    api_key=settings.OPENAI_API_KEY,
+    timeout=120.0,  # 2 minutes timeout for OpenAI API calls
+    max_retries=1   # Single retry to avoid excessive wait times
+)
 
 # Language script patterns for validation - OpenAI Whisper supported languages only
 SCRIPT_PATTERNS = {
@@ -207,6 +211,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         # First attempt: with user's preferred language
         if language:
             try:
+                logger.info(f"Starting language-specific transcription for '{language}'")
                 with open(temp_filepath, "rb") as audio_file:
                     response = client.audio.transcriptions.create(
                         model="whisper-1",
@@ -217,20 +222,27 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                     result_with_language = response.text
                     logger.info(f"Transcription with language '{language}' successful: {len(result_with_language)} characters")
             except Exception as e:
-                logger.warning(f"Transcription with language '{language}' failed: {e}")
+                logger.error(f"Transcription with language '{language}' failed: {e}")
+                result_with_language = None
         
-        # Second attempt: auto-detection (no language specified)
-        try:
-            with open(temp_filepath, "rb") as audio_file:
-                response = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    prompt="Transcribe the following audio with proper punctuation, including periods, commas, and question marks. Format complete sentences properly."
-                )
-                result_auto = response.text
-                logger.info(f"Auto-detection transcription successful: {len(result_auto)} characters")
-        except Exception as e:
-            logger.warning(f"Auto-detection transcription failed: {e}")
+        # Second attempt: auto-detection (no language specified) - only if first attempt failed
+        if not result_with_language:
+            try:
+                logger.info("Starting auto-detection transcription")
+                with open(temp_filepath, "rb") as audio_file:
+                    response = client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        prompt="Transcribe the following audio with proper punctuation, including periods, commas, and question marks. Format complete sentences properly."
+                    )
+                    result_auto = response.text
+                    logger.info(f"Auto-detection transcription successful: {len(result_auto)} characters")
+            except Exception as e:
+                logger.error(f"Auto-detection transcription failed: {e}")
+                result_auto = None
+        else:
+            logger.info("Skipping auto-detection since language-specific transcription succeeded")
+            result_auto = None
         
         # Choose the better result
         final_result = choose_better_transcription(result_with_language, result_auto, language, audio_duration)
