@@ -17,10 +17,10 @@ from app.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client with extended timeout for longer audio files
+# Initialize OpenAI client with extended timeout for 5+ minute audio files
 client = OpenAI(
     api_key=settings.OPENAI_API_KEY,
-    timeout=120.0,  # 2 minutes timeout for OpenAI API calls
+    timeout=420.0,  # 7 minutes timeout for OpenAI API calls (5 min audio + processing time)
     max_retries=1   # Single retry to avoid excessive wait times
 )
 

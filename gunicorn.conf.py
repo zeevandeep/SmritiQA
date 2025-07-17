@@ -9,10 +9,10 @@ bind = "0.0.0.0:5000"
 workers = 1
 worker_class = "sync"
 
-# Timeout settings for longer audio processing
-timeout = 180  # 3 minutes for audio transcription
-keepalive = 30
-graceful_timeout = 30
+# Timeout settings for 5+ minute audio processing
+timeout = 480  # 8 minutes for audio transcription (5 min audio + processing overhead)
+keepalive = 60
+graceful_timeout = 60
 
 # Memory and restart settings
 max_requests = 500  # Restart worker after 500 requests to prevent memory leaks
