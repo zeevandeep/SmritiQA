@@ -1061,7 +1061,22 @@
         document.getElementById('addTimeButton').addEventListener('click', addFiveMinutes);
 
         
-        // No need to load sessions on page load anymore
+        // Check for new user tour trigger
+        const urlParams = new URLSearchParams(window.location.search);
+        const isNewUser = urlParams.get('tour') === 'start' || urlParams.get('welcome') === 'true';
+        
+        if (isNewUser) {
+            // Clear URL params to avoid repeated tours
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            // Force start tour for new users
+            setTimeout(() => {
+                if (window.smritiTour) {
+                    window.smritiTour.manualStart();
+                }
+            }, 1500);
+        }
         
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
@@ -1125,6 +1140,9 @@
     
     <!-- PWA Install Prompt -->
     <script src="/static/install-prompt.js"></script>
+    
+    <!-- Onboarding Tour -->
+    <script src="/static/js/intro-tour.js"></script>
     
     <!-- Add Bootstrap JavaScript Bundle to enable the navigation toggle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -848,8 +848,8 @@ async def select_language_post(
         language_name = language_names.get(language, language)
         flash(request, 'success', f'Language preference set to {language_name}!')
         
-        # Redirect to journal page
-        return RedirectResponse(url="/journal", status_code=303)
+        # Redirect to journal page with tour parameter for new users
+        return RedirectResponse(url="/journal?welcome=true", status_code=303)
         
     except Exception as e:
         logger.error(f"Failed to update language preference: {e}")

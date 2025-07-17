@@ -1,0 +1,338 @@
+// Smriti Onboarding Tour using Intro.js
+// This tour guides new users through the key features of the app
+
+class SmritiTour {
+    constructor() {
+        this.hasSeenTour = localStorage.getItem('smriti_tour_completed');
+        this.introInstance = null;
+    }
+
+    // Initialize the tour for new users
+    init() {
+        // Check URL parameters for tour triggers
+        const urlParams = new URLSearchParams(window.location.search);
+        const isWelcome = urlParams.get('welcome') === 'true';
+        const isTourStart = urlParams.get('tour') === 'start';
+        
+        // Show tour if user hasn't seen it before OR if explicitly requested
+        if (!this.hasSeenTour || isWelcome || isTourStart) {
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                this.startTour();
+            }, 1000);
+        }
+    }
+
+    // Start the onboarding tour
+    startTour() {
+        // Import Intro.js dynamically if not already loaded
+        if (typeof introJs === 'undefined') {
+            this.loadIntroJS(() => {
+                this.configureTour();
+            });
+        } else {
+            this.configureTour();
+        }
+    }
+
+    // Load Intro.js library dynamically
+    loadIntroJS(callback) {
+        // Load CSS
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://cdn.jsdelivr.net/npm/intro.js@7.2.0/introjs.min.css';
+        document.head.appendChild(css);
+
+        // Load JS
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/intro.js@7.2.0/intro.min.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    // Configure and start the actual tour
+    configureTour() {
+        this.introInstance = introJs();
+        
+        // Custom styling for Smriti's orange theme
+        const customCSS = `
+            <style id="smriti-tour-styles">
+                .introjs-tooltip {
+                    max-width: 350px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                    border: none;
+                }
+                .introjs-tooltip-header {
+                    background: linear-gradient(135deg, #ff6b35, #f7931e);
+                    color: white;
+                    padding: 16px 20px;
+                    border-radius: 12px 12px 0 0;
+                    font-weight: 600;
+                }
+                .introjs-tooltip-title {
+                    color: white;
+                    font-size: 18px;
+                    margin: 0;
+                }
+                .introjs-tooltiptext {
+                    padding: 20px;
+                    line-height: 1.5;
+                    font-size: 15px;
+                }
+                .introjs-button {
+                    background: #ff6b35;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                }
+                .introjs-button:hover {
+                    background: #e55a2b;
+                    transform: translateY(-1px);
+                }
+                .introjs-skipbutton {
+                    color: #6c757d;
+                    background: transparent;
+                    border: 1px solid #dee2e6;
+                }
+                .introjs-skipbutton:hover {
+                    background: #f8f9fa;
+                }
+                .introjs-overlay {
+                    background: rgba(0,0,0,0.4);
+                }
+                .introjs-helperLayer {
+                    border-radius: 8px;
+                    box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+                }
+            </style>
+        `;
+        document.head.insertAdjacentHTML('beforeend', customCSS);
+
+        const steps = this.getTourSteps();
+
+        this.introInstance.setOptions({
+            steps: steps,
+            showStepNumbers: false,
+            showBullets: false,
+            exitOnOverlayClick: false,
+            exitOnEsc: true,
+            nextLabel: 'Next →',
+            prevLabel: '← Back',
+            skipLabel: 'Skip Tour',
+            doneLabel: 'Start Journaling! 🎉',
+            tooltipClass: 'smriti-tooltip',
+            highlightClass: 'smriti-highlight',
+            overlayOpacity: 0.4
+        });
+
+        // Event handlers
+        this.introInstance.onbeforechange((targetElement) => {
+            // Ensure elements are visible before highlighting
+            this.prepareStepElement(targetElement);
+        });
+
+        this.introInstance.oncomplete(() => {
+            this.completeTour();
+        });
+
+        this.introInstance.onexit(() => {
+            this.skipTour();
+        });
+
+        // Start the tour
+        this.introInstance.start();
+    }
+
+    // Define the tour steps
+    getTourSteps() {
+        const currentPath = window.location.pathname;
+        
+        // Base steps that work on journal page
+        const baseSteps = [
+            {
+                intro: `
+                    <div style="text-align: center;">
+                        <h3 style="color: #ff6b35; margin-bottom: 16px;">Welcome to Smriti! 🧠</h3>
+                        <p style="margin-bottom: 16px;">Smriti is your AI-powered emotional journaling companion that helps you discover patterns in your thoughts and feelings.</p>
+                        <p style="font-size: 14px; color: #6c757d;">This quick tour will show you how to get started. It takes about 1 minute.</p>
+                    </div>
+                `
+            }
+        ];
+
+        // Journal page specific steps
+        if (currentPath === '/journal' || currentPath === '/') {
+            return baseSteps.concat([
+                {
+                    element: '.input-mode-toggle',
+                    intro: `
+                        <h4>📝 Choose Your Input Method</h4>
+                        <p>You can journal in two ways:</p>
+                        <ul style="margin: 12px 0; padding-left: 20px;">
+                            <li><strong>Voice:</strong> Tap the microphone and speak your thoughts</li>
+                            <li><strong>Text:</strong> Click the pen icon and type your entry</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #6c757d;">Try switching between them!</p>
+                    `,
+                    position: 'bottom'
+                },
+                {
+                    element: '#micButton',
+                    intro: `
+                        <h4>🎤 Voice Journaling</h4>
+                        <p>Tap this microphone to start recording your thoughts. Smriti supports multiple languages and will automatically transcribe your speech.</p>
+                        <p style="font-size: 14px; color: #6c757d;">Perfect for when you're on the go or prefer speaking your thoughts!</p>
+                    `,
+                    position: 'top'
+                },
+                {
+                    element: '#textInputArea',
+                    intro: `
+                        <h4>✍️ Text Journaling</h4>
+                        <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
+                        <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
+                    `,
+                    position: 'top'
+                }
+            ]);
+        }
+
+        // Generic steps for other pages
+        return baseSteps.concat([
+            {
+                intro: `
+                    <h4>🚀 Ready to Start!</h4>
+                    <p>Visit the Journal page to create your first entry. Smriti will:</p>
+                    <ul style="margin: 12px 0; padding-left: 20px;">
+                        <li>Analyze your thoughts with AI</li>
+                        <li>Find patterns in your emotions</li>
+                        <li>Generate personalized insights</li>
+                        <li>Keep everything encrypted and private</li>
+                    </ul>
+                    <p style="font-size: 14px; color: #6c757d;">Let's explore your inner world together!</p>
+                `
+            }
+        ]);
+    }
+
+    // Prepare elements before each step
+    prepareStepElement(targetElement) {
+        if (!targetElement) return;
+
+        // Ensure text input area is visible if it's the target
+        if (targetElement.id === 'textInputArea') {
+            // Switch to text mode temporarily
+            const textToggle = document.getElementById('textToggle');
+            if (textToggle && !textToggle.classList.contains('active')) {
+                textToggle.click();
+            }
+        }
+
+        // Scroll element into view
+        targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+
+    // Handle tour completion
+    completeTour() {
+        localStorage.setItem('smriti_tour_completed', 'true');
+        this.removeTourStyles();
+        
+        // Show completion message
+        this.showCompletionMessage();
+    }
+
+    // Handle tour skip
+    skipTour() {
+        localStorage.setItem('smriti_tour_completed', 'true');
+        this.removeTourStyles();
+    }
+
+    // Remove custom tour styles
+    removeTourStyles() {
+        const styles = document.getElementById('smriti-tour-styles');
+        if (styles) {
+            styles.remove();
+        }
+    }
+
+    // Show a nice completion message
+    showCompletionMessage() {
+        const message = document.createElement('div');
+        message.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                text-align: center;
+                z-index: 10000;
+                max-width: 400px;
+                border: 2px solid #ff6b35;
+            ">
+                <h3 style="color: #ff6b35; margin-bottom: 16px;">Welcome Aboard! 🎉</h3>
+                <p style="margin-bottom: 20px;">You're all set to start your emotional journaling journey with Smriti.</p>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: #ff6b35;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    cursor: pointer;
+                ">Start Journaling</button>
+            </div>
+            <div style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 9999;
+            " onclick="this.parentElement.remove()"></div>
+        `;
+        document.body.appendChild(message);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (message.parentElement) {
+                message.remove();
+            }
+        }, 5000);
+    }
+
+    // Manual tour trigger (for settings or help)
+    manualStart() {
+        localStorage.removeItem('smriti_tour_completed');
+        this.hasSeenTour = false;
+        this.startTour();
+    }
+
+    // Reset tour for testing
+    resetTour() {
+        localStorage.removeItem('smriti_tour_completed');
+        this.hasSeenTour = false;
+    }
+}
+
+// Initialize tour when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    window.smritiTour = new SmritiTour();
+    
+    // Auto-start for new users
+    window.smritiTour.init();
+});
+
+// Export for global access
+window.SmritiTour = SmritiTour;

@@ -789,8 +789,8 @@ def signup():
             # Store user ID in session
             session['user_id'] = user_id
             
-            # Redirect directly to the journal page after successful account creation
-            return redirect(url_for('journal'))
+            # Redirect to journal with tour parameter for new users
+            return redirect(url_for('journal') + '?welcome=true')
         
         except Exception as e:
             error = f"An error occurred during signup: {str(e)}"
