@@ -64,12 +64,12 @@ class SmritiTour {
                     border: none;
                 }
                 .introjs-tooltipbuttons {
-                    padding: 15px 20px 20px;
+                    padding: 12px 20px 16px;
                 }
                 .introjs-tooltip-header {
-                    background: linear-gradient(135deg, #ff6b35, #f7931e);
+                    background: linear-gradient(135deg, #fd7e14, #e67e22);
                     color: white;
-                    padding: 16px 20px;
+                    padding: 14px 20px;
                     border-radius: 12px 12px 0 0;
                     font-weight: 600;
                 }
@@ -79,12 +79,12 @@ class SmritiTour {
                     margin: 0;
                 }
                 .introjs-tooltiptext {
-                    padding: 20px;
+                    padding: 18px 20px;
                     line-height: 1.5;
                     font-size: 15px;
                 }
                 .introjs-button {
-                    background: #ff6b35;
+                    background: #fd7e14;
                     color: white;
                     border: none;
                     padding: 10px 20px;
@@ -95,7 +95,7 @@ class SmritiTour {
                     transition: all 0.2s;
                 }
                 .introjs-button:hover {
-                    background: #e55a2b;
+                    background: #e67e22;
                     transform: translateY(-1px);
                 }
                 .introjs-skipbutton {
