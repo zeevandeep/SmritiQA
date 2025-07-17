@@ -216,7 +216,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             print(f"AUDIO DEBUG: Wave validation failed: {wave_e}")
             # Try to get basic file info anyway
             try:
-                import os
                 file_size = os.path.getsize(temp_filepath)
                 print(f"AUDIO DEBUG: File size: {file_size} bytes")
             except Exception as size_e:
