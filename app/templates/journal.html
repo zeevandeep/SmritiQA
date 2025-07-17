@@ -126,13 +126,14 @@
         .text-area {
             min-height: 200px;
             border-radius: 12px;
-            padding: 15px;
+            padding: 12px 8px;  /* Reduced horizontal padding from 15px to 8px */
             background-color: var(--background-light);
             border: 2px solid var(--border-color);
             font-size: 16px;
             font-family: inherit;
             resize: vertical;
             transition: border-color 0.2s ease;
+            width: 100%;  /* Ensure full width usage */
         }
         
         .text-area:focus {
@@ -354,7 +355,7 @@
                 
                 <!-- Text Input Area -->
                 <div id="textInputArea" class="text-input-area">
-                    <div class="action-row mb-3">
+                    <div class="mb-3">
                         <textarea id="textAreaInput" class="text-area" placeholder="Type your journal entry here... Share your thoughts, feelings, or experiences."></textarea>
                         
                         <div class="d-flex justify-content-end gap-3 mt-3">
