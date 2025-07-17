@@ -203,6 +203,36 @@ def update_display_name(db: Session, user_id: UUID, display_name: str) -> bool:
         return False
 
 
+def update_language_preference(db: Session, user_id: UUID, language: str) -> bool:
+    """
+    Update the language preference for a user profile.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user.
+        language: New language preference (ISO 639-1 code).
+        
+    Returns:
+        True if update was successful, False otherwise.
+    """
+    try:
+        from sqlalchemy import func
+        db_profile = get_user_profile(db, user_id)
+        if db_profile is None:
+            return False
+        
+        # Update both language and language_preference fields for consistency
+        setattr(db_profile, 'language', language)
+        setattr(db_profile, 'language_preference', language)
+        setattr(db_profile, 'updated_at', func.now())
+        
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        return False
+
+
 def delete_user_completely(db: Session, user_id: UUID) -> bool:
     """
     Delete a user and all their associated data from all tables.

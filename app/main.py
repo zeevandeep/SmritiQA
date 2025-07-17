@@ -676,6 +676,7 @@ async def settings_post(
     request: Request, 
     action: str = Form(...),
     display_name: str = Form(""),
+    language: str = Form(""),
     db: Session = Depends(get_db)
 ):
     """Handle settings form submission."""
@@ -712,12 +713,44 @@ async def settings_post(
         
         elif action == "update":
             # Update display name in user_profile table
-            success = user_repository.update_display_name(db, user_uuid, display_name.strip())
+            display_name_success = user_repository.update_display_name(db, user_uuid, display_name.strip())
             
-            if success:
-                flash(request, 'success', 'Display name updated successfully!')
+            # Update language preference if provided
+            language_success = True
+            if language and language.strip():
+                language_success = user_repository.update_language_preference(db, user_uuid, language.strip())
+            
+            if display_name_success and language_success:
+                if language and language.strip():
+                    # Get language name for success message
+                    language_names = {
+                        'en': 'English', 'af': 'Afrikaans', 'ar': 'Arabic', 'hy': 'Armenian',
+                        'az': 'Azerbaijani', 'be': 'Belarusian', 'bn': 'Bengali', 'bs': 'Bosnian',
+                        'bg': 'Bulgarian', 'ca': 'Catalan', 'zh': 'Chinese', 'hr': 'Croatian',
+                        'cs': 'Czech', 'da': 'Danish', 'nl': 'Dutch', 'et': 'Estonian',
+                        'fi': 'Finnish', 'fr': 'French', 'gl': 'Galician', 'de': 'German',
+                        'el': 'Greek', 'he': 'Hebrew', 'hi': 'Hindi', 'hu': 'Hungarian',
+                        'is': 'Icelandic', 'id': 'Indonesian', 'it': 'Italian', 'ja': 'Japanese',
+                        'kn': 'Kannada', 'kk': 'Kazakh', 'ko': 'Korean', 'lv': 'Latvian',
+                        'lt': 'Lithuanian', 'mk': 'Macedonian', 'ms': 'Malay', 'mi': 'Maori',
+                        'mr': 'Marathi', 'ne': 'Nepali', 'no': 'Norwegian', 'fa': 'Persian',
+                        'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
+                        'sr': 'Serbian', 'sk': 'Slovak', 'sl': 'Slovenian', 'es': 'Spanish',
+                        'sw': 'Swahili', 'sv': 'Swedish', 'tl': 'Tagalog', 'ta': 'Tamil',
+                        'th': 'Thai', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu',
+                        'vi': 'Vietnamese', 'cy': 'Welsh'
+                    }
+                    language_name = language_names.get(language.strip(), language.strip())
+                    flash(request, 'success', f'Settings updated successfully! Language preference set to {language_name}.')
+                else:
+                    flash(request, 'success', 'Display name updated successfully!')
             else:
-                flash(request, 'error', 'Failed to update display name. Please try again.')
+                if not display_name_success and not language_success:
+                    flash(request, 'error', 'Failed to update settings. Please try again.')
+                elif not display_name_success:
+                    flash(request, 'error', 'Failed to update display name. Please try again.')
+                else:
+                    flash(request, 'error', 'Failed to update language preference. Please try again.')
                 
     except Exception as e:
         flash(request, 'error', f'Error updating settings: {str(e)}')
