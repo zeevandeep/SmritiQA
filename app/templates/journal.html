@@ -474,6 +474,7 @@
                     // Create form data for API call
                     const formData = new FormData();
                     formData.append('file', audioBlob, 'recording.webm');
+                    formData.append('duration_seconds', window.finalRecordingDuration);
                     
                     try {
                         // Send to transcription API using secureFetch for automatic token refresh

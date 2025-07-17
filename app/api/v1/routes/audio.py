@@ -17,7 +17,7 @@ router = APIRouter()
 @router.post("/transcribe/", status_code=status.HTTP_200_OK)
 async def transcribe_audio_file(
     file: UploadFile = File(...), 
-    duration_seconds: int = Form(None),
+    duration_seconds: str = Form(None),
     current_user_id: str = Depends(get_current_user_from_jwt),
     db: Session = Depends(get_db)
 ):
@@ -37,7 +37,17 @@ async def transcribe_audio_file(
     # Log received parameters
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"Received transcription request with duration: {duration_seconds}")
+    
+    # Convert duration to int if provided
+    duration_int = None
+    if duration_seconds:
+        try:
+            duration_int = int(float(duration_seconds))
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid duration format received: {duration_seconds}")
+            duration_int = None
+    
+    logger.info(f"Received transcription request with duration: {duration_seconds} -> {duration_int}")
     
     # Check if the file is an audio file
     if file.content_type and not file.content_type.startswith("audio/"):
@@ -63,7 +73,7 @@ async def transcribe_audio_file(
             file_content, 
             filename=filename, 
             user_language=user_language,
-            audio_duration=duration_seconds
+            audio_duration=duration_int
         )
         
         if transcribed_text is None:
@@ -73,10 +83,10 @@ async def transcribe_audio_file(
                 detail="Failed to transcribe audio - please try again"
             )
         
-        logger.info(f"Transcription successful: '{transcribed_text[:100]}...' (duration: {duration_seconds}s)")
+        logger.info(f"Transcription successful: '{transcribed_text[:100]}...' (duration: {duration_int}s)")
         return {
             "transcribed_text": transcribed_text,  # Fixed: frontend expects this field name
-            "duration_seconds": duration_seconds
+            "duration_seconds": duration_int
         }
         
     except Exception as e:
