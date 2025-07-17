@@ -56,21 +56,32 @@ async def transcribe_audio_file(
     
     # Transcribe the audio with user's language preference
     filename = file.filename if file.filename else "audio.webm"
-    transcribed_text = transcribe_audio(
-        file_content, 
-        filename=filename, 
-        user_language=user_language,
-        duration_seconds=duration_seconds
-    )
+    logger.info(f"Starting transcription with file: {filename}, size: {len(file_content)} bytes")
     
-    if transcribed_text is None:
+    try:
+        transcribed_text = transcribe_audio(
+            file_content, 
+            filename=filename, 
+            user_language=user_language,
+            audio_duration=duration_seconds
+        )
+        
+        if transcribed_text is None:
+            logger.error("Transcription returned None - OpenAI API might have failed")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to transcribe audio - please try again"
+            )
+        
+        logger.info(f"Transcription successful: '{transcribed_text[:100]}...' (duration: {duration_seconds}s)")
+        return {
+            "transcribed_text": transcribed_text,  # Fixed: frontend expects this field name
+            "duration_seconds": duration_seconds
+        }
+        
+    except Exception as e:
+        logger.error(f"Transcription error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to transcribe audio"
+            detail=f"Transcription failed: {str(e)}"
         )
-    
-    logger.info(f"Transcription successful, returning text with duration: {duration_seconds}")
-    return {
-        "transcript": transcribed_text,
-        "duration_seconds": duration_seconds
-    }
