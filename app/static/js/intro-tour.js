@@ -94,13 +94,13 @@ class SmritiTour {
                     font-size: 15px;
                 }
                 .introjs-button {
-                    background: transparent;
+                    background: transparent !important;
                     color: #f39c12;
-                    border: none;
+                    border: none !important;
                     padding: 8px 12px;
-                    border-radius: 4px;
+                    border-radius: 0 !important;
                     font-weight: 500;
-                    font-size: 18px;
+                    font-size: 24px;
                     white-space: nowrap;
                     transition: all 0.2s;
                     display: flex;
@@ -109,11 +109,13 @@ class SmritiTour {
                     min-width: 44px;
                     height: 36px;
                     cursor: pointer;
+                    outline: none !important;
+                    box-shadow: none !important;
                 }
                 .introjs-button:hover {
-                    background: rgba(243, 156, 18, 0.1);
+                    background: transparent !important;
                     color: #e67e22;
-                    transform: translateY(-1px);
+                    transform: scale(1.1);
                 }
                 .introjs-skipbutton {
                     color: #6c757d;
@@ -151,8 +153,8 @@ class SmritiTour {
             showBullets: false,
             exitOnOverlayClick: false,
             exitOnEsc: true,
-            nextLabel: '→',
-            prevLabel: '←',
+            nextLabel: '▶',
+            prevLabel: '◀',
             skipLabel: 'Skip',
             doneLabel: 'Start Exploring! 🎉',
             tooltipClass: 'smriti-tooltip',
