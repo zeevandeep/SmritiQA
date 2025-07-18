@@ -188,34 +188,36 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // Fix AI Processing step positioning using MutationObserver for persistent centering
+            // Fix AI Processing step positioning with simple timeout approach
             const currentStep = this.introInstance._currentStep;
             if (currentStep === 4) {
-                this.setupTooltipPositionLock();
-            } else {
-                // Clean up observer when leaving step 4
-                if (this.tooltipObserver) {
-                    this.tooltipObserver.disconnect();
-                    this.tooltipObserver = null;
-                }
+                // Apply positioning multiple times with different delays
+                const centerTooltip = () => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.classList.remove('introjs-top-left-aligned');
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = '50%';
+                        tooltip.style.left = '50%';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
+                        tooltip.style.margin = '0';
+                    }
+                };
+                
+                // Apply immediately and with multiple retries
+                centerTooltip();
+                setTimeout(centerTooltip, 50);
+                setTimeout(centerTooltip, 150);
+                setTimeout(centerTooltip, 300);
+                setTimeout(centerTooltip, 500);
             }
         });
 
         this.introInstance.oncomplete(() => {
-            // Clean up observer on tour completion
-            if (this.tooltipObserver) {
-                this.tooltipObserver.disconnect();
-                this.tooltipObserver = null;
-            }
             this.completeTour();
         });
 
         this.introInstance.onexit(() => {
-            // Clean up observer on tour exit
-            if (this.tooltipObserver) {
-                this.tooltipObserver.disconnect();
-                this.tooltipObserver = null;
-            }
             this.skipTour();
         });
 
@@ -223,71 +225,7 @@ class SmritiTour {
         this.introInstance.start();
     }
 
-    // Setup persistent tooltip positioning for AI Processing step
-    setupTooltipPositionLock() {
-        // Use delayed execution to ensure tooltip is fully rendered
-        setTimeout(() => {
-            try {
-                const tooltip = document.querySelector('.introjs-tooltip');
-                if (!tooltip) {
-                    console.log('Tooltip not found, retrying...');
-                    // Retry once more
-                    setTimeout(() => this.setupTooltipPositionLock(), 100);
-                    return;
-                }
 
-                // Apply initial positioning
-                this.applyCenterPositioning(tooltip);
-
-                // Create MutationObserver with error handling
-                this.tooltipObserver = new MutationObserver((mutations) => {
-                    try {
-                        mutations.forEach((mutation) => {
-                            if (mutation.type === 'attributes' && 
-                                (mutation.attributeName === 'class' || 
-                                 mutation.attributeName === 'style')) {
-                                const currentTooltip = document.querySelector('.introjs-tooltip');
-                                if (currentTooltip) {
-                                    this.applyCenterPositioning(currentTooltip);
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.log('MutationObserver error:', error);
-                    }
-                });
-
-                // Observe with error handling
-                this.tooltipObserver.observe(tooltip, {
-                    attributes: true,
-                    attributeFilter: ['class', 'style']
-                });
-
-            } catch (error) {
-                console.log('Setup error:', error);
-            }
-        }, 150);
-    }
-
-    // Apply center positioning and remove problematic classes
-    applyCenterPositioning(tooltip) {
-        try {
-            if (!tooltip || !tooltip.classList) return;
-            
-            // Remove problematic class
-            tooltip.classList.remove('introjs-top-left-aligned');
-            
-            // Apply center positioning with high specificity
-            tooltip.style.setProperty('position', 'fixed', 'important');
-            tooltip.style.setProperty('top', '50%', 'important');
-            tooltip.style.setProperty('left', '50%', 'important');
-            tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-            tooltip.style.setProperty('margin', '0', 'important');
-            
-        } catch (error) {
-            console.log('Positioning error:', error);
-        }
-    }
 
     // Define the tour steps
     getTourSteps() {
