@@ -177,6 +177,20 @@ class SmritiTour {
                     }
                 }, 100);
             }
+            
+            // Center positioning for AI processing step (no target element)
+            if (!targetElement) {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = '50%';
+                        tooltip.style.left = '50%';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
+                        tooltip.style.zIndex = '2147483647';
+                    }
+                }, 100);
+            }
         });
 
         this.introInstance.oncomplete(() => {
@@ -251,7 +265,8 @@ class SmritiTour {
                             <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
-                    `
+                    `,
+                    position: 'center'
                 },
                 {
                     element: '.bottom-nav',
