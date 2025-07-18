@@ -66,8 +66,17 @@ class SmritiTour {
                 /* Center positioning for AI processing step */
                 .introjs-tooltip.center-tooltip {
                     position: fixed !important;
-                    top: 50% !important;
-                    left: 50% !important;
+                    top: 50vh !important;
+                    left: 50vw !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                    z-index: 999999 !important;
+                }
+                /* Force center for step 4 (AI Processing) */
+                .introjs-tooltip[data-step="4"] {
+                    position: fixed !important;
+                    top: 50vh !important;
+                    left: 50vw !important;
                     transform: translate(-50%, -50%) !important;
                     margin: 0 !important;
                 }
@@ -186,15 +195,20 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Center positioning for AI processing step (no target element)
-            if (!targetElement) {
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.classList.add('center-tooltip');
-                    }
-                }, 100);
-            }
+            // Force center positioning for AI processing step
+            setTimeout(() => {
+                const tooltip = document.querySelector('.introjs-tooltip');
+                if (tooltip && !targetElement) {
+                    // Multiple approaches to ensure centering
+                    tooltip.classList.add('center-tooltip');
+                    tooltip.style.setProperty('position', 'fixed', 'important');
+                    tooltip.style.setProperty('top', '50vh', 'important');
+                    tooltip.style.setProperty('left', '50vw', 'important');
+                    tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+                    tooltip.style.setProperty('margin', '0', 'important');
+                    tooltip.style.setProperty('z-index', '999999', 'important');
+                }
+            }, 50);
         });
 
         this.introInstance.oncomplete(() => {
