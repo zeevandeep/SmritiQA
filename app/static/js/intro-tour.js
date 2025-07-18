@@ -228,7 +228,6 @@ class SmritiTour {
                 },
                 {
                     intro: `
-                        <h4>AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
                         <ul style="margin: 12px 0; padding-left: 20px;">
                             <li><strong>Analyze</strong> your thoughts and emotions</li>
