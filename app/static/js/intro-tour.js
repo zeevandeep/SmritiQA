@@ -132,8 +132,18 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Force center positioning for tooltip targeting center point */
-                .introjs-tooltip[data-step-number="4"] {
+                /* Force center positioning when targeting center point element */
+                .introjs-tooltip[data-step-number="4"],
+                .introjs-tooltip[data-step-number="5"] {
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                }
+                
+                /* Alternative approach - target by tooltip content */
+                .introjs-tooltip:has(h4:contains("AI Processing")) {
                     position: fixed !important;
                     top: 50% !important;
                     left: 50% !important;
@@ -201,7 +211,26 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // No special positioning needed - using invisible center element
+            console.log('Step change detected. Current step index:', this.introInstance._currentStep);
+            console.log('Target element:', targetElement);
+            
+            // Force center positioning for AI Processing step using JavaScript as backup
+            if (targetElement && targetElement.id === 'tour-center-point') {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        console.log('Forcing center positioning for AI step');
+                        tooltip.style.cssText = `
+                            position: fixed !important;
+                            top: 50% !important;
+                            left: 50% !important;
+                            transform: translate(-50%, -50%) !important;
+                            margin: 0 !important;
+                            z-index: 9999999 !important;
+                        `;
+                    }
+                }, 10);
+            }
         });
 
         this.introInstance.oncomplete(() => {
