@@ -205,10 +205,10 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Force center positioning ONLY for AI Processing step (step 4)
+            // Force center positioning for Text Journaling (step 3) and AI Processing (step 4)
             const currentStep = this.introInstance._currentStep;
-            if (targetElement && targetElement.id === 'tour-center-point' && currentStep === 4) {
-                console.log(`Setting up persistent center positioning for AI Processing step ${currentStep}`);
+            if (targetElement && targetElement.id === 'tour-center-point' && (currentStep === 3 || currentStep === 4)) {
+                console.log(`Setting up persistent center positioning for step ${currentStep}`);
                 
                 const forceCenterPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
@@ -232,10 +232,10 @@ class SmritiTour {
                 setTimeout(forceCenterPosition, 100);
                 setTimeout(forceCenterPosition, 200);
                 
-                // Set up continuous monitoring
+                // Set up continuous monitoring for both steps
                 this.centeringInterval = setInterval(forceCenterPosition, 100);
             } else {
-                // Clear interval when leaving AI Processing step
+                // Clear interval when leaving center point steps
                 if (this.centeringInterval) {
                     clearInterval(this.centeringInterval);
                     this.centeringInterval = null;
