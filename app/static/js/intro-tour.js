@@ -279,7 +279,7 @@ class SmritiTour {
                         <h4>🎤 Voice Journaling</h4>
                         <p>Tap the microphone to record your thoughts. Supports multiple languages with automatic transcription.</p>
                     `,
-                    position: 'top'
+                    position: 'bottom'
                 },
                 {
                     element: '#textInputArea',
