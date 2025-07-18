@@ -308,8 +308,7 @@ class SmritiTour {
         localStorage.setItem('smriti_tour_completed', 'true');
         this.removeTourStyles();
         
-        // Show completion message
-        this.showCompletionMessage();
+        // No completion message needed
     }
 
     // Handle tour skip
