@@ -132,17 +132,7 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Force center positioning for AI Processing step using multiple selectors */
-                .introjs-tooltip[data-step-number="5"],
-                .introjs-tooltip[data-step="4"],
-                .introjs-floatingElement .introjs-tooltip {
-                    position: fixed !important;
-                    top: 50% !important;
-                    left: 60% !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                    z-index: 999999 !important;
-                }
+
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', customCSS);
@@ -198,40 +188,23 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // Debug: Log DOM structure for AI Processing step
+            // Fix AI Processing step positioning by removing problematic class
             const currentStep = this.introInstance._currentStep;
             if (currentStep === 4) {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        console.log('=== AI Processing Tooltip DOM Analysis ===');
-                        console.log('Tooltip element:', tooltip);
-                        console.log('Tooltip classes:', tooltip.className);
-                        console.log('Tooltip attributes:', tooltip.attributes);
-                        console.log('Data attributes:');
-                        for (let attr of tooltip.attributes) {
-                            if (attr.name.startsWith('data-')) {
-                                console.log(`  ${attr.name}: ${attr.value}`);
-                            }
-                        }
-                        console.log('Parent element:', tooltip.parentElement);
-                        console.log('Parent classes:', tooltip.parentElement ? tooltip.parentElement.className : 'none');
-                        console.log('Current styles:', {
-                            position: tooltip.style.position,
-                            top: tooltip.style.top,
-                            left: tooltip.style.left,
-                            transform: tooltip.style.transform,
-                            margin: tooltip.style.margin
-                        });
-                        console.log('Computed styles:', {
-                            position: getComputedStyle(tooltip).position,
-                            top: getComputedStyle(tooltip).top,
-                            left: getComputedStyle(tooltip).left,
-                            transform: getComputedStyle(tooltip).transform
-                        });
-                        console.log('========================================');
+                        // Remove the class that forces left positioning
+                        tooltip.classList.remove('introjs-top-left-aligned');
+                        
+                        // Apply center positioning
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = '50%';
+                        tooltip.style.left = '50%';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
+                        tooltip.style.margin = '0';
                     }
-                }, 100);
+                }, 50);
             }
         });
 
