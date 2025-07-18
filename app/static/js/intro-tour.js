@@ -58,9 +58,7 @@ class SmritiTour {
         const customCSS = `
             <style id="smriti-tour-styles">
                 .introjs-tooltip {
-                    max-width: 420px !important;
-                    min-width: 380px !important;
-                    width: 420px !important;
+                    max-width: 420px;
                     border-radius: 12px;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
