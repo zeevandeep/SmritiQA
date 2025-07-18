@@ -65,6 +65,10 @@ class SmritiTour {
                 }
                 .introjs-tooltipbuttons {
                     padding: 12px 20px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
                 }
                 .introjs-tooltip-header {
                     background: linear-gradient(135deg, #f39c12, #e67e22);
@@ -93,6 +97,10 @@ class SmritiTour {
                     font-size: 14px;
                     white-space: nowrap;
                     transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 36px;
                 }
                 .introjs-button:hover {
                     background: #e67e22;
@@ -108,6 +116,9 @@ class SmritiTour {
                     padding: 8px 14px;
                     min-width: 80px;
                     height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .introjs-skipbutton:hover {
                     background: #f8f9fa;
@@ -167,8 +178,8 @@ class SmritiTour {
             {
                 intro: `
                     <div style="text-align: center;">
-                        <h3 style="color: #ff6b35; margin-bottom: 16px;">Welcome to Smriti! 🧠</h3>
-                        <p style="margin-bottom: 16px;">Smriti is your AI-powered emotional journaling companion that helps you discover patterns in your thoughts and feelings.</p>
+                        <h3 style="color: #ff6b35; margin-bottom: 16px;">Welcome to Smriti!</h3>
+                        <p style="margin-bottom: 16px;">Smriti is your AI-powered journaling companion that helps you discover patterns in your thoughts and feelings.</p>
                         <p style="font-size: 14px; color: #6c757d;">This quick tour will show you how to get started. It takes about 1 minute.</p>
                     </div>
                 `
