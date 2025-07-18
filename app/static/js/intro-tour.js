@@ -197,9 +197,9 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Force center positioning for AI processing step (floating element)
-            if (targetElement && targetElement.classList && targetElement.classList.contains('introjsFloatingElement')) {
-                console.log('AI Processing floating step detected - applying custom positioning');
+            // Force center positioning for AI processing step (step 4 only)
+            if (this.introInstance._currentStep === 4 && targetElement && targetElement.classList && targetElement.classList.contains('introjsFloatingElement')) {
+                console.log('AI Processing step 4 detected - applying custom positioning');
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
