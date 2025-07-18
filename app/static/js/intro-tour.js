@@ -132,7 +132,16 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Smooth transition for AI Processing tooltip repositioning */
+                /* Force center positioning for tooltip targeting center point */
+                .introjs-tooltip[data-step-number="4"] {
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                }
+                
+                /* Smooth transition for all tooltips */
                 .introjs-tooltip {
                     transition: all 0.1s ease-out;
                 }
