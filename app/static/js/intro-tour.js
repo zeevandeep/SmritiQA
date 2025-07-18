@@ -253,7 +253,7 @@ class SmritiTour {
                 {
                     element: '.bottom-nav a[href="/entries"]',
                     intro: `
-                        <p>Come here to see your past journal entries and track your journaling journey over time.</p>
+                        <p>Navigate here to see your past journal entries and track your journaling journey over time.</p>
                     `,
                     position: 'top'
                 },
@@ -267,7 +267,7 @@ class SmritiTour {
                 {
                     element: '.bottom-nav a[href="/reflections"]',
                     intro: `
-                        <p>Come here to view past reflections and explore the insights Smriti has discovered about your emotional patterns.</p>
+                        <p>Navigate here to view past reflections and explore the insights Smriti has discovered about your emotional patterns.</p>
                     `,
                     position: 'top'
                 }
