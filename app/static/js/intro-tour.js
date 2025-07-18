@@ -270,8 +270,7 @@ class SmritiTour {
                             <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
-                    `,
-                    position: 'bottom'
+                    `
                 },
                 {
                     element: '.bottom-nav',
