@@ -260,7 +260,7 @@ class SmritiTour {
                 {
                     element: '.bottom-nav a[href="/generate-reflection"]',
                     intro: `
-                        <p>Come here to generate new reflections from your past journal entries and discover insights about your thoughts.</p>
+                        <p>Navigate here to generate new reflections from your past journal entries. It takes minimum 4 to 5 journaling entries for Smriti AI to discover meaningful insights.</p>
                     `,
                     position: 'top'
                 },
