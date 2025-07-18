@@ -207,9 +207,9 @@ class SmritiTour {
             // Handle positioning for different steps
             const currentStep = this.introInstance._currentStep;
             
-            // AI Processing step (step 4) - force center positioning
+            // AI Processing step (step 4) - force center positioning ONCE
             if (targetElement && targetElement.id === 'tour-center-point' && currentStep === 4) {
-                console.log(`Setting up persistent center positioning for AI Processing step ${currentStep}`);
+                console.log(`Setting up one-time center positioning for AI Processing step ${currentStep}`);
                 
                 const forceCenterPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
@@ -225,16 +225,13 @@ class SmritiTour {
                     }
                 };
                 
-                // Apply immediately and with multiple retries
+                // Apply positioning with multiple retries but NO continuous monitoring
                 forceCenterPosition();
-                setTimeout(forceCenterPosition, 1);
                 setTimeout(forceCenterPosition, 10);
                 setTimeout(forceCenterPosition, 50);
                 setTimeout(forceCenterPosition, 100);
                 setTimeout(forceCenterPosition, 200);
-                
-                // Set up less frequent monitoring for AI Processing
-                this.centeringInterval = setInterval(forceCenterPosition, 500);
+                setTimeout(forceCenterPosition, 500);
             } 
             // Text Journaling step (step 3) - ensure proper positioning above text area
             else if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
@@ -276,50 +273,20 @@ class SmritiTour {
                     }
                 };
                 
-                // Apply positioning with retries and persistent monitoring
+                // Apply positioning with retries but NO continuous monitoring
                 setTimeout(forceTextJournalingPosition, 10);
                 setTimeout(forceTextJournalingPosition, 50);
                 setTimeout(forceTextJournalingPosition, 100);
                 setTimeout(forceTextJournalingPosition, 200);
-                
-                // Set up less frequent monitoring for Text Journaling step
-                this.textJournalingInterval = setInterval(forceTextJournalingPosition, 500);
-            } else {
-                // Clear intervals when leaving special positioning steps
-                if (this.centeringInterval) {
-                    clearInterval(this.centeringInterval);
-                    this.centeringInterval = null;
-                }
-                if (this.textJournalingInterval) {
-                    clearInterval(this.textJournalingInterval);
-                    this.textJournalingInterval = null;
-                }
+                setTimeout(forceTextJournalingPosition, 500);
             }
         });
 
         this.introInstance.oncomplete(() => {
-            // Clear all intervals if active
-            if (this.centeringInterval) {
-                clearInterval(this.centeringInterval);
-                this.centeringInterval = null;
-            }
-            if (this.textJournalingInterval) {
-                clearInterval(this.textJournalingInterval);
-                this.textJournalingInterval = null;
-            }
             this.completeTour();
         });
 
         this.introInstance.onexit(() => {
-            // Clear all intervals if active
-            if (this.centeringInterval) {
-                clearInterval(this.centeringInterval);
-                this.centeringInterval = null;
-            }
-            if (this.textJournalingInterval) {
-                clearInterval(this.textJournalingInterval);
-                this.textJournalingInterval = null;
-            }
             this.skipTour();
         });
 
