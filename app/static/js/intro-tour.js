@@ -200,19 +200,29 @@ class SmritiTour {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
+                        // Get viewport dimensions
+                        const viewportWidth = window.innerWidth;
+                        const viewportHeight = window.innerHeight;
+                        
+                        // Calculate center position manually
+                        const tooltipWidth = 400; // max-width we're setting
+                        const leftPosition = (viewportWidth - tooltipWidth) / 2;
+                        const topPosition = (viewportHeight / 2) - 200; // Offset from center
+                        
                         // Remove all IntroJS positioning classes
                         tooltip.className = tooltip.className.replace(/introjs-\w+/g, '');
                         tooltip.classList.add('introjs-tooltip'); // Keep base class
                         
-                        // Force absolute center positioning
+                        // Force absolute positioning with calculated values
                         tooltip.style.cssText = `
                             position: fixed !important;
-                            top: 50% !important;
-                            left: 50% !important;
-                            transform: translate(-50%, -50%) !important;
+                            top: ${Math.max(50, topPosition)}px !important;
+                            left: ${Math.max(20, leftPosition)}px !important;
+                            transform: none !important;
                             margin: 0 !important;
                             z-index: 999999 !important;
                             max-width: 400px !important;
+                            width: 400px !important;
                         `;
                     }
                 }, 10);
