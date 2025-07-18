@@ -181,6 +181,15 @@ class SmritiTour {
                 }, 100);
             }
             
+            // Pre-position AI Processing step (step 4) to prevent left positioning
+            if (this.introInstance._currentStep === 4) {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.style.marginLeft = '100px';
+                    }
+                }, 50);
+            }
 
         });
 
@@ -188,13 +197,21 @@ class SmritiTour {
             // Fix AI Processing step (4) positioning - move it to the right
             const currentStep = this.introInstance._currentStep;
             if (currentStep === 4) {
-                setTimeout(() => {
+                // Apply positioning multiple times to ensure it sticks
+                const applyPositioning = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        // Simple right offset from center
                         tooltip.style.marginLeft = '100px';
+                        tooltip.style.left = 'calc(50% + 50px)';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
                     }
-                }, 150);
+                };
+                
+                // Apply immediately and with delays
+                applyPositioning();
+                setTimeout(applyPositioning, 50);
+                setTimeout(applyPositioning, 150);
+                setTimeout(applyPositioning, 300);
             }
         });
 
