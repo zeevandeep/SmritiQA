@@ -203,24 +203,6 @@ class SmritiTour {
                     position: 'bottom'
                 },
                 {
-                    element: '#micButton',
-                    intro: `
-                        <h4>🎤 Voice Journaling</h4>
-                        <p>Tap this microphone to start recording your thoughts. Smriti supports multiple languages and will automatically transcribe your speech.</p>
-                        <p style="font-size: 14px; color: #6c757d;">Perfect for when you're on the go or prefer speaking your thoughts!</p>
-                    `,
-                    position: 'top'
-                },
-                {
-                    element: '#textInputArea',
-                    intro: `
-                        <h4>✍️ Text Journaling</h4>
-                        <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
-                        <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
-                    `,
-                    position: 'top'
-                },
-                {
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
@@ -271,15 +253,6 @@ class SmritiTour {
     // Prepare elements before each step
     prepareStepElement(targetElement) {
         if (!targetElement) return;
-
-        // Ensure text input area is visible if it's the target
-        if (targetElement.id === 'textInputArea') {
-            // Switch to text mode temporarily
-            const textToggle = document.getElementById('textToggle');
-            if (textToggle && !textToggle.classList.contains('active')) {
-                textToggle.click();
-            }
-        }
 
         // Scroll element into view
         targetElement.scrollIntoView({
