@@ -211,7 +211,6 @@ class SmritiTour {
                             <li><strong>Identify</strong> meaningful patterns in your reflections</li>
                             <li><strong>Connect</strong> your current entry to past memories</li>
                         </ul>
-                        <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
                     `
                 },
                 {
