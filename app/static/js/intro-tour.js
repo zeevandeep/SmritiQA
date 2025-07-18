@@ -155,6 +155,17 @@ class SmritiTour {
         this.introInstance.onbeforechange((targetElement) => {
             // Ensure elements are visible before highlighting
             this.prepareStepElement(targetElement);
+            
+            // Custom positioning for microphone button to avoid covering it
+            if (targetElement && targetElement.id === 'micButton') {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.style.transform = 'translateX(-120px)';
+                        tooltip.style.marginTop = '10px';
+                    }
+                }, 100);
+            }
         });
 
         this.introInstance.oncomplete(() => {
@@ -209,7 +220,7 @@ class SmritiTour {
                         <p>Tap this microphone to start recording your thoughts. Smriti supports multiple languages and will automatically transcribe your speech.</p>
                         <p style="font-size: 14px; color: #6c757d;">Perfect for when you're on the go or prefer speaking your thoughts!</p>
                     `,
-                    position: 'top'
+                    position: 'left'
                 },
                 {
                     element: '#textInputArea',
