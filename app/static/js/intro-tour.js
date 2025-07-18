@@ -149,7 +149,7 @@ class SmritiTour {
                 .introjs-tooltip[data-step="0"] .introjs-tooltipbuttons {
                     justify-content: space-between !important;
                 }
-                .introjs-tooltip[data-step="6"] .introjs-donebutton {
+                .introjs-tooltip[data-step="7"] .introjs-donebutton {
                     color: #ccc !important;
                     pointer-events: none !important;
                     opacity: 0.4 !important;
@@ -263,6 +263,13 @@ class SmritiTour {
                         <p>Come here to generate new reflections from your past journal entries and discover insights about your thoughts.</p>
                     `,
                     position: 'top'
+                },
+                {
+                    element: '.generate-btn, .btn-primary',
+                    intro: `
+                        <p>Click here to generate new reflections. Smriti needs 4-5 journal entries for AI to find meaningful patterns and generate insights.</p>
+                    `,
+                    position: 'bottom'
                 },
                 {
                     element: '.bottom-nav a[href="/reflections"]',
