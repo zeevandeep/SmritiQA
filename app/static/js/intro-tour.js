@@ -253,7 +253,7 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '.bottom-nav a[href="/generate"]',
+                    element: '.bottom-nav a[href="/generate-reflection"]',
                     intro: `
                         <p>Come here to generate new reflections from your past journal entries and discover insights about your thoughts.</p>
                     `,
