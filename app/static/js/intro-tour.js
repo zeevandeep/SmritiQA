@@ -132,15 +132,9 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Hide initial positioning flash for AI Processing step */
-                .introjs-tooltip.introjs-top-left-aligned {
-                    opacity: 0 !important;
-                    transition: opacity 0.05s;
-                }
-                
-                /* Show tooltip after positioning is fixed */
-                .introjs-tooltip.centered {
-                    opacity: 1 !important;
+                /* Smooth transition for AI Processing tooltip repositioning */
+                .introjs-tooltip {
+                    transition: all 0.1s ease-out;
                 }
 
             </style>
@@ -201,7 +195,7 @@ class SmritiTour {
             // Fix AI Processing step positioning with simple timeout approach
             const currentStep = this.introInstance._currentStep;
             if (currentStep === 4) {
-                // Apply positioning multiple times with different delays
+                // Apply positioning with immediate and delayed attempts
                 const centerTooltip = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
@@ -211,15 +205,15 @@ class SmritiTour {
                         tooltip.style.left = '50%';
                         tooltip.style.transform = 'translate(-50%, -50%)';
                         tooltip.style.margin = '0';
-                        tooltip.classList.add('centered'); // Add centered class to show tooltip
+                        tooltip.style.opacity = '1'; // Ensure tooltip is visible
                     }
                 };
                 
-                // Apply immediately and with multiple retries
+                // Apply immediately and with retries for reliability
                 centerTooltip();
+                setTimeout(centerTooltip, 1);
                 setTimeout(centerTooltip, 10);
                 setTimeout(centerTooltip, 50);
-                setTimeout(centerTooltip, 150);
             }
         });
 
