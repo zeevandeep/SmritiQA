@@ -132,8 +132,7 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Force center positioning for steps using center point element */
-                .introjs-tooltip[data-step-number="3"],
+                /* Force center positioning only for AI Processing step */
                 .introjs-tooltip[data-step-number="4"] {
                     position: fixed !important;
                     top: 50% !important;
@@ -205,10 +204,10 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Force center positioning for Text Journaling (step 3) and AI Processing (step 4)
+            // Force center positioning ONLY for AI Processing step (step 4)
             const currentStep = this.introInstance._currentStep;
-            if (targetElement && targetElement.id === 'tour-center-point' && (currentStep === 3 || currentStep === 4)) {
-                console.log(`Setting up persistent center positioning for step ${currentStep}`);
+            if (targetElement && targetElement.id === 'tour-center-point' && currentStep === 4) {
+                console.log(`Setting up persistent center positioning for AI Processing step ${currentStep}`);
                 
                 const forceCenterPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
@@ -232,10 +231,10 @@ class SmritiTour {
                 setTimeout(forceCenterPosition, 100);
                 setTimeout(forceCenterPosition, 200);
                 
-                // Set up continuous monitoring for both steps
+                // Set up continuous monitoring only for AI Processing
                 this.centeringInterval = setInterval(forceCenterPosition, 100);
             } else {
-                // Clear interval when leaving center point steps
+                // Clear interval when leaving AI Processing step
                 if (this.centeringInterval) {
                     clearInterval(this.centeringInterval);
                     this.centeringInterval = null;
@@ -309,12 +308,13 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '#tour-center-point',
+                    element: '#textInputArea',
                     intro: `
                         <h4>✍️ Text Journaling</h4>
                         <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
                         <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
-                    `
+                    `,
+                    position: 'top'
                 },
                 {
                     element: '#tour-center-point',
