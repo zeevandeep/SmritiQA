@@ -91,16 +91,18 @@ class SmritiTour {
                     background: #f39c12;
                     color: white;
                     border: none;
-                    padding: 10px 20px;
-                    border-radius: 6px;
+                    padding: 8px;
+                    border-radius: 50%;
                     font-weight: 500;
-                    font-size: 14px;
+                    font-size: 16px;
                     white-space: nowrap;
                     transition: all 0.2s;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    width: 36px;
                     height: 36px;
+                    min-width: 36px;
                 }
                 .introjs-button:hover {
                     background: #e67e22;
@@ -142,8 +144,8 @@ class SmritiTour {
             showBullets: false,
             exitOnOverlayClick: false,
             exitOnEsc: true,
-            nextLabel: 'Next →',
-            prevLabel: '← Back',
+            nextLabel: '→',
+            prevLabel: '←',
             skipLabel: 'Skip',
             doneLabel: 'Start Exploring! 🎉',
             tooltipClass: 'smriti-tooltip',
