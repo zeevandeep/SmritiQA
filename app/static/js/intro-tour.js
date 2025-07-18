@@ -142,10 +142,12 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 .introjs-tooltip[data-step="0"] .introjs-prevbutton {
-                    display: none !important;
+                    color: #ccc !important;
+                    pointer-events: none !important;
+                    opacity: 0.4 !important;
                 }
                 .introjs-tooltip[data-step="0"] .introjs-tooltipbuttons {
-                    justify-content: center !important;
+                    justify-content: space-between !important;
                 }
             </style>
         `;
