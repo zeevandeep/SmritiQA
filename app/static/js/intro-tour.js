@@ -177,6 +177,15 @@ class SmritiTour {
 
         // Event handlers
         this.introInstance.onbeforechange((targetElement) => {
+            // Handle page navigation for specific steps
+            const nextStep = this.introInstance._currentStep + 1;
+            
+            // Step 6 is the generate button step - navigate to generate page
+            if (nextStep === 6) {
+                window.location.href = '/generate-reflection?tour=continue&step=6';
+                return false; // Prevent default step change
+            }
+            
             // Ensure elements are visible before highlighting
             this.prepareStepElement(targetElement);
             
@@ -388,6 +397,136 @@ class SmritiTour {
         localStorage.removeItem('smriti_tour_completed');
         this.hasSeenTour = false;
         this.startTour();
+    }
+
+    // Continue tour from specific step
+    continueFromStep(stepNumber) {
+        if (typeof introJs === 'undefined') {
+            this.loadIntroJS(() => {
+                this.continueFromStepInternal(stepNumber);
+            });
+        } else {
+            this.continueFromStepInternal(stepNumber);
+        }
+    }
+
+    // Internal method to continue from step
+    continueFromStepInternal(stepNumber) {
+        this.introInstance = introJs();
+        this.configureTourForGenerate();
+        this.introInstance.goToStep(stepNumber + 1);
+    }
+
+    // Configure tour for generate page
+    configureTourForGenerate() {
+        const customCSS = `
+            <style id="smriti-tour-styles">
+                .introjs-tooltip {
+                    max-width: 420px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                    border: none;
+                }
+                .introjs-tooltipbuttons {
+                    padding: 12px 20px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .introjs-nextbutton {
+                    margin-left: auto;
+                }
+                .introjs-prevbutton {
+                    margin-right: auto;
+                }
+                .introjs-button {
+                    background: transparent !important;
+                    color: #f39c12;
+                    border: none !important;
+                    padding: 8px 12px;
+                    border-radius: 0 !important;
+                    font-weight: 500;
+                    font-size: 24px;
+                    white-space: nowrap;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 44px;
+                    height: 36px;
+                    cursor: pointer;
+                    outline: none !important;
+                    box-shadow: none !important;
+                }
+                .introjs-button:hover {
+                    background: transparent !important;
+                    color: #e67e22;
+                    transform: scale(1.1);
+                }
+                .introjs-overlay {
+                    background: rgba(0,0,0,0.4);
+                }
+                .introjs-helperLayer {
+                    border-radius: 8px;
+                    box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+                }
+                .introjs-tooltip[data-step="7"] .introjs-donebutton {
+                    color: #ccc !important;
+                    pointer-events: none !important;
+                    opacity: 0.4 !important;
+                }
+            </style>
+        `;
+        document.head.insertAdjacentHTML('beforeend', customCSS);
+
+        const steps = [
+            {
+                element: '.btn-generate',
+                intro: `<p>Click here to generate new reflections. Smriti needs 4-5 journal entries for AI to find meaningful patterns and generate insights.</p>`,
+                position: 'bottom'
+            },
+            {
+                element: '.bottom-nav a[href="/reflections"]',
+                intro: `<p>Come here to view past reflections and explore the insights Smriti has discovered about your emotional patterns.</p>`,
+                position: 'top'
+            }
+        ];
+
+        this.introInstance.setOptions({
+            steps: steps,
+            showStepNumbers: false,
+            showBullets: false,
+            exitOnOverlayClick: false,
+            exitOnEsc: true,
+            nextLabel: '▶',
+            prevLabel: '◀',
+            skipLabel: 'Skip',
+            doneLabel: '▶',
+            tooltipClass: 'smriti-tooltip',
+            highlightClass: 'smriti-highlight',
+            overlayOpacity: 0.4
+        });
+
+        this.introInstance.onbeforechange((targetElement) => {
+            setTimeout(() => {
+                const currentStep = this.introInstance._currentStep;
+                const tooltip = document.querySelector('.introjs-tooltip');
+                if (tooltip) {
+                    tooltip.setAttribute('data-step', currentStep + 6); // Offset for proper styling
+                }
+            }, 10);
+        });
+
+        this.introInstance.oncomplete(() => {
+            this.completeTour();
+        });
+
+        this.introInstance.onexit(() => {
+            this.skipTour();
+        });
+
+        this.introInstance.start();
     }
 
     // Reset tour for testing

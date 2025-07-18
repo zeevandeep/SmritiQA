@@ -472,6 +472,28 @@
         }
     </script>
     
+    <!-- Onboarding Tour Script -->
+    <script src="/static/js/intro-tour.js?v=2.6"></script>
+    <script>
+        // Handle tour continuation from query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tourContinue = urlParams.get('tour');
+        const stepParam = urlParams.get('step');
+        
+        if (tourContinue === 'continue' && stepParam) {
+            // Clear URL params
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            // Continue tour from specific step
+            setTimeout(() => {
+                if (window.smritiTour) {
+                    window.smritiTour.continueFromStep(parseInt(stepParam));
+                }
+            }, 500);
+        }
+    </script>
+    
     <!-- Bottom Navigation -->
     {% include 'partials/bottom_nav.html' %}
 </body>
