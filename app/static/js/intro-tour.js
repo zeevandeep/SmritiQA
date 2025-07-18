@@ -192,13 +192,11 @@ class SmritiTour {
                 {
                     element: '.input-mode-toggle',
                     intro: `
-                        <h4>📝 Choose Your Input Method</h4>
                         <p>You can journal in two ways:</p>
                         <ul style="margin: 12px 0; padding-left: 20px;">
                             <li><strong>Voice:</strong> Tap the microphone and speak your thoughts</li>
                             <li><strong>Text:</strong> Click the pen icon and type your entry</li>
                         </ul>
-                        <p style="font-size: 14px; color: #6c757d;">Try switching between them!</p>
                     `,
                     position: 'bottom'
                 },
