@@ -253,7 +253,7 @@ class SmritiTour {
                 {
                     element: '.bottom-nav a[href="/entries"]',
                     intro: `
-                        <p>Navigate here to see your past journal entries and track your journaling journey over time.</p>
+                        <p>Navigate here to view your past journal entries and track your journaling journey over time.</p>
                     `,
                     position: 'top'
                 },
