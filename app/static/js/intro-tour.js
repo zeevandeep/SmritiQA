@@ -63,7 +63,6 @@ class SmritiTour {
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
                 }
-
                 .introjs-tooltipbuttons {
                     padding: 12px 20px 16px;
                     display: flex;
@@ -131,30 +130,6 @@ class SmritiTour {
                     border-radius: 8px;
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
-                
-                /* Force center positioning for AI Processing step */
-                .introjs-tooltip[data-step-number="4"] {
-                    position: fixed !important;
-                    top: 50% !important;
-                    left: 50% !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                }
-                
-                /* Force proper positioning for Text Journaling step */
-                .introjs-tooltip[data-step-number="3"] {
-                    position: fixed !important;
-                    top: 40% !important;
-                    left: 50% !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                }
-                
-                /* Smooth transition for all tooltips */
-                .introjs-tooltip {
-                    transition: all 0.1s ease-out;
-                }
-
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', customCSS);
@@ -178,52 +153,8 @@ class SmritiTour {
 
         // Event handlers
         this.introInstance.onbeforechange((targetElement) => {
-            console.log('Step change detected. Current step index:', this.introInstance._currentStep);
-            console.log('Target element:', targetElement);
             // Ensure elements are visible before highlighting
             this.prepareStepElement(targetElement);
-            
-            // Custom positioning for microphone button to avoid covering it
-            if (targetElement && targetElement.id === 'micButton') {
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.style.transform = 'translateY(-40px) translateX(-50px)';
-                        tooltip.style.marginTop = '0px';
-                    }
-                }, 100);
-            }
-            
-            // Custom positioning for bottom navigation to keep it compact
-            if (targetElement && targetElement.classList && targetElement.classList.contains('bottom-nav')) {
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.style.transform = 'translateY(-20px)';
-                        tooltip.style.maxWidth = '280px';
-                    }
-                }, 100);
-            }
-            
-
-
-        });
-
-        this.introInstance.onafterchange((targetElement) => {
-            console.log('Step change detected. Current step index:', this.introInstance._currentStep);
-            console.log('Target element:', targetElement);
-            
-            // Handle text mode activation for Text Journaling step
-            const currentStep = this.introInstance._currentStep;
-            if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
-                console.log(`Activating text mode for Text Journaling step ${currentStep}`);
-                
-                // Make sure text mode is active
-                const textModeBtn = document.getElementById('textModeBtn');
-                if (textModeBtn && !textModeBtn.classList.contains('active')) {
-                    textModeBtn.click();
-                }
-            }
         });
 
         this.introInstance.oncomplete(() => {
@@ -237,8 +168,6 @@ class SmritiTour {
         // Start the tour
         this.introInstance.start();
     }
-
-
 
     // Define the tour steps
     getTourSteps() {
@@ -277,9 +206,10 @@ class SmritiTour {
                     element: '#micButton',
                     intro: `
                         <h4>🎤 Voice Journaling</h4>
-                        <p>Tap the microphone to record your thoughts. Supports multiple languages with automatic transcription.</p>
+                        <p>Tap this microphone to start recording your thoughts. Smriti supports multiple languages and will automatically transcribe your speech.</p>
+                        <p style="font-size: 14px; color: #6c757d;">Perfect for when you're on the go or prefer speaking your thoughts!</p>
                     `,
-                    position: 'bottom'
+                    position: 'top'
                 },
                 {
                     element: '#textInputArea',
@@ -291,7 +221,6 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '#tour-center-point',
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
@@ -307,8 +236,14 @@ class SmritiTour {
                     element: '.bottom-nav',
                     intro: `
                         <h4>🧭 Navigation</h4>
-                        <p>Use the bottom tabs to explore different sections of Smriti.</p>
-                        <p style="font-size: 14px; color: #6c757d;">You're ready to start journaling!</p>
+                        <p>Use the bottom navigation to explore:</p>
+                        <ul style="margin: 12px 0; padding-left: 20px;">
+                            <li><strong>Journal:</strong> Create new entries (where you are now)</li>
+                            <li><strong>Entries:</strong> View your journal history</li>
+                            <li><strong>Reflections:</strong> Read AI-generated insights</li>
+                            <li><strong>Generate:</strong> Create new reflections from your patterns</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #6c757d;">Let's explore these sections!</p>
                     `,
                     position: 'top'
                 }
