@@ -166,6 +166,17 @@ class SmritiTour {
                     }
                 }, 100);
             }
+            
+            // Custom positioning for bottom navigation to keep it compact
+            if (targetElement && targetElement.classList && targetElement.classList.contains('bottom-nav')) {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.style.transform = 'translateY(-20px)';
+                        tooltip.style.maxWidth = '280px';
+                    }
+                }, 100);
+            }
         });
 
         this.introInstance.oncomplete(() => {
@@ -246,14 +257,8 @@ class SmritiTour {
                     element: '.bottom-nav',
                     intro: `
                         <h4>🧭 Navigation</h4>
-                        <p>Use the bottom navigation to explore:</p>
-                        <ul style="margin: 12px 0; padding-left: 20px;">
-                            <li><strong>Journal:</strong> Create new entries (where you are now)</li>
-                            <li><strong>Entries:</strong> View your journal history</li>
-                            <li><strong>Reflections:</strong> Read AI-generated insights</li>
-                            <li><strong>Generate:</strong> Create new reflections from your patterns</li>
-                        </ul>
-                        <p style="font-size: 14px; color: #6c757d;">Let's explore these sections!</p>
+                        <p>Use the bottom tabs to explore different sections of Smriti.</p>
+                        <p style="font-size: 14px; color: #6c757d;">You're ready to start journaling!</p>
                     `,
                     position: 'top'
                 }
