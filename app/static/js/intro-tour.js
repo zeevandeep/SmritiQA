@@ -63,23 +63,7 @@ class SmritiTour {
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
                 }
-                /* Center positioning for AI processing step */
-                .introjs-tooltip.center-tooltip {
-                    position: fixed !important;
-                    top: 50vh !important;
-                    left: 50vw !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                    z-index: 999999 !important;
-                }
-                /* Force center for step 4 (AI Processing) */
-                .introjs-tooltip[data-step="4"] {
-                    position: fixed !important;
-                    top: 50vh !important;
-                    left: 50vw !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                }
+
                 .introjs-tooltipbuttons {
                     padding: 12px 20px 16px;
                     display: flex;
@@ -201,16 +185,16 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // Fix AI Processing step positioning (step 4)
-            if (this.introInstance._currentStep === 4) {
+            // Fix AI Processing step (4) positioning - move it to the right
+            const currentStep = this.introInstance._currentStep;
+            if (currentStep === 4) {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        tooltip.style.left = 'calc(50% + 80px)';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                        console.log('Step 4 positioning applied');
+                        // Simple right offset from center
+                        tooltip.style.marginLeft = '100px';
                     }
-                }, 100);
+                }, 150);
             }
         });
 
