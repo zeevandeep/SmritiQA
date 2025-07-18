@@ -204,8 +204,10 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Force center positioning ONLY for AI Processing step (step 4)
+            // Handle positioning for different steps
             const currentStep = this.introInstance._currentStep;
+            
+            // AI Processing step (step 4) - force center positioning
             if (targetElement && targetElement.id === 'tour-center-point' && currentStep === 4) {
                 console.log(`Setting up persistent center positioning for AI Processing step ${currentStep}`);
                 
@@ -233,8 +235,36 @@ class SmritiTour {
                 
                 // Set up continuous monitoring only for AI Processing
                 this.centeringInterval = setInterval(forceCenterPosition, 100);
+            } 
+            // Text Journaling step (step 3) - ensure proper positioning above text area
+            else if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
+                console.log(`Ensuring proper positioning for Text Journaling step ${currentStep}`);
+                
+                // Make sure text mode is active and text area is visible
+                setTimeout(() => {
+                    const textModeBtn = document.getElementById('textModeBtn');
+                    const textInputArea = document.getElementById('textInputArea');
+                    
+                    if (textModeBtn && !textModeBtn.classList.contains('active')) {
+                        textModeBtn.click(); // Switch to text mode if not already active
+                    }
+                    
+                    // Force proper positioning above text area
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip && textInputArea) {
+                        const rect = textInputArea.getBoundingClientRect();
+                        tooltip.style.cssText = `
+                            position: fixed !important;
+                            top: ${rect.top - tooltip.offsetHeight - 20}px !important;
+                            left: ${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px !important;
+                            transform: none !important;
+                            margin: 0 !important;
+                            z-index: 9999999 !important;
+                        `;
+                    }
+                }, 50);
             } else {
-                // Clear interval when leaving AI Processing step
+                // Clear interval when leaving special positioning steps
                 if (this.centeringInterval) {
                     clearInterval(this.centeringInterval);
                     this.centeringInterval = null;
