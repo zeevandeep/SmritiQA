@@ -534,7 +534,7 @@ async def signup_post(
         refresh_token = generate_refresh_token(str(user.id))
         
         # Create response and set secure cookies using centralized utility
-        response = RedirectResponse(url="/journal", status_code=303)
+        response = RedirectResponse(url="/journal?welcome=true", status_code=303)
         
         # Use centralized cookie utility
         set_auth_cookies(response, access_token, refresh_token)
