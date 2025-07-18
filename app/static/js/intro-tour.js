@@ -160,9 +160,17 @@ class SmritiTour {
             if (targetElement && targetElement.id === 'micButton') {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.style.transform = 'translateY(-80px)';
-                        tooltip.style.marginLeft = '0px';
+                    const micButton = document.getElementById('micButton');
+                    if (tooltip && micButton) {
+                        const micRect = micButton.getBoundingClientRect();
+                        const tooltipRect = tooltip.getBoundingClientRect();
+                        
+                        // Position tooltip directly above the microphone button
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = (micRect.top - tooltipRect.height - 20) + 'px';
+                        tooltip.style.left = (micRect.left + (micRect.width / 2) - (tooltipRect.width / 2)) + 'px';
+                        tooltip.style.transform = 'none';
+                        tooltip.style.margin = '0';
                     }
                 }, 100);
             }
