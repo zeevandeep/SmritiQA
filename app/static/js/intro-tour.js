@@ -192,29 +192,7 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // Fix AI Processing step positioning with simple timeout approach
-            const currentStep = this.introInstance._currentStep;
-            if (currentStep === 4) {
-                // Apply positioning with immediate and delayed attempts
-                const centerTooltip = () => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.classList.remove('introjs-top-left-aligned');
-                        tooltip.style.position = 'fixed';
-                        tooltip.style.top = '50%';
-                        tooltip.style.left = '50%';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                        tooltip.style.margin = '0';
-                        tooltip.style.opacity = '1'; // Ensure tooltip is visible
-                    }
-                };
-                
-                // Apply immediately and with retries for reliability
-                centerTooltip();
-                setTimeout(centerTooltip, 1);
-                setTimeout(centerTooltip, 10);
-                setTimeout(centerTooltip, 50);
-            }
+            // No special positioning needed - using invisible center element
         });
 
         this.introInstance.oncomplete(() => {
@@ -282,6 +260,7 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
+                    element: '#tour-center-point',
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
@@ -291,7 +270,8 @@ class SmritiTour {
                             <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
-                    `
+                    `,
+                    position: 'bottom'
                 },
                 {
                     element: '.bottom-nav',
