@@ -218,6 +218,13 @@ class SmritiTour {
         if (currentPath === '/journal' || currentPath === '/') {
             return baseSteps.concat([
                 {
+                    element: '.bottom-nav a[href="/journal"]',
+                    intro: `
+                        <p>Use this to record your journal entries. This is where you'll start your daily journaling practice.</p>
+                    `,
+                    position: 'top'
+                },
+                {
                     element: '.input-mode-toggle',
                     intro: `
                         <p>You can journal in two ways:</p>
@@ -239,17 +246,23 @@ class SmritiTour {
                     `
                 },
                 {
-                    element: '.bottom-nav',
+                    element: '.bottom-nav a[href="/entries"]',
                     intro: `
-                        <h4>🧭 Navigation</h4>
-                        <p>Use the bottom navigation to explore:</p>
-                        <ul style="margin: 12px 0; padding-left: 20px;">
-                            <li><strong>Journal:</strong> Create new entries (where you are now)</li>
-                            <li><strong>Entries:</strong> View your journal history</li>
-                            <li><strong>Reflections:</strong> Read AI-generated insights</li>
-                            <li><strong>Generate:</strong> Create new reflections from your patterns</li>
-                        </ul>
-                        <p style="font-size: 14px; color: #6c757d;">Let's explore these sections!</p>
+                        <p>Come here to see your past journal entries and track your journaling journey over time.</p>
+                    `,
+                    position: 'top'
+                },
+                {
+                    element: '.bottom-nav a[href="/generate"]',
+                    intro: `
+                        <p>Come here to generate new reflections from your past journal entries and discover insights about your thoughts.</p>
+                    `,
+                    position: 'top'
+                },
+                {
+                    element: '.bottom-nav a[href="/reflections"]',
+                    intro: `
+                        <p>Come here to view past reflections and explore the insights Smriti has discovered about your emotional patterns.</p>
                     `,
                     position: 'top'
                 }
