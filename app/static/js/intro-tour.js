@@ -170,6 +170,8 @@ class SmritiTour {
 
         // Event handlers
         this.introInstance.onbeforechange((targetElement) => {
+            console.log('Step change detected. Current step index:', this.introInstance._currentStep);
+            console.log('Target element:', targetElement);
             // Ensure elements are visible before highlighting
             this.prepareStepElement(targetElement);
             
@@ -197,35 +199,39 @@ class SmritiTour {
             
             // Force center positioning for AI processing step (step without target element)
             if (!targetElement) {
+                console.log('AI Processing step detected - applying custom positioning');
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        // Get viewport dimensions
-                        const viewportWidth = window.innerWidth;
-                        const viewportHeight = window.innerHeight;
+                        console.log('Tooltip found, applying center positioning');
                         
-                        // Calculate center position manually with extra padding
-                        const tooltipWidth = 350; // Slightly smaller width
-                        const leftPosition = (viewportWidth - tooltipWidth) / 2 + 50; // Add 50px more padding to right
-                        const topPosition = (viewportHeight / 2) - 180; // Slightly higher
-                        
-                        // Remove all IntroJS positioning classes
-                        tooltip.className = tooltip.className.replace(/introjs-\w+/g, '');
-                        tooltip.classList.add('introjs-tooltip'); // Keep base class
-                        
-                        // Force absolute positioning with calculated values
+                        // Force absolute center positioning with significant left margin
                         tooltip.style.cssText = `
                             position: fixed !important;
-                            top: ${Math.max(50, topPosition)}px !important;
-                            left: ${Math.max(20, leftPosition)}px !important;
-                            transform: none !important;
-                            margin: 0 !important;
+                            top: 50% !important;
+                            left: 50% !important;
+                            transform: translate(-50%, -50%) !important;
+                            margin-left: 100px !important;
                             z-index: 999999 !important;
                             max-width: 350px !important;
-                            width: 350px !important;
                         `;
+                        
+                        console.log('Positioning applied to tooltip');
+                    } else {
+                        console.log('Tooltip not found');
                     }
-                }, 10);
+                }, 50);
+                
+                // Also try a backup approach with longer delay
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        tooltip.style.marginLeft = '100px';
+                        tooltip.style.left = '50%';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
+                        console.log('Backup positioning applied');
+                    }
+                }, 200);
             }
         });
 
