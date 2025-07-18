@@ -188,36 +188,88 @@ class SmritiTour {
         });
 
         this.introInstance.onafterchange((targetElement) => {
-            // Fix AI Processing step positioning by removing problematic class
+            // Fix AI Processing step positioning using MutationObserver for persistent centering
             const currentStep = this.introInstance._currentStep;
             if (currentStep === 4) {
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        // Remove the class that forces left positioning
-                        tooltip.classList.remove('introjs-top-left-aligned');
-                        
-                        // Apply center positioning
-                        tooltip.style.position = 'fixed';
-                        tooltip.style.top = '50%';
-                        tooltip.style.left = '50%';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                        tooltip.style.margin = '0';
-                    }
-                }, 50);
+                this.setupTooltipPositionLock();
+            } else {
+                // Clean up observer when leaving step 4
+                if (this.tooltipObserver) {
+                    this.tooltipObserver.disconnect();
+                    this.tooltipObserver = null;
+                }
             }
         });
 
         this.introInstance.oncomplete(() => {
+            // Clean up observer on tour completion
+            if (this.tooltipObserver) {
+                this.tooltipObserver.disconnect();
+                this.tooltipObserver = null;
+            }
             this.completeTour();
         });
 
         this.introInstance.onexit(() => {
+            // Clean up observer on tour exit
+            if (this.tooltipObserver) {
+                this.tooltipObserver.disconnect();
+                this.tooltipObserver = null;
+            }
             this.skipTour();
         });
 
         // Start the tour
         this.introInstance.start();
+    }
+
+    // Setup persistent tooltip positioning for AI Processing step
+    setupTooltipPositionLock() {
+        const tooltip = document.querySelector('.introjs-tooltip');
+        if (!tooltip) return;
+
+        // Apply initial positioning
+        this.applyCenterPositioning(tooltip);
+
+        // Create MutationObserver to monitor and fix positioning changes
+        this.tooltipObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'class' || 
+                     mutation.attributeName === 'style')) {
+                    this.applyCenterPositioning(tooltip);
+                }
+            });
+        });
+
+        // Observe class and style changes
+        this.tooltipObserver.observe(tooltip, {
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+
+        // Also observe parent for any positioning changes
+        if (tooltip.parentElement) {
+            this.tooltipObserver.observe(tooltip.parentElement, {
+                attributes: true,
+                attributeFilter: ['style']
+            });
+        }
+    }
+
+    // Apply center positioning and remove problematic classes
+    applyCenterPositioning(tooltip) {
+        if (!tooltip) return;
+        
+        // Remove problematic class
+        tooltip.classList.remove('introjs-top-left-aligned');
+        
+        // Apply center positioning with high specificity
+        tooltip.style.setProperty('position', 'fixed', 'important');
+        tooltip.style.setProperty('top', '50%', 'important');
+        tooltip.style.setProperty('left', '50%', 'important');
+        tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+        tooltip.style.setProperty('margin', '0', 'important');
     }
 
     // Define the tour steps
