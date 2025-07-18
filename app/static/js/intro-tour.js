@@ -204,10 +204,10 @@ class SmritiTour {
                         const viewportWidth = window.innerWidth;
                         const viewportHeight = window.innerHeight;
                         
-                        // Calculate center position manually
-                        const tooltipWidth = 400; // max-width we're setting
-                        const leftPosition = (viewportWidth - tooltipWidth) / 2;
-                        const topPosition = (viewportHeight / 2) - 200; // Offset from center
+                        // Calculate center position manually with extra padding
+                        const tooltipWidth = 350; // Slightly smaller width
+                        const leftPosition = (viewportWidth - tooltipWidth) / 2 + 50; // Add 50px more padding to right
+                        const topPosition = (viewportHeight / 2) - 180; // Slightly higher
                         
                         // Remove all IntroJS positioning classes
                         tooltip.className = tooltip.className.replace(/introjs-\w+/g, '');
@@ -221,8 +221,8 @@ class SmritiTour {
                             transform: none !important;
                             margin: 0 !important;
                             z-index: 999999 !important;
-                            max-width: 400px !important;
-                            width: 400px !important;
+                            max-width: 350px !important;
+                            width: 350px !important;
                         `;
                     }
                 }, 10);
