@@ -195,20 +195,27 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Force center positioning for AI processing step (targeting center point element)
-            if (targetElement && targetElement.id === 'tour-center-point') {
+            // Force center positioning for AI processing step (step without target element)
+            if (!targetElement) {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        // Apply centered positioning
-                        tooltip.style.setProperty('position', 'fixed', 'important');
-                        tooltip.style.setProperty('top', '50%', 'important');
-                        tooltip.style.setProperty('left', '50%', 'important');
-                        tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-                        tooltip.style.setProperty('margin', '0', 'important');
-                        tooltip.style.setProperty('z-index', '999999', 'important');
+                        // Remove all IntroJS positioning classes
+                        tooltip.className = tooltip.className.replace(/introjs-\w+/g, '');
+                        tooltip.classList.add('introjs-tooltip'); // Keep base class
+                        
+                        // Force absolute center positioning
+                        tooltip.style.cssText = `
+                            position: fixed !important;
+                            top: 50% !important;
+                            left: 50% !important;
+                            transform: translate(-50%, -50%) !important;
+                            margin: 0 !important;
+                            z-index: 999999 !important;
+                            max-width: 400px !important;
+                        `;
                     }
-                }, 50);
+                }, 10);
             }
         });
 
@@ -275,7 +282,6 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '#tour-center-point',
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
@@ -285,8 +291,7 @@ class SmritiTour {
                             <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
-                    `,
-                    position: 'floating'
+                    `
                 },
                 {
                     element: '.bottom-nav',
