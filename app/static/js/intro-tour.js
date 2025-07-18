@@ -161,8 +161,8 @@ class SmritiTour {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        tooltip.style.transform = 'translateX(-120px)';
-                        tooltip.style.marginTop = '10px';
+                        tooltip.style.transform = 'translateY(-80px)';
+                        tooltip.style.marginLeft = '0px';
                     }
                 }, 100);
             }
@@ -217,10 +217,9 @@ class SmritiTour {
                     element: '#micButton',
                     intro: `
                         <h4>🎤 Voice Journaling</h4>
-                        <p>Tap this microphone to start recording your thoughts. Smriti supports multiple languages and will automatically transcribe your speech.</p>
-                        <p style="font-size: 14px; color: #6c757d;">Perfect for when you're on the go or prefer speaking your thoughts!</p>
+                        <p>Tap the microphone to record your thoughts. Supports multiple languages with automatic transcription.</p>
                     `,
-                    position: 'left'
+                    position: 'top'
                 },
                 {
                     element: '#textInputArea',
