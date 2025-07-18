@@ -233,8 +233,8 @@ class SmritiTour {
                 setTimeout(forceCenterPosition, 100);
                 setTimeout(forceCenterPosition, 200);
                 
-                // Set up continuous monitoring only for AI Processing
-                this.centeringInterval = setInterval(forceCenterPosition, 100);
+                // Set up less frequent monitoring for AI Processing
+                this.centeringInterval = setInterval(forceCenterPosition, 500);
             } 
             // Text Journaling step (step 3) - ensure proper positioning above text area
             else if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
@@ -246,28 +246,33 @@ class SmritiTour {
                     textModeBtn.click(); // Switch to text mode if not already active
                 }
                 
-                // Use persistent monitoring for Text Journaling positioning
+                // Use stable positioning for Text Journaling
                 const forceTextJournalingPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     const textInputArea = document.getElementById('textInputArea');
                     
                     if (tooltip && textInputArea) {
+                        // Only reposition if tooltip is significantly misplaced
                         const rect = textInputArea.getBoundingClientRect();
-                        // Position tooltip above text area with some padding
-                        const topPosition = Math.max(10, rect.top - tooltip.offsetHeight - 15);
-                        const leftPosition = Math.max(10, Math.min(
-                            window.innerWidth - tooltip.offsetWidth - 10,
-                            rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)
-                        ));
+                        const currentTop = parseInt(tooltip.style.top) || 0;
+                        const targetTop = Math.max(10, rect.top - tooltip.offsetHeight - 15);
                         
-                        tooltip.style.cssText = `
-                            position: fixed !important;
-                            top: ${topPosition}px !important;
-                            left: ${leftPosition}px !important;
-                            transform: none !important;
-                            margin: 0 !important;
-                            z-index: 9999999 !important;
-                        `;
+                        // Only update if position is off by more than 20px
+                        if (Math.abs(currentTop - targetTop) > 20) {
+                            const leftPosition = Math.max(10, Math.min(
+                                window.innerWidth - tooltip.offsetWidth - 10,
+                                rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)
+                            ));
+                            
+                            tooltip.style.cssText = `
+                                position: fixed !important;
+                                top: ${targetTop}px !important;
+                                left: ${leftPosition}px !important;
+                                transform: none !important;
+                                margin: 0 !important;
+                                z-index: 9999999 !important;
+                            `;
+                        }
                     }
                 };
                 
@@ -277,8 +282,8 @@ class SmritiTour {
                 setTimeout(forceTextJournalingPosition, 100);
                 setTimeout(forceTextJournalingPosition, 200);
                 
-                // Set up monitoring for Text Journaling step
-                this.textJournalingInterval = setInterval(forceTextJournalingPosition, 150);
+                // Set up less frequent monitoring for Text Journaling step
+                this.textJournalingInterval = setInterval(forceTextJournalingPosition, 500);
             } else {
                 // Clear intervals when leaving special positioning steps
                 if (this.centeringInterval) {
