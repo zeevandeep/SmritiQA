@@ -204,12 +204,12 @@ class SmritiTour {
                 },
                 {
                     intro: `
-                        <h4>⚡ AI Processing</h4>
+                        <h4>AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
                         <ul style="margin: 12px 0; padding-left: 20px;">
-                            <li><strong>Analyze</strong> your thoughts and emotions (~2.4s)</li>
-                            <li><strong>Generate embeddings</strong> for pattern recognition (~1.6s)</li>
-                            <li><strong>Create connections</strong> to your past entries (~1.5s)</li>
+                            <li><strong>Analyze</strong> your thoughts and emotions</li>
+                            <li><strong>Identify</strong> meaningful patterns in your reflections</li>
+                            <li><strong>Connect</strong> your current entry to past memories</li>
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
                     `
