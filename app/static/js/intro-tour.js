@@ -149,6 +149,11 @@ class SmritiTour {
                 .introjs-tooltip[data-step="0"] .introjs-tooltipbuttons {
                     justify-content: space-between !important;
                 }
+                .introjs-tooltip[data-step="6"] .introjs-donebutton {
+                    color: #ccc !important;
+                    pointer-events: none !important;
+                    opacity: 0.4 !important;
+                }
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', customCSS);
@@ -164,7 +169,7 @@ class SmritiTour {
             nextLabel: '▶',
             prevLabel: '◀',
             skipLabel: 'Skip',
-            doneLabel: 'Start Exploring! 🎉',
+            doneLabel: '▶',
             tooltipClass: 'smriti-tooltip',
             highlightClass: 'smriti-highlight',
             overlayOpacity: 0.4
