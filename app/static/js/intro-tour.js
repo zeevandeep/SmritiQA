@@ -195,20 +195,25 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Force center positioning for AI processing step
-            setTimeout(() => {
-                const tooltip = document.querySelector('.introjs-tooltip');
-                if (tooltip && !targetElement) {
-                    // Multiple approaches to ensure centering
-                    tooltip.classList.add('center-tooltip');
-                    tooltip.style.setProperty('position', 'fixed', 'important');
-                    tooltip.style.setProperty('top', '50vh', 'important');
-                    tooltip.style.setProperty('left', '50vw', 'important');
-                    tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-                    tooltip.style.setProperty('margin', '0', 'important');
-                    tooltip.style.setProperty('z-index', '999999', 'important');
-                }
-            }, 50);
+            // Force center positioning for AI processing step (targeting body element)
+            if (targetElement && targetElement.tagName === 'BODY') {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        // Remove any positioning classes and styles first
+                        tooltip.style.cssText = '';
+                        tooltip.className = tooltip.className.replace(/introjs-\w*position\w*/g, '');
+                        
+                        // Apply centered positioning
+                        tooltip.style.setProperty('position', 'fixed', 'important');
+                        tooltip.style.setProperty('top', '50%', 'important');
+                        tooltip.style.setProperty('left', '50%', 'important');
+                        tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+                        tooltip.style.setProperty('margin', '0', 'important');
+                        tooltip.style.setProperty('z-index', '999999', 'important');
+                    }
+                }, 50);
+            }
         });
 
         this.introInstance.oncomplete(() => {
@@ -274,6 +279,7 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
+                    element: 'body',
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
@@ -284,7 +290,7 @@ class SmritiTour {
                         </ul>
                         <p style="font-size: 14px; color: #6c757d;">You'll see real-time progress indicators during processing!</p>
                     `,
-                    position: 'center'
+                    position: 'floating'
                 },
                 {
                     element: '.bottom-nav',
