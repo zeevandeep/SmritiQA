@@ -193,8 +193,8 @@
                     // New user: redirect to language selection
                     window.location.href = '/select-language';
                 } else {
-                    // Existing user: redirect to journal
-                    window.location.href = '/journal';
+                    // Existing user: redirect to journal with welcome parameter for potential tour
+                    window.location.href = '/journal?welcome=true';
                 }
             }
         });
