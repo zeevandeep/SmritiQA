@@ -63,6 +63,14 @@ class SmritiTour {
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
                 }
+                /* Center positioning for AI processing step */
+                .introjs-tooltip.center-tooltip {
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                }
                 .introjs-tooltipbuttons {
                     padding: 12px 20px 16px;
                     display: flex;
@@ -183,11 +191,7 @@ class SmritiTour {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        tooltip.style.position = 'fixed';
-                        tooltip.style.top = '50%';
-                        tooltip.style.left = '50%';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                        tooltip.style.zIndex = '2147483647';
+                        tooltip.classList.add('center-tooltip');
                     }
                 }, 100);
             }
