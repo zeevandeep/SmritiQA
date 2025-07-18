@@ -197,41 +197,20 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Force center positioning for AI processing step (step 4 only)
-            if (this.introInstance._currentStep === 4 && targetElement && targetElement.classList && targetElement.classList.contains('introjsFloatingElement')) {
-                console.log('AI Processing step 4 detected - applying custom positioning');
+
+        });
+
+        this.introInstance.onafterchange((targetElement) => {
+            // Fix AI Processing step positioning (step 4)
+            if (this.introInstance._currentStep === 4) {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        console.log('Tooltip found, applying center positioning');
-                        
-                        // Force absolute center positioning with significant left margin
-                        tooltip.style.cssText = `
-                            position: fixed !important;
-                            top: 50% !important;
-                            left: 50% !important;
-                            transform: translate(-50%, -50%) !important;
-                            margin-left: 100px !important;
-                            z-index: 999999 !important;
-                            max-width: 350px !important;
-                        `;
-                        
-                        console.log('Positioning applied to tooltip');
-                    } else {
-                        console.log('Tooltip not found');
-                    }
-                }, 50);
-                
-                // Also try a backup approach with longer delay
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.style.marginLeft = '100px';
-                        tooltip.style.left = '50%';
+                        tooltip.style.left = 'calc(50% + 80px)';
                         tooltip.style.transform = 'translate(-50%, -50%)';
-                        console.log('Backup positioning applied');
+                        console.log('Step 4 positioning applied');
                     }
-                }, 200);
+                }, 100);
             }
         });
 
