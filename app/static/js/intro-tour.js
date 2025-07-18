@@ -214,9 +214,10 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Force center positioning for AI Processing step using persistent monitoring
+            // Force center positioning for steps using center point (Text Journaling & AI Processing)
             if (targetElement && targetElement.id === 'tour-center-point') {
-                console.log('Setting up persistent center positioning for AI step');
+                const currentStep = this.introInstance._currentStep;
+                console.log(`Setting up persistent center positioning for step ${currentStep}`);
                 
                 const forceCenterPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
@@ -243,7 +244,7 @@ class SmritiTour {
                 // Set up continuous monitoring
                 this.centeringInterval = setInterval(forceCenterPosition, 100);
             } else {
-                // Clear interval when leaving AI step
+                // Clear interval when leaving center point steps
                 if (this.centeringInterval) {
                     clearInterval(this.centeringInterval);
                     this.centeringInterval = null;
@@ -317,13 +318,12 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '#textInputArea',
+                    element: '#tour-center-point',
                     intro: `
                         <h4>✍️ Text Journaling</h4>
                         <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
                         <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
-                    `,
-                    position: 'top'
+                    `
                 },
                 {
                     element: '#tour-center-point',
