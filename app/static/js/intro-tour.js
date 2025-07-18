@@ -195,15 +195,11 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Force center positioning for AI processing step (targeting body element)
-            if (targetElement && targetElement.tagName === 'BODY') {
+            // Force center positioning for AI processing step (targeting center point element)
+            if (targetElement && targetElement.id === 'tour-center-point') {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        // Remove any positioning classes and styles first
-                        tooltip.style.cssText = '';
-                        tooltip.className = tooltip.className.replace(/introjs-\w*position\w*/g, '');
-                        
                         // Apply centered positioning
                         tooltip.style.setProperty('position', 'fixed', 'important');
                         tooltip.style.setProperty('top', '50%', 'important');
@@ -279,7 +275,7 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: 'body',
+                    element: '#tour-center-point',
                     intro: `
                         <h4>⚡ AI Processing</h4>
                         <p>After recording or typing, Smriti's AI will:</p>
