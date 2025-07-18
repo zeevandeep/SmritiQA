@@ -186,7 +186,15 @@ class SmritiTour {
                 setTimeout(() => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        tooltip.style.marginLeft = '100px';
+                        // Reset any conflicting styles first
+                        tooltip.style.marginLeft = '';
+                        tooltip.style.left = '';
+                        tooltip.style.transform = '';
+                        // Apply center positioning with right offset
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = '50%';
+                        tooltip.style.left = 'calc(50% + 50px)';
+                        tooltip.style.transform = 'translate(-50%, -50%)';
                     }
                 }, 50);
             }
@@ -201,7 +209,11 @@ class SmritiTour {
                 const applyPositioning = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        tooltip.style.marginLeft = '100px';
+                        // Reset conflicting styles
+                        tooltip.style.marginLeft = '';
+                        // Apply clean center + offset positioning
+                        tooltip.style.position = 'fixed';
+                        tooltip.style.top = '50%';
                         tooltip.style.left = 'calc(50% + 50px)';
                         tooltip.style.transform = 'translate(-50%, -50%)';
                     }
