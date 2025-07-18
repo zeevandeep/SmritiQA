@@ -132,10 +132,19 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Force center positioning only for AI Processing step */
+                /* Force center positioning for AI Processing step */
                 .introjs-tooltip[data-step-number="4"] {
                     position: fixed !important;
                     top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                }
+                
+                /* Force proper positioning for Text Journaling step */
+                .introjs-tooltip[data-step-number="3"] {
+                    position: fixed !important;
+                    top: 40% !important;
                     left: 50% !important;
                     transform: translate(-50%, -50%) !important;
                     margin: 0 !important;
@@ -204,81 +213,16 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Handle positioning for different steps
+            // Handle text mode activation for Text Journaling step
             const currentStep = this.introInstance._currentStep;
-            
-            // AI Processing step (step 4) - force center positioning ONCE
-            if (targetElement && targetElement.id === 'tour-center-point' && currentStep === 4) {
-                console.log(`Setting up one-time center positioning for AI Processing step ${currentStep}`);
+            if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
+                console.log(`Activating text mode for Text Journaling step ${currentStep}`);
                 
-                const forceCenterPosition = () => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        tooltip.style.cssText = `
-                            position: fixed !important;
-                            top: 50% !important;
-                            left: 50% !important;
-                            transform: translate(-50%, -50%) !important;
-                            margin: 0 !important;
-                            z-index: 9999999 !important;
-                        `;
-                    }
-                };
-                
-                // Apply positioning with multiple retries but NO continuous monitoring
-                forceCenterPosition();
-                setTimeout(forceCenterPosition, 10);
-                setTimeout(forceCenterPosition, 50);
-                setTimeout(forceCenterPosition, 100);
-                setTimeout(forceCenterPosition, 200);
-                setTimeout(forceCenterPosition, 500);
-            } 
-            // Text Journaling step (step 3) - ensure proper positioning above text area
-            else if (targetElement && targetElement.id === 'textInputArea' && currentStep === 3) {
-                console.log(`Ensuring proper positioning for Text Journaling step ${currentStep}`);
-                
-                // Make sure text mode is active and text area is visible
+                // Make sure text mode is active
                 const textModeBtn = document.getElementById('textModeBtn');
                 if (textModeBtn && !textModeBtn.classList.contains('active')) {
-                    textModeBtn.click(); // Switch to text mode if not already active
+                    textModeBtn.click();
                 }
-                
-                // Use stable positioning for Text Journaling
-                const forceTextJournalingPosition = () => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    const textInputArea = document.getElementById('textInputArea');
-                    
-                    if (tooltip && textInputArea) {
-                        // Only reposition if tooltip is significantly misplaced
-                        const rect = textInputArea.getBoundingClientRect();
-                        const currentTop = parseInt(tooltip.style.top) || 0;
-                        const targetTop = Math.max(10, rect.top - tooltip.offsetHeight - 15);
-                        
-                        // Only update if position is off by more than 20px
-                        if (Math.abs(currentTop - targetTop) > 20) {
-                            const leftPosition = Math.max(10, Math.min(
-                                window.innerWidth - tooltip.offsetWidth - 10,
-                                rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)
-                            ));
-                            
-                            tooltip.style.cssText = `
-                                position: fixed !important;
-                                top: ${targetTop}px !important;
-                                left: ${leftPosition}px !important;
-                                transform: none !important;
-                                margin: 0 !important;
-                                z-index: 9999999 !important;
-                            `;
-                        }
-                    }
-                };
-                
-                // Apply positioning with retries but NO continuous monitoring
-                setTimeout(forceTextJournalingPosition, 10);
-                setTimeout(forceTextJournalingPosition, 50);
-                setTimeout(forceTextJournalingPosition, 100);
-                setTimeout(forceTextJournalingPosition, 200);
-                setTimeout(forceTextJournalingPosition, 500);
             }
         });
 
