@@ -197,7 +197,43 @@ class SmritiTour {
 
         });
 
-
+        this.introInstance.onafterchange((targetElement) => {
+            // Debug: Log DOM structure for AI Processing step
+            const currentStep = this.introInstance._currentStep;
+            if (currentStep === 4) {
+                setTimeout(() => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
+                    if (tooltip) {
+                        console.log('=== AI Processing Tooltip DOM Analysis ===');
+                        console.log('Tooltip element:', tooltip);
+                        console.log('Tooltip classes:', tooltip.className);
+                        console.log('Tooltip attributes:', tooltip.attributes);
+                        console.log('Data attributes:');
+                        for (let attr of tooltip.attributes) {
+                            if (attr.name.startsWith('data-')) {
+                                console.log(`  ${attr.name}: ${attr.value}`);
+                            }
+                        }
+                        console.log('Parent element:', tooltip.parentElement);
+                        console.log('Parent classes:', tooltip.parentElement ? tooltip.parentElement.className : 'none');
+                        console.log('Current styles:', {
+                            position: tooltip.style.position,
+                            top: tooltip.style.top,
+                            left: tooltip.style.left,
+                            transform: tooltip.style.transform,
+                            margin: tooltip.style.margin
+                        });
+                        console.log('Computed styles:', {
+                            position: getComputedStyle(tooltip).position,
+                            top: getComputedStyle(tooltip).top,
+                            left: getComputedStyle(tooltip).left,
+                            transform: getComputedStyle(tooltip).transform
+                        });
+                        console.log('========================================');
+                    }
+                }, 100);
+            }
+        });
 
         this.introInstance.oncomplete(() => {
             this.completeTour();
