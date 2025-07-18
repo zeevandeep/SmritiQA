@@ -132,18 +132,9 @@ class SmritiTour {
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
                 
-                /* Force center positioning when targeting center point element */
-                .introjs-tooltip[data-step-number="4"],
-                .introjs-tooltip[data-step-number="5"] {
-                    position: fixed !important;
-                    top: 50% !important;
-                    left: 50% !important;
-                    transform: translate(-50%, -50%) !important;
-                    margin: 0 !important;
-                }
-                
-                /* Alternative approach - target by tooltip content */
-                .introjs-tooltip:has(h4:contains("AI Processing")) {
+                /* Force center positioning for steps using center point element */
+                .introjs-tooltip[data-step-number="3"],
+                .introjs-tooltip[data-step-number="4"] {
                     position: fixed !important;
                     top: 50% !important;
                     left: 50% !important;
@@ -318,13 +309,12 @@ class SmritiTour {
                     position: 'top'
                 },
                 {
-                    element: '#textInputArea',
+                    element: '#tour-center-point',
                     intro: `
                         <h4>✍️ Text Journaling</h4>
                         <p>Click the pen icon above to switch to text mode. You can type your thoughts here and use Enter for line breaks.</p>
                         <p style="font-size: 14px; color: #6c757d;">Great for detailed reflection or when you prefer writing!</p>
-                    `,
-                    position: 'top'
+                    `
                 },
                 {
                     element: '#tour-center-point',
