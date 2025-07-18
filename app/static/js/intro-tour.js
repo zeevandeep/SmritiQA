@@ -241,51 +241,79 @@ class SmritiTour {
                 console.log(`Ensuring proper positioning for Text Journaling step ${currentStep}`);
                 
                 // Make sure text mode is active and text area is visible
-                setTimeout(() => {
-                    const textModeBtn = document.getElementById('textModeBtn');
+                const textModeBtn = document.getElementById('textModeBtn');
+                if (textModeBtn && !textModeBtn.classList.contains('active')) {
+                    textModeBtn.click(); // Switch to text mode if not already active
+                }
+                
+                // Use persistent monitoring for Text Journaling positioning
+                const forceTextJournalingPosition = () => {
+                    const tooltip = document.querySelector('.introjs-tooltip');
                     const textInputArea = document.getElementById('textInputArea');
                     
-                    if (textModeBtn && !textModeBtn.classList.contains('active')) {
-                        textModeBtn.click(); // Switch to text mode if not already active
-                    }
-                    
-                    // Force proper positioning above text area
-                    const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip && textInputArea) {
                         const rect = textInputArea.getBoundingClientRect();
+                        // Position tooltip above text area with some padding
+                        const topPosition = Math.max(10, rect.top - tooltip.offsetHeight - 15);
+                        const leftPosition = Math.max(10, Math.min(
+                            window.innerWidth - tooltip.offsetWidth - 10,
+                            rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)
+                        ));
+                        
                         tooltip.style.cssText = `
                             position: fixed !important;
-                            top: ${rect.top - tooltip.offsetHeight - 20}px !important;
-                            left: ${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px !important;
+                            top: ${topPosition}px !important;
+                            left: ${leftPosition}px !important;
                             transform: none !important;
                             margin: 0 !important;
                             z-index: 9999999 !important;
                         `;
                     }
-                }, 50);
+                };
+                
+                // Apply positioning with retries and persistent monitoring
+                setTimeout(forceTextJournalingPosition, 10);
+                setTimeout(forceTextJournalingPosition, 50);
+                setTimeout(forceTextJournalingPosition, 100);
+                setTimeout(forceTextJournalingPosition, 200);
+                
+                // Set up monitoring for Text Journaling step
+                this.textJournalingInterval = setInterval(forceTextJournalingPosition, 150);
             } else {
-                // Clear interval when leaving special positioning steps
+                // Clear intervals when leaving special positioning steps
                 if (this.centeringInterval) {
                     clearInterval(this.centeringInterval);
                     this.centeringInterval = null;
+                }
+                if (this.textJournalingInterval) {
+                    clearInterval(this.textJournalingInterval);
+                    this.textJournalingInterval = null;
                 }
             }
         });
 
         this.introInstance.oncomplete(() => {
-            // Clear centering interval if active
+            // Clear all intervals if active
             if (this.centeringInterval) {
                 clearInterval(this.centeringInterval);
                 this.centeringInterval = null;
+            }
+            if (this.textJournalingInterval) {
+                clearInterval(this.textJournalingInterval);
+                this.textJournalingInterval = null;
             }
             this.completeTour();
         });
 
         this.introInstance.onexit(() => {
-            // Clear centering interval if active
+            // Clear all intervals if active
             if (this.centeringInterval) {
                 clearInterval(this.centeringInterval);
                 this.centeringInterval = null;
+            }
+            if (this.textJournalingInterval) {
+                clearInterval(this.textJournalingInterval);
+                this.textJournalingInterval = null;
             }
             this.skipTour();
         });
