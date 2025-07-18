@@ -225,51 +225,68 @@ class SmritiTour {
 
     // Setup persistent tooltip positioning for AI Processing step
     setupTooltipPositionLock() {
-        const tooltip = document.querySelector('.introjs-tooltip');
-        if (!tooltip) return;
-
-        // Apply initial positioning
-        this.applyCenterPositioning(tooltip);
-
-        // Create MutationObserver to monitor and fix positioning changes
-        this.tooltipObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && 
-                    (mutation.attributeName === 'class' || 
-                     mutation.attributeName === 'style')) {
-                    this.applyCenterPositioning(tooltip);
+        // Use delayed execution to ensure tooltip is fully rendered
+        setTimeout(() => {
+            try {
+                const tooltip = document.querySelector('.introjs-tooltip');
+                if (!tooltip) {
+                    console.log('Tooltip not found, retrying...');
+                    // Retry once more
+                    setTimeout(() => this.setupTooltipPositionLock(), 100);
+                    return;
                 }
-            });
-        });
 
-        // Observe class and style changes
-        this.tooltipObserver.observe(tooltip, {
-            attributes: true,
-            attributeFilter: ['class', 'style']
-        });
+                // Apply initial positioning
+                this.applyCenterPositioning(tooltip);
 
-        // Also observe parent for any positioning changes
-        if (tooltip.parentElement) {
-            this.tooltipObserver.observe(tooltip.parentElement, {
-                attributes: true,
-                attributeFilter: ['style']
-            });
-        }
+                // Create MutationObserver with error handling
+                this.tooltipObserver = new MutationObserver((mutations) => {
+                    try {
+                        mutations.forEach((mutation) => {
+                            if (mutation.type === 'attributes' && 
+                                (mutation.attributeName === 'class' || 
+                                 mutation.attributeName === 'style')) {
+                                const currentTooltip = document.querySelector('.introjs-tooltip');
+                                if (currentTooltip) {
+                                    this.applyCenterPositioning(currentTooltip);
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.log('MutationObserver error:', error);
+                    }
+                });
+
+                // Observe with error handling
+                this.tooltipObserver.observe(tooltip, {
+                    attributes: true,
+                    attributeFilter: ['class', 'style']
+                });
+
+            } catch (error) {
+                console.log('Setup error:', error);
+            }
+        }, 150);
     }
 
     // Apply center positioning and remove problematic classes
     applyCenterPositioning(tooltip) {
-        if (!tooltip) return;
-        
-        // Remove problematic class
-        tooltip.classList.remove('introjs-top-left-aligned');
-        
-        // Apply center positioning with high specificity
-        tooltip.style.setProperty('position', 'fixed', 'important');
-        tooltip.style.setProperty('top', '50%', 'important');
-        tooltip.style.setProperty('left', '50%', 'important');
-        tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-        tooltip.style.setProperty('margin', '0', 'important');
+        try {
+            if (!tooltip || !tooltip.classList) return;
+            
+            // Remove problematic class
+            tooltip.classList.remove('introjs-top-left-aligned');
+            
+            // Apply center positioning with high specificity
+            tooltip.style.setProperty('position', 'fixed', 'important');
+            tooltip.style.setProperty('top', '50%', 'important');
+            tooltip.style.setProperty('left', '50%', 'important');
+            tooltip.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+            tooltip.style.setProperty('margin', '0', 'important');
+            
+        } catch (error) {
+            console.log('Positioning error:', error);
+        }
     }
 
     // Define the tour steps
