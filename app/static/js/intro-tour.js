@@ -131,6 +131,18 @@ class SmritiTour {
                     border-radius: 8px;
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
+                
+                /* Force center positioning for AI Processing step using multiple selectors */
+                .introjs-tooltip[data-step-number="5"],
+                .introjs-tooltip[data-step="4"],
+                .introjs-floatingElement .introjs-tooltip {
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 60% !important;
+                    transform: translate(-50%, -50%) !important;
+                    margin: 0 !important;
+                    z-index: 999999 !important;
+                }
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', customCSS);
@@ -181,51 +193,11 @@ class SmritiTour {
                 }, 100);
             }
             
-            // Pre-position AI Processing step (step 4) to prevent left positioning
-            if (this.introInstance._currentStep === 4) {
-                setTimeout(() => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        // Reset any conflicting styles first
-                        tooltip.style.marginLeft = '';
-                        tooltip.style.left = '';
-                        tooltip.style.transform = '';
-                        // Apply center positioning with right offset
-                        tooltip.style.position = 'fixed';
-                        tooltip.style.top = '50%';
-                        tooltip.style.left = 'calc(50% + 50px)';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                    }
-                }, 50);
-            }
+
 
         });
 
-        this.introInstance.onafterchange((targetElement) => {
-            // Fix AI Processing step (4) positioning - move it to the right
-            const currentStep = this.introInstance._currentStep;
-            if (currentStep === 4) {
-                // Apply positioning multiple times to ensure it sticks
-                const applyPositioning = () => {
-                    const tooltip = document.querySelector('.introjs-tooltip');
-                    if (tooltip) {
-                        // Reset conflicting styles
-                        tooltip.style.marginLeft = '';
-                        // Apply clean center + offset positioning
-                        tooltip.style.position = 'fixed';
-                        tooltip.style.top = '50%';
-                        tooltip.style.left = 'calc(50% + 50px)';
-                        tooltip.style.transform = 'translate(-50%, -50%)';
-                    }
-                };
-                
-                // Apply immediately and with delays
-                applyPositioning();
-                setTimeout(applyPositioning, 50);
-                setTimeout(applyPositioning, 150);
-                setTimeout(applyPositioning, 300);
-            }
-        });
+
 
         this.introInstance.oncomplete(() => {
             this.completeTour();
