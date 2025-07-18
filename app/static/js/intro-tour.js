@@ -214,12 +214,13 @@ class SmritiTour {
             console.log('Step change detected. Current step index:', this.introInstance._currentStep);
             console.log('Target element:', targetElement);
             
-            // Force center positioning for AI Processing step using JavaScript as backup
+            // Force center positioning for AI Processing step using persistent monitoring
             if (targetElement && targetElement.id === 'tour-center-point') {
-                setTimeout(() => {
+                console.log('Setting up persistent center positioning for AI step');
+                
+                const forceCenterPosition = () => {
                     const tooltip = document.querySelector('.introjs-tooltip');
                     if (tooltip) {
-                        console.log('Forcing center positioning for AI step');
                         tooltip.style.cssText = `
                             position: fixed !important;
                             top: 50% !important;
@@ -229,15 +230,42 @@ class SmritiTour {
                             z-index: 9999999 !important;
                         `;
                     }
-                }, 10);
+                };
+                
+                // Apply immediately and with multiple retries
+                forceCenterPosition();
+                setTimeout(forceCenterPosition, 1);
+                setTimeout(forceCenterPosition, 10);
+                setTimeout(forceCenterPosition, 50);
+                setTimeout(forceCenterPosition, 100);
+                setTimeout(forceCenterPosition, 200);
+                
+                // Set up continuous monitoring
+                this.centeringInterval = setInterval(forceCenterPosition, 100);
+            } else {
+                // Clear interval when leaving AI step
+                if (this.centeringInterval) {
+                    clearInterval(this.centeringInterval);
+                    this.centeringInterval = null;
+                }
             }
         });
 
         this.introInstance.oncomplete(() => {
+            // Clear centering interval if active
+            if (this.centeringInterval) {
+                clearInterval(this.centeringInterval);
+                this.centeringInterval = null;
+            }
             this.completeTour();
         });
 
         this.introInstance.onexit(() => {
+            // Clear centering interval if active
+            if (this.centeringInterval) {
+                clearInterval(this.centeringInterval);
+                this.centeringInterval = null;
+            }
             this.skipTour();
         });
 
