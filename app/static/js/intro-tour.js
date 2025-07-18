@@ -141,6 +141,9 @@ class SmritiTour {
                     border-radius: 8px;
                     box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
                 }
+                .introjs-tooltip[data-step="0"] .introjs-prevbutton {
+                    display: none !important;
+                }
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', customCSS);
@@ -166,6 +169,15 @@ class SmritiTour {
         this.introInstance.onbeforechange((targetElement) => {
             // Ensure elements are visible before highlighting
             this.prepareStepElement(targetElement);
+            
+            // Hide back button on first step
+            setTimeout(() => {
+                const currentStep = this.introInstance._currentStep;
+                const tooltip = document.querySelector('.introjs-tooltip');
+                if (tooltip) {
+                    tooltip.setAttribute('data-step', currentStep);
+                }
+            }, 10);
         });
 
         this.introInstance.oncomplete(() => {
