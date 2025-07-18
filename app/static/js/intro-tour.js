@@ -58,7 +58,7 @@ class SmritiTour {
         const customCSS = `
             <style id="smriti-tour-styles">
                 .introjs-tooltip {
-                    max-width: 350px;
+                    max-width: 420px;
                     border-radius: 12px;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
                     border: none;
@@ -143,6 +143,9 @@ class SmritiTour {
                 }
                 .introjs-tooltip[data-step="0"] .introjs-prevbutton {
                     display: none !important;
+                }
+                .introjs-tooltip[data-step="0"] .introjs-tooltipbuttons {
+                    justify-content: center !important;
                 }
             </style>
         `;
