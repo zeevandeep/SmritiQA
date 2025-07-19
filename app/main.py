@@ -195,21 +195,40 @@ def get_user_reflections_data(user_id: str, db: Session) -> List[Dict[str, Any]]
     try:
         from app.repositories import reflection_repository
         from uuid import UUID
+        import logging
         
-        reflections = reflection_repository.get_user_reflections(db, UUID(user_id))
-        return [
-            {
+        logger = logging.getLogger(__name__)
+        logger.info(f"Fetching reflections for user {user_id} for template display")
+        
+        # Call with decrypt_for_processing=False to ensure decryption for user display
+        reflections = reflection_repository.get_user_reflections(
+            db, 
+            UUID(user_id), 
+            decrypt_for_processing=False
+        )
+        
+        logger.info(f"Retrieved {len(reflections)} reflections for user {user_id}")
+        
+        result = []
+        for reflection in reflections:
+            logger.info(f"Processing reflection {reflection.id}, encrypted: {reflection.is_encrypted}, text length: {len(reflection.generated_text) if reflection.generated_text else 0}")
+            
+            result.append({
                 "id": str(reflection.id),
                 "user_id": str(reflection.user_id),
                 "generated_text": reflection.generated_text,
                 "generated_at": reflection.generated_at,
                 "feedback": reflection.feedback,
                 "is_viewed": reflection.is_viewed
-            }
-            for reflection in reflections
-        ]
+            })
+        
+        logger.info(f"Returning {len(result)} reflections for template")
+        return result
+        
     except Exception as e:
-        print(f"Error fetching reflections: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error fetching reflections for user {user_id}: {e}", exc_info=True)
     return []
 
 # Helper function to check unprocessed edges
