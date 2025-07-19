@@ -1017,16 +1017,10 @@
                 
                 const data = await response.json();
                 
-                // Clear the text area
-                textAreaInput.value = '';
+
                 
-                // Show success message
-                instructionText.innerHTML = `
-                    <div class="alert alert-success mb-0 py-2">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        Journal entry saved successfully!
-                    </div>
-                `;
+                // Clear the text area first
+                textAreaInput.value = '';
                 
                 // Trigger the processing pipeline with detailed progress messages
                 const sessionId = data.id;
