@@ -341,21 +341,20 @@ def add_reflection_feedback(db: DbSession, reflection_id: UUID, feedback: int) -
 
 def get_node_details(db: DbSession, node_ids: List[UUID]) -> List[Dict[str, Any]]:
     """
-    Get details for a list of nodes with decrypted text for user display.
+    Get details for a list of nodes.
     
     Args:
         db: Database session.
         node_ids: List of node IDs to retrieve.
         
     Returns:
-        List of node details as dictionaries with decrypted text.
+        List of node details as dictionaries.
     """
-    # Use node repository's get_node_details function which handles decryption for user display
-    nodes = node_repository.get_node_details(db, node_ids, decrypt_for_processing=False)
+    nodes = db.query(Node).filter(Node.id.in_(node_ids)).all()
     return [
         {
             "user_id": str(node.user_id),
-            "text": node.text,  # Now contains decrypted text for user display
+            "text": node.text,
             "theme": node.theme,
             "cognition_type": node.cognition_type,
             "emotion": node.emotion,
