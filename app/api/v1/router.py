@@ -5,7 +5,7 @@ This module defines the main router for the v1 API and includes all route module
 """
 from fastapi import APIRouter
 
-from app.api.v1.routes import users, sessions, health, nodes, edges, reflections, audio, auth, google_oauth
+from app.api.v1.routes import users, sessions, health, nodes, edges, reflections, audio, auth, google_oauth, tour
 
 # Create main v1 router with custom JSON response for proper timezone handling
 router = APIRouter()
@@ -20,3 +20,4 @@ router.include_router(edges.router, prefix="/edges", tags=["edges"])
 router.include_router(reflections.router, prefix="/reflections", tags=["reflections"])
 router.include_router(audio.router, prefix="/audio", tags=["audio"])
 router.include_router(health.router, prefix="/health", tags=["health"])
+router.include_router(tour.router, prefix="/tour", tags=["tour"])

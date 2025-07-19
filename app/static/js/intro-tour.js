@@ -3,19 +3,70 @@
 
 class SmritiTour {
     constructor() {
-        this.hasSeenTour = localStorage.getItem('smriti_tour_completed');
         this.introInstance = null;
     }
 
+    // Check if user has seen the tour before (from database)
+    async hasSeenTour() {
+        try {
+            const user = await this.getCurrentUser();
+            if (!user || !user.id) return true; // If no user, don't show tour
+            
+            const response = await fetch(`/api/v1/tour/status/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${this.getAccessToken()}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.tour_completed;
+            }
+            return true; // If API fails, assume tour completed to avoid showing
+        } catch (error) {
+            console.error('Error checking tour status:', error);
+            return true; // If error, assume tour completed to avoid showing
+        }
+    }
+
+    // Get current user (helper method)
+    async getCurrentUser() {
+        try {
+            const response = await fetch('/api/v1/users/me', {
+                headers: { 'Authorization': `Bearer ${this.getAccessToken()}` }
+            });
+            if (response.ok) {
+                return await response.json();
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting current user:', error);
+            return null;
+        }
+    }
+
+    // Get access token from cookies
+    getAccessToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'smriti_access_token') {
+                return value;
+            }
+        }
+        return null;
+    }
+
     // Initialize the tour for new users
-    init() {
+    async init() {
         // Check URL parameters for tour triggers
         const urlParams = new URLSearchParams(window.location.search);
         const isWelcome = urlParams.get('welcome') === 'true';
         const isTourStart = urlParams.get('tour') === 'start';
         
+        // Check if user has seen tour before
+        const hasSeenTour = await this.hasSeenTour();
+        
         // Show tour if user hasn't seen it before OR if explicitly requested
-        if (!this.hasSeenTour || isWelcome || isTourStart) {
+        if (!hasSeenTour || isWelcome || isTourStart) {
             // Small delay to ensure page is fully loaded
             setTimeout(() => {
                 this.startTour();
@@ -304,16 +355,35 @@ class SmritiTour {
     }
 
     // Handle tour completion
-    completeTour() {
-        localStorage.setItem('smriti_tour_completed', 'true');
+    // Complete tour and mark in database
+    async completeTour() {
+        try {
+            const user = await this.getCurrentUser();
+            if (user && user.id) {
+                await fetch(`/api/v1/tour/complete/${user.id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${this.getAccessToken()}` }
+                });
+            }
+        } catch (error) {
+            console.error('Error marking tour as completed:', error);
+        }
         this.removeTourStyles();
-        
-        // No completion message needed
     }
 
-    // Handle tour skip
-    skipTour() {
-        localStorage.setItem('smriti_tour_completed', 'true');
+    // Handle tour skip and mark in database
+    async skipTour() {
+        try {
+            const user = await this.getCurrentUser();
+            if (user && user.id) {
+                await fetch(`/api/v1/tour/complete/${user.id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${this.getAccessToken()}` }
+                });
+            }
+        } catch (error) {
+            console.error('Error marking tour as completed:', error);
+        }
         this.removeTourStyles();
     }
 
@@ -376,9 +446,9 @@ class SmritiTour {
     }
 
     // Manual tour trigger (for settings or help)
+    // Manual tour start (for "How to Use" page)
     manualStart() {
-        localStorage.removeItem('smriti_tour_completed');
-        this.hasSeenTour = false;
+        // No need to remove anything from database - just start the tour
         this.startTour();
     }
 
