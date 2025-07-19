@@ -53,29 +53,29 @@ def run_migration():
         """)
         print("✓ Column tour_completed added successfully")
         
-        # Step 3: Set tour_completed=True for all existing users
-        # This ensures existing users won't see the tour again
+        # Step 3: Set tour_completed=False for all existing users
+        # This allows existing users to see the tour
         cursor.execute("""
             UPDATE user_profiles 
-            SET tour_completed = TRUE 
-            WHERE tour_completed IS NULL OR tour_completed = FALSE
+            SET tour_completed = FALSE 
+            WHERE tour_completed IS NULL OR tour_completed = TRUE
         """)
         updated_count = cursor.rowcount
-        print(f"✓ Set tour_completed=True for {updated_count} existing users")
+        print(f"✓ Set tour_completed=False for {updated_count} existing users")
         
         # Step 4: Verify the migration
         cursor.execute("""
             SELECT COUNT(*) as total_users,
-                   COUNT(*) FILTER (WHERE tour_completed = TRUE) as tour_completed_users
+                   COUNT(*) FILTER (WHERE tour_completed = FALSE) as tour_not_completed_users
             FROM user_profiles
         """)
         result = cursor.fetchone()
-        total_users, completed_users = result
+        total_users, not_completed_users = result
         
         print(f"\nMigration completed successfully:")
         print(f"  - Total users: {total_users}")
-        print(f"  - Users with tour_completed=True: {completed_users}")
-        print(f"  - New users will see tour (tour_completed=False by default)")
+        print(f"  - Users with tour_completed=False: {not_completed_users}")
+        print(f"  - All users will see tour until they complete it")
         
         cursor.close()
         conn.close()
