@@ -9,17 +9,27 @@ class SmritiTour {
     // Check if user has seen the tour before (from database)
     async hasSeenTour() {
         try {
+            console.log('Checking tour status from database...');
             const user = await this.getCurrentUser();
-            if (!user || !user.id) return true; // If no user, don't show tour
+            console.log('Current user:', user);
+            
+            if (!user || !user.id) {
+                console.log('No user found, not showing tour');
+                return true; // If no user, don't show tour
+            }
             
             const response = await fetch(`/api/v1/tour/status/${user.id}`, {
                 headers: { 'Authorization': `Bearer ${this.getAccessToken()}` }
             });
             
+            console.log('Tour status API response:', response.status);
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('Tour status data:', data);
                 return data.tour_completed;
             }
+            console.log('API call failed, assuming tour completed');
             return true; // If API fails, assume tour completed to avoid showing
         } catch (error) {
             console.error('Error checking tour status:', error);
@@ -57,20 +67,28 @@ class SmritiTour {
 
     // Initialize the tour for new users
     async init() {
+        console.log('Tour init() called');
+        
         // Check URL parameters for tour triggers
         const urlParams = new URLSearchParams(window.location.search);
         const isWelcome = urlParams.get('welcome') === 'true';
         const isTourStart = urlParams.get('tour') === 'start';
         
-        // Check if user has seen tour before
+        console.log('URL params - welcome:', isWelcome, 'tour:', isTourStart);
+        
+        // Always check if user has seen tour before (database check)
         const hasSeenTour = await this.hasSeenTour();
+        console.log('Has seen tour (from database):', hasSeenTour);
         
         // Show tour if user hasn't seen it before OR if explicitly requested
         if (!hasSeenTour || isWelcome || isTourStart) {
+            console.log('Starting tour - conditions met');
             // Small delay to ensure page is fully loaded
             setTimeout(() => {
                 this.startTour();
             }, 1000);
+        } else {
+            console.log('Tour not started - user has already seen it');
         }
     }
 
