@@ -350,6 +350,16 @@
                         <div id="statusIndicator" class="status-indicator">
                             Tap the microphone to start recording in {{ language_display_name }}
                         </div>
+                        
+                        <!-- Processing state (positioned below microphone button) -->
+                        <div id="processingState" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-center my-3">
+                                <div class="spinner-border text-primary me-3" role="status">
+                                    <span class="visually-hidden">Processing...</span>
+                                </div>
+                                <span>Processing your recording...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -394,15 +404,7 @@
                     </div>
                 </div>
                 
-                <!-- Processing state -->
-                <div id="processingState" style="display: none;">
-                    <div class="d-flex align-items-center my-3">
-                        <div class="spinner-border text-primary me-3" role="status">
-                            <span class="visually-hidden">Processing...</span>
-                        </div>
-                        <span>Processing your recording...</span>
-                    </div>
-                </div>
+
                 
                 <!-- Transcript area (hidden initially) -->
                 <div id="transcriptContainer" style="display: none;">
