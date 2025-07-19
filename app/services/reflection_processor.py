@@ -514,15 +514,18 @@ def generate_single_reflection_for_user(
                 logger.info(f"Successfully created reflection: {reflection.id} after {attempt_count} attempts")
                 
                 # Get the decrypted version for user display
+                logger.info(f"Attempting to retrieve decrypted reflection {reflection.id} for API response")
                 decrypted_reflection = reflection_repository.get_reflection(
                     db, reflection.id, decrypt_for_processing=False
                 )
                 
-                if decrypted_reflection:
-                    logger.info(f"Retrieved decrypted reflection {reflection.id} for stats, text length: {len(decrypted_reflection.generated_text)}")
+                if decrypted_reflection and decrypted_reflection.generated_text:
+                    logger.info(f"✅ Retrieved decrypted reflection {reflection.id} for stats, text length: {len(decrypted_reflection.generated_text)}")
+                    logger.info(f"✅ Decrypted text preview: {decrypted_reflection.generated_text[:100]}...")
                     stats_text = decrypted_reflection.generated_text
                 else:
-                    logger.warning(f"Failed to retrieve decrypted reflection {reflection.id}, using original text for stats")
+                    logger.error(f"❌ Failed to retrieve decrypted reflection {reflection.id} (reflection={decrypted_reflection is not None}, has_text={decrypted_reflection.generated_text is not None if decrypted_reflection else False})")
+                    logger.error(f"❌ Using original OpenAI text for stats as fallback")
                     stats_text = reflection_data['generated_text']
                 
                 # Mark the starting edge as processed
