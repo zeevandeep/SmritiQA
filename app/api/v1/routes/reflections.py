@@ -251,18 +251,16 @@ def add_reflection_feedback(
         reflection_id: ID of the reflection to update.
         feedback: Feedback data.
         db: Database session.
+        current_user_id: Authenticated user ID from JWT.
         
     Returns:
         Reflection: Updated reflection.
         
     Raises:
-        HTTPException: If the reflection is not found.
+        HTTPException: If the reflection is not found or access is denied.
     """
-    db_reflection = reflection_repository.add_reflection_feedback(
-        db, 
-        reflection_id=reflection_id, 
-        feedback=feedback.feedback
-    )
+    # First get the reflection to verify ownership
+    db_reflection = reflection_repository.get_reflection(db, reflection_id)
     
     if db_reflection is None:
         raise HTTPException(
@@ -270,7 +268,17 @@ def add_reflection_feedback(
             detail="Reflection not found"
         )
     
-    return db_reflection
+    # Verify user has access to this reflection
+    verify_user_access(str(db_reflection.user_id), current_user_id)
+    
+    # Add the feedback
+    updated_reflection = reflection_repository.add_reflection_feedback(
+        db, 
+        reflection_id=reflection_id, 
+        feedback=feedback.feedback
+    )
+    
+    return updated_reflection
 
 
 @router.post("/{reflection_id}/mark-reflected", response_model=ReflectionSchema)
