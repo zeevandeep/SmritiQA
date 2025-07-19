@@ -518,6 +518,13 @@ def generate_single_reflection_for_user(
                     db, reflection.id, decrypt_for_processing=False
                 )
                 
+                if decrypted_reflection:
+                    logger.info(f"Retrieved decrypted reflection {reflection.id} for stats, text length: {len(decrypted_reflection.generated_text)}")
+                    stats_text = decrypted_reflection.generated_text
+                else:
+                    logger.warning(f"Failed to retrieve decrypted reflection {reflection.id}, using original text for stats")
+                    stats_text = reflection_data['generated_text']
+                
                 # Mark the starting edge as processed
                 edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
                 
@@ -525,7 +532,7 @@ def generate_single_reflection_for_user(
                 stats['edges_processed'] += 1
                 stats['reflection'] = {
                     'id': str(reflection.id),
-                    'generated_text': decrypted_reflection.generated_text if decrypted_reflection else reflection_data['generated_text'],
+                    'generated_text': stats_text,
                     'confidence_score': reflection.confidence_score,
                     'generated_at': reflection.generated_at.isoformat()
                 }
