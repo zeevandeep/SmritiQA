@@ -1,0 +1,44 @@
+Perfect! Thank you for the clarifications. Based on your responses, I have a refined implementation plan. Let me ask a few final clarifying questions to ensure the implementation is exactly what you need:
+
+Refined Implementation Plan Summary
+Based on your answers:
+
+✅ Only encrypt new nodes going forward (no migration of existing nodes)
+✅ Edge processing won't need decrypted text access
+✅ Accept slight performance overhead for reflection generation
+✅ Support both encrypted and unencrypted nodes during transition
+✅ Use same error handling pattern as sessions (migration_errors table)
+Final Clarifying Questions:
+1. New Node Creation Behavior:
+When creating new nodes, should encryption be:
+
+Option A: Always enabled by default for all new nodes
+Option B: Configurable via environment variable (e.g., ENCRYPT_NEW_NODES=true/false)
+Option C: User-specific setting (some users get encrypted nodes, others don't)
+2. API Response Handling:
+For API endpoints that return node data, should we:
+
+Option A: Always return decrypted text when user requests their own nodes
+Option B: Add an optional parameter to API endpoints for requesting decrypted vs encrypted data
+Option C: Never expose encrypted text through APIs (always decrypt for user-facing responses)
+3. Reflection Generation Service:
+Should the reflection service:
+
+Option A: Always decrypt all nodes in a chain (both old unencrypted and new encrypted ones)
+Option B: Only decrypt encrypted nodes, leave unencrypted nodes as-is
+Option C: Detect encryption status and handle each node appropriately
+4. Testing Strategy:
+Should I include:
+
+Option A: Unit tests for encryption/decryption of node text
+Option B: Integration tests for mixed encrypted/unencrypted node scenarios
+Option C: Both unit and integration tests
+Option D: Minimal testing (just verify basic functionality works)
+5. Environment Variable Requirements:
+The current session encryption uses MASTER_ENCRYPTION_KEY and STATIC_ENCRYPTION_SALT. Should node encryption:
+
+Option A: Use the same environment variables (shared encryption system)
+Option B: Use separate node-specific environment variables
+Option C: Use the same variables but with a different salt derivation method
+These answers will help me create the exact implementation you want without any assumptions.
+
