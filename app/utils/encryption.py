@@ -47,7 +47,7 @@ def _derive_user_key(user_id: str) -> bytes:
     Derive user-specific encryption key from master key and user ID.
     
     Args:
-        user_id: User identifier
+        user_id: User identifier (string)
         
     Returns:
         bytes: 32-byte encryption key
@@ -56,10 +56,15 @@ def _derive_user_key(user_id: str) -> bytes:
         EncryptionError: If key derivation fails
     """
     try:
+        # Ensure user_id is a string
+        if isinstance(user_id, bytes):
+            user_id = user_id.decode()
+        user_id_str = str(user_id)
+        
         master_key, static_salt = _get_encryption_config()
         
         # Combine static salt with user ID for user-specific derivation
-        combined_salt = static_salt + user_id.encode()
+        combined_salt = static_salt + user_id_str.encode()
         
         # Use PBKDF2 to derive encryption key
         kdf = PBKDF2HMAC(
@@ -134,6 +139,21 @@ def decrypt_data(encrypted_data: str, user_id: str) -> str:
     except Exception as e:
         logger.error(f"[ENCRYPTION FAIL] op=decrypt user_id={user_id} error={e}")
         raise EncryptionError(f"Decryption failed: {e}")
+
+def derive_user_key(user_id: str) -> bytes:
+    """
+    Public function to derive user-specific encryption key.
+    
+    Args:
+        user_id: User identifier
+        
+    Returns:
+        bytes: User-specific encryption key
+        
+    Raises:
+        EncryptionError: If key derivation fails
+    """
+    return _derive_user_key(user_id)
 
 def test_encryption_roundtrip(user_id: str, test_data: str = "Test encryption data") -> bool:
     """
