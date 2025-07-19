@@ -102,8 +102,7 @@ def encrypt_data(data: str, user_id: str) -> str:
         key = _derive_user_key(user_id)
         fernet = Fernet(key)
         encrypted_bytes = fernet.encrypt(data.encode())
-        # Fernet already returns base64-encoded data, so just decode to string
-        return encrypted_bytes.decode()
+        return base64.urlsafe_b64encode(encrypted_bytes).decode()
         
     except Exception as e:
         logger.error(f"[ENCRYPTION FAIL] op=encrypt user_id={user_id} error={e}")
@@ -130,8 +129,8 @@ def decrypt_data(encrypted_data: str, user_id: str) -> str:
         key = _derive_user_key(user_id)
         fernet = Fernet(key)
         
-        # Fernet expects base64-encoded data as bytes, so encode the string
-        encrypted_bytes = encrypted_data.encode()
+        # Decode the base64 encrypted data
+        encrypted_bytes = base64.urlsafe_b64decode(encrypted_data.encode())
         
         # Decrypt and return as string
         decrypted_bytes = fernet.decrypt(encrypted_bytes)
