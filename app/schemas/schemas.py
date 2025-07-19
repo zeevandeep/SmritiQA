@@ -7,7 +7,7 @@ They are used for validation, serialization, and documentation.
 from datetime import datetime, date, timezone
 from typing import List, Optional, Union
 from uuid import UUID
-from pydantic import BaseModel, Field, EmailStr, field_serializer, validator
+from pydantic import BaseModel, Field, EmailStr, field_serializer
 
 
 # User schemas
@@ -248,13 +248,7 @@ class FeedbackRequest(BaseModel):
     - -1 for thumbs down (negative)
     - NULL for no feedback yet (handled by Optional)
     """
-    feedback: int = Field(description="Feedback value: 1 for thumbs up, -1 for thumbs down")
-    
-    @validator('feedback')
-    def validate_feedback(cls, v):
-        if v not in [-1, 1]:
-            raise ValueError('feedback must be -1 (thumbs down) or 1 (thumbs up)')
-        return v
+    feedback: int = Field(description="Feedback value: 1 for thumbs up, -1 for thumbs down", ge=-1, le=1)
     
 
 # User Feedback schemas

@@ -259,26 +259,44 @@ def add_reflection_feedback(
     Raises:
         HTTPException: If the reflection is not found or access is denied.
     """
-    # First get the reflection to verify ownership
-    db_reflection = reflection_repository.get_reflection(db, reflection_id)
+    import logging
+    logger = logging.getLogger(__name__)
     
-    if db_reflection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Reflection not found"
+    try:
+        logger.info(f"[FEEDBACK] Starting feedback submission for reflection {reflection_id}, value: {feedback.feedback}")
+        
+        # First get the reflection to verify ownership
+        db_reflection = reflection_repository.get_reflection(db, reflection_id)
+        
+        if db_reflection is None:
+            logger.error(f"[FEEDBACK] Reflection {reflection_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reflection not found"
+            )
+        
+        logger.info(f"[FEEDBACK] Found reflection {reflection_id}, user: {db_reflection.user_id}")
+        
+        # Verify user has access to this reflection
+        verify_user_access(str(db_reflection.user_id), current_user_id)
+        logger.info(f"[FEEDBACK] User access verified for {current_user_id}")
+        
+        # Add the feedback
+        updated_reflection = reflection_repository.add_reflection_feedback(
+            db, 
+            reflection_id=reflection_id, 
+            feedback=feedback.feedback
         )
-    
-    # Verify user has access to this reflection
-    verify_user_access(str(db_reflection.user_id), current_user_id)
-    
-    # Add the feedback
-    updated_reflection = reflection_repository.add_reflection_feedback(
-        db, 
-        reflection_id=reflection_id, 
-        feedback=feedback.feedback
-    )
-    
-    return updated_reflection
+        
+        logger.info(f"[FEEDBACK] Successfully added feedback {feedback.feedback} to reflection {reflection_id}")
+        return updated_reflection
+        
+    except Exception as e:
+        logger.error(f"[FEEDBACK ERROR] Failed to add feedback: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to add feedback: {str(e)}"
+        )
 
 
 @router.post("/{reflection_id}/mark-reflected", response_model=ReflectionSchema)
