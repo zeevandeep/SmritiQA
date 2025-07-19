@@ -84,6 +84,7 @@ class Node(Base):
     embedding = Column(BYTEA)  # For semantic matching, stored as binary data
     created_at = Column(DateTime, default=func.now())
     is_processed = Column(Boolean, default=False)
+    is_encrypted = Column(Boolean, default=False)  # Track encryption status
     
     # Relationships
     user = relationship("User", back_populates="nodes")
