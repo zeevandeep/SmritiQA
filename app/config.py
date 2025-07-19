@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     # OpenAI settings
     OPENAI_API_KEY: str = Field(default=os.environ.get("OPENAI_API_KEY"))
     
+    # Encryption settings
+    ENCRYPT_NEW_NODES: bool = Field(default=True)
+    MASTER_ENCRYPTION_KEY: str = Field(default=os.environ.get("MASTER_ENCRYPTION_KEY"))
+    STATIC_ENCRYPTION_SALT: str = Field(default=os.environ.get("STATIC_ENCRYPTION_SALT"))
+    
     # Settings configuration
     model_config = SettingsConfigDict(
         env_file=".env",
