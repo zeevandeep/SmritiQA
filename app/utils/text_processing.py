@@ -30,7 +30,7 @@ def add_paragraph_breaks(text: str) -> str:
     # Clean up the text first
     text = text.strip()
     
-    # Split into sentences using common sentence endings
+    # Split into sentences using common sentence endings and also commas for speech patterns
     sentence_pattern = r'([.!?]+)\s+'
     sentences = re.split(sentence_pattern, text)
     
@@ -58,13 +58,15 @@ def add_paragraph_breaks(text: str) -> str:
         # Topic transition words
         r'\b(anyway|however|meanwhile|additionally|furthermore|moreover|besides|also|next|then|afterwards|later|finally|lastly|in conclusion|to summarize)\b',
         # Time transitions
-        r'\b(today|yesterday|tomorrow|this morning|this afternoon|this evening|last week|next week|recently|earlier|afterwards)\b',
+        r'\b(today|yesterday|tomorrow|this morning|this afternoon|this evening|last week|next week|recently|earlier|afterwards|now)\b',
         # Emotional transitions
         r'\b(suddenly|surprisingly|unfortunately|fortunately|interestingly|actually|honestly|frankly|basically)\b',
         # Question starters
         r'^\s*(what|how|why|when|where|who|which|do|does|did|can|could|would|should|will)\b',
         # Contrasting thoughts
-        r'\b(but|although|though|while|whereas|on the other hand|in contrast|instead|rather)\b'
+        r'\b(but|although|though|while|whereas|on the other hand|in contrast|instead|rather)\b',
+        # Speech patterns common in journal entries
+        r'^\s*(so|and|well|ok|okay|right|actually|basically|you know)\b'
     ]
     
     compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in new_paragraph_indicators]
@@ -75,8 +77,8 @@ def add_paragraph_breaks(text: str) -> str:
         # Determine if we should start a new paragraph
         should_break = False
         
-        # Check if current paragraph is getting long (more than 3 sentences)
-        if len(current_paragraph) >= 3:
+        # Check if current paragraph is getting long (more than 2 sentences for speech patterns)
+        if len(current_paragraph) >= 2:
             should_break = True
         
         # Check if next sentence (if exists) starts with transition words
