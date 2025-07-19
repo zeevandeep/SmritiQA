@@ -7,13 +7,34 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session as DbSession
 
-from app.models.models import Session, MigrationError
+from app.models.models import Session, MigrationError, UserProfile
 from app.schemas.schemas import SessionCreate
 from app.utils.encryption import encrypt_data, decrypt_data, EncryptionError
 from app.utils.text_processing import format_journal_entry
 
 logger = logging.getLogger(__name__)
 
+
+def _get_user_language(db: DbSession, user_id: UUID) -> str:
+    """Get user's language preference for text formatting."""
+    try:
+        user_profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+        if user_profile and user_profile.language:
+            # Map full language names to codes for formatting
+            language_mapping = {
+                'English': 'en',
+                'Hindi': 'hi', 
+                'Spanish': 'es',
+                'French': 'fr',
+                'German': 'de',
+                'Japanese': 'ja',
+                'Arabic': 'ar'
+            }
+            return language_mapping.get(user_profile.language, 'en')
+        return 'en'  # Default to English
+    except Exception as e:
+        logger.warning(f"Could not get user language for {user_id}: {e}")
+        return 'en'
 
 def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = False) -> Optional[Session]:
     """
@@ -52,8 +73,9 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
             # DO NOT modify db_session.raw_transcript directly as it will save back to database
             decrypted_text = decrypt_data(db_session.raw_transcript, user_id)
             
-            # Format the decrypted text with paragraph breaks for better readability
-            formatted_text = format_journal_entry(decrypted_text)
+            # Get user's language preference and format the decrypted text
+            user_language = _get_user_language(db, db_session.user_id)
+            formatted_text = format_journal_entry(decrypted_text, user_language)
             
             # Create a completely new Session object with decrypted and formatted data (not a copy)
             # This ensures no reference to the original encrypted database object
@@ -78,8 +100,9 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
     
     # For unencrypted sessions requesting processing mode with formatting
     if decrypt_for_processing and db_session.raw_transcript:
-        # Apply formatting to unencrypted text for processing
-        formatted_text = format_journal_entry(db_session.raw_transcript)
+        # Get user's language preference and apply formatting to unencrypted text
+        user_language = _get_user_language(db, db_session.user_id)
+        formatted_text = format_journal_entry(db_session.raw_transcript, user_language)
         # Create new session object with formatted text
         formatted_session = Session(
             id=db_session.id,
@@ -126,7 +149,8 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
                 decrypted_text = decrypt_data(session.raw_transcript, str(user_id))
                 
                 # Format the decrypted text with paragraph breaks for better readability
-                formatted_text = format_journal_entry(decrypted_text)
+                user_language = _get_user_language(db, session.user_id)
+                formatted_text = format_journal_entry(decrypted_text, user_language)
                 
                 # Create a completely new Session object with decrypted and formatted data (not a copy)
                 # This ensures no reference to the original encrypted database object
@@ -150,7 +174,8 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
         else:
             # For unencrypted sessions, also apply text formatting
             if session.raw_transcript:
-                formatted_text = format_journal_entry(session.raw_transcript)
+                user_language = _get_user_language(db, session.user_id)
+                formatted_text = format_journal_entry(session.raw_transcript, user_language)
                 # Create new session object with formatted text
                 formatted_session = Session(
                     id=session.id,
