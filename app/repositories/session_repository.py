@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.models.models import Session, MigrationError
 from app.schemas.schemas import SessionCreate
 from app.utils.encryption import encrypt_data, decrypt_data, EncryptionError
+from app.utils.text_processing import format_journal_entry
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +52,15 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
             # DO NOT modify db_session.raw_transcript directly as it will save back to database
             decrypted_text = decrypt_data(db_session.raw_transcript, user_id)
             
-            # Create a completely new Session object with decrypted data (not a copy)
+            # Format the decrypted text with paragraph breaks for better readability
+            formatted_text = format_journal_entry(decrypted_text)
+            
+            # Create a completely new Session object with decrypted and formatted data (not a copy)
             # This ensures no reference to the original encrypted database object
             decrypted_session = Session(
                 id=db_session.id,
                 user_id=db_session.user_id,
-                raw_transcript=decrypted_text,  # Use decrypted text
+                raw_transcript=formatted_text,  # Use decrypted and formatted text
                 duration_seconds=db_session.duration_seconds,
                 created_at=db_session.created_at,
                 is_encrypted=db_session.is_encrypted,
@@ -72,7 +76,23 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
             # Return None to indicate the session is corrupted for processing
             return None
     
-    # For unencrypted sessions or when requesting processing mode, return the attached object
+    # For unencrypted sessions requesting processing mode with formatting
+    if decrypt_for_processing and db_session.raw_transcript:
+        # Apply formatting to unencrypted text for processing
+        formatted_text = format_journal_entry(db_session.raw_transcript)
+        # Create new session object with formatted text
+        formatted_session = Session(
+            id=db_session.id,
+            user_id=db_session.user_id,
+            raw_transcript=formatted_text,
+            duration_seconds=db_session.duration_seconds,
+            created_at=db_session.created_at,
+            is_encrypted=db_session.is_encrypted,
+            is_processed=db_session.is_processed
+        )
+        return formatted_session
+    
+    # For unencrypted sessions or when not requesting processing mode, return the attached object
     return db_session
 
 
@@ -105,12 +125,15 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
                 # DO NOT modify session.raw_transcript directly as it will save back to database
                 decrypted_text = decrypt_data(session.raw_transcript, str(user_id))
                 
-                # Create a completely new Session object with decrypted data (not a copy)
+                # Format the decrypted text with paragraph breaks for better readability
+                formatted_text = format_journal_entry(decrypted_text)
+                
+                # Create a completely new Session object with decrypted and formatted data (not a copy)
                 # This ensures no reference to the original encrypted database object
                 decrypted_session = Session(
                     id=session.id,
                     user_id=session.user_id,
-                    raw_transcript=decrypted_text,  # Use decrypted text
+                    raw_transcript=formatted_text,  # Use decrypted and formatted text
                     duration_seconds=session.duration_seconds,
                     created_at=session.created_at,
                     is_encrypted=session.is_encrypted,
@@ -125,7 +148,22 @@ def get_user_sessions(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 
                 # Skip corrupted sessions
                 continue
         else:
-            decrypted_sessions.append(session)
+            # For unencrypted sessions, also apply text formatting
+            if session.raw_transcript:
+                formatted_text = format_journal_entry(session.raw_transcript)
+                # Create new session object with formatted text
+                formatted_session = Session(
+                    id=session.id,
+                    user_id=session.user_id,
+                    raw_transcript=formatted_text,
+                    duration_seconds=session.duration_seconds,
+                    created_at=session.created_at,
+                    is_encrypted=session.is_encrypted,
+                    is_processed=session.is_processed
+                )
+                decrypted_sessions.append(formatted_session)
+            else:
+                decrypted_sessions.append(session)
     
     return decrypted_sessions
 
