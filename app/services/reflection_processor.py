@@ -513,20 +513,12 @@ def generate_single_reflection_for_user(
                 reflection = reflection_repository.create_reflection(db, reflection_create)
                 logger.info(f"Successfully created reflection: {reflection.id} after {attempt_count} attempts")
                 
-                # Get the decrypted version for user display
-                logger.info(f"Attempting to retrieve decrypted reflection {reflection.id} for API response")
-                decrypted_reflection = reflection_repository.get_reflection(
-                    db, reflection.id, decrypt_for_processing=False
-                )
-                
-                if decrypted_reflection and decrypted_reflection.generated_text:
-                    logger.info(f"✅ Retrieved decrypted reflection {reflection.id} for stats, text length: {len(decrypted_reflection.generated_text)}")
-                    logger.info(f"✅ Decrypted text preview: {decrypted_reflection.generated_text[:100]}...")
-                    stats_text = decrypted_reflection.generated_text
-                else:
-                    logger.error(f"❌ Failed to retrieve decrypted reflection {reflection.id} (reflection={decrypted_reflection is not None}, has_text={decrypted_reflection.generated_text is not None if decrypted_reflection else False})")
-                    logger.error(f"❌ Using original OpenAI text for stats as fallback")
-                    stats_text = reflection_data['generated_text']
+                # DON'T retrieve the reflection - this was overwriting encrypted data!
+                # Use the original OpenAI response text directly for stats (it's already decrypted)
+                logger.info(f"✅ Using original OpenAI text for API response (prevents overwriting encrypted data)")
+                logger.info(f"✅ Original text length: {len(reflection_data['generated_text'])}")
+                logger.info(f"✅ Original text preview: {reflection_data['generated_text'][:100]}...")
+                stats_text = reflection_data['generated_text']
                 
                 # Mark the starting edge as processed
                 edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
