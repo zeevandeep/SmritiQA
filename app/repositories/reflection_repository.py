@@ -374,7 +374,8 @@ def mark_reflection_viewed(db: DbSession, reflection_id: UUID) -> Optional[Refle
     Returns:
         Updated Reflection object if found, None otherwise.
     """
-    db_reflection = get_reflection(db, reflection_id)
+    # Get reflection directly from database session (not via repository to avoid detached objects)
+    db_reflection = db.query(Reflection).filter(Reflection.id == reflection_id).first()
     if db_reflection:
         # Use setattr to avoid direct attribute assignment LSP error
         setattr(db_reflection, 'is_reflected', True)
@@ -399,7 +400,8 @@ def add_reflection_feedback(db: DbSession, reflection_id: UUID, feedback: int) -
     if feedback not in [-1, 1]:
         raise ValueError("Feedback must be 1 (thumbs up) or -1 (thumbs down)")
         
-    db_reflection = get_reflection(db, reflection_id)
+    # Get reflection directly from database session (not via repository to avoid detached objects)
+    db_reflection = db.query(Reflection).filter(Reflection.id == reflection_id).first()
     if db_reflection:
         # Use setattr to avoid direct attribute assignment LSP error
         setattr(db_reflection, 'feedback', feedback)
