@@ -38,23 +38,34 @@ def create_reflection(db: DbSession, reflection: ReflectionCreate, encrypt: Opti
     
     logger.info(f"ENCRYPT_NEW_REFLECTIONS setting: {encrypt_new_reflections}")
     
-    reflection_data = reflection.model_dump()
+    # Get the original text and user_id
+    original_text = reflection.generated_text
+    user_id_str = str(reflection.user_id)
     
-    if encrypt_new_reflections and reflection_data.get('generated_text'):
+    if encrypt_new_reflections and original_text:
         try:
-            user_id = str(reflection.user_id)
-            original_text = reflection_data['generated_text']
-            logger.info(f"Encrypting reflection text for user {user_id}, original length: {len(original_text)}")
+            logger.info(f"Encrypting reflection text for user {user_id_str}, original length: {len(original_text)}")
             
             # Encrypt the generated text
-            encrypted_text = encrypt_data(original_text, user_id)
-            reflection_data['generated_text'] = encrypted_text
-            reflection_data['is_encrypted'] = True
+            encrypted_text = encrypt_data(original_text, user_id_str)
             
-            logger.info(f"Successfully encrypted reflection text for user {user_id}, encrypted length: {len(encrypted_text)}")
+            logger.info(f"Successfully encrypted reflection text for user {user_id_str}, encrypted length: {len(encrypted_text)}")
+            
+            # Create Reflection object DIRECTLY with encrypted data (like sessions)
+            db_reflection = Reflection(
+                user_id=reflection.user_id,
+                node_ids=reflection.node_ids,
+                edge_ids=reflection.edge_ids,
+                generated_text=encrypted_text,  # Use encrypted data directly
+                confidence_score=reflection.confidence_score,
+                is_encrypted=True,
+                is_reflected=False,
+                is_viewed=False,
+                feedback=None
+            )
             
         except EncryptionError as e:
-            logger.error(f"[ENCRYPTION FAIL] op=encrypt_reflection user_id={user_id} error={e}")
+            logger.error(f"[ENCRYPTION FAIL] op=encrypt_reflection user_id={user_id_str} error={e}")
             # Log encryption error
             error_record = MigrationError(
                 user_id=reflection.user_id,
@@ -65,15 +76,34 @@ def create_reflection(db: DbSession, reflection: ReflectionCreate, encrypt: Opti
             db.add(error_record)
             db.commit()
             
-            # Continue with unencrypted text as fallback
-            reflection_data['is_encrypted'] = False
-            logger.warning(f"Encryption failed for user {user_id}, storing reflection as plain text")
+            # Create with unencrypted text as fallback
+            db_reflection = Reflection(
+                user_id=reflection.user_id,
+                node_ids=reflection.node_ids,
+                edge_ids=reflection.edge_ids,
+                generated_text=original_text,  # Use plain text
+                confidence_score=reflection.confidence_score,
+                is_encrypted=False,
+                is_reflected=False,
+                is_viewed=False,
+                feedback=None
+            )
+            logger.warning(f"Encryption failed for user {user_id_str}, storing reflection as plain text")
     else:
         # Encryption disabled or no text to encrypt
-        reflection_data['is_encrypted'] = False
+        db_reflection = Reflection(
+            user_id=reflection.user_id,
+            node_ids=reflection.node_ids,
+            edge_ids=reflection.edge_ids,
+            generated_text=original_text,
+            confidence_score=reflection.confidence_score,
+            is_encrypted=False,
+            is_reflected=False,
+            is_viewed=False,
+            feedback=None
+        )
         logger.info(f"Reflection encryption disabled or no text, storing as plain text")
     
-    db_reflection = Reflection(**reflection_data)
     db.add(db_reflection)
     db.commit()
     db.refresh(db_reflection)
