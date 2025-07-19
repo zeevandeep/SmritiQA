@@ -78,6 +78,20 @@ def get_user_reflections(
     return query.order_by(Reflection.generated_at.desc()).offset(skip).limit(limit).all()
 
 
+def get_user_reflection_count(db: DbSession, user_id: UUID) -> int:
+    """
+    Get the total count of reflections for a user.
+    
+    Args:
+        db: Database session.
+        user_id: ID of the user.
+        
+    Returns:
+        Total count of reflections for the user.
+    """
+    return db.query(Reflection).filter(Reflection.user_id == user_id).count()
+
+
 def get_reflections(
     db: DbSession,
     skip: int = 0,

@@ -480,13 +480,17 @@ def generate_single_reflection_for_user(
             visited_nodes = set()
             chain = build_node_chain(db, edge_dict, user_id, visited_nodes)
             
-            if len(chain) < 3:
-                logger.info(f"Chain too short for edge {strongest_edge.id} ({len(chain)} nodes), marking as processed and trying next edge")
+            # Dynamic chain requirements: 2 nodes for users with no reflections, 3+ for experienced users
+            user_reflection_count = reflection_repository.get_user_reflection_count(db, user_id)
+            min_chain_length = 2 if user_reflection_count == 0 else 3
+            
+            if len(chain) < min_chain_length:
+                logger.info(f"Chain too short for edge {strongest_edge.id} ({len(chain)} nodes), minimum required: {min_chain_length} (user has {user_reflection_count} existing reflections)")
                 edge_repository.mark_edge_processed(db, UUID(str(strongest_edge.id)))
                 stats['edges_processed'] += 1
                 continue  # Try next edge
             
-            logger.info(f"Found valid chain with {len(chain)} nodes for edge {strongest_edge.id}")
+            logger.info(f"Found valid chain with {len(chain)} nodes for edge {strongest_edge.id} (required: {min_chain_length}, user has {user_reflection_count} existing reflections)")
             
             # Collect all edges connecting nodes in the chain
             node_ids = [UUID(node.get('id')) for node in chain]
