@@ -144,6 +144,7 @@ class Reflection(Base):
     node_ids = Column(ARRAY(UUID(as_uuid=True)), nullable=False)
     edge_ids = Column(ARRAY(UUID(as_uuid=True)), nullable=True)
     generated_text = Column(Text, nullable=False)
+    is_encrypted = Column(Boolean, default=False)
     generated_at = Column(DateTime, default=func.now())
     is_reflected = Column(Boolean, default=False)
     is_viewed = Column(Boolean, default=False)
