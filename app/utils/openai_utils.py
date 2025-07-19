@@ -501,8 +501,39 @@ def generate_reflection(nodes: List[Dict[str, Any]], edges: Optional[List[Dict[s
         response_content = response.choices[0].message.content
         result = json.loads(response_content)
         
-        logger.info(f"Generated reflection successfully")
-        return result
+        # Handle different response formats from OpenAI
+        generated_text = ""
+        
+        if "generated_text" in result:
+            # Expected format
+            generated_text = result["generated_text"]
+        elif "reflection" in result:
+            # Handle array format like {"reflection": ["text1", "text2", ...]}
+            if isinstance(result["reflection"], list):
+                generated_text = "\n\n".join(result["reflection"])
+            else:
+                generated_text = str(result["reflection"])
+        else:
+            # Fallback: try to extract any string content from the response
+            for key, value in result.items():
+                if isinstance(value, str) and len(value) > 10:
+                    generated_text = value
+                    break
+                elif isinstance(value, list) and value:
+                    generated_text = "\n\n".join(str(item) for item in value)
+                    break
+        
+        if not generated_text:
+            logger.warning(f"Could not extract generated_text from OpenAI response: {result}")
+            generated_text = "I noticed patterns in your thoughts that might be worth reflecting on. Consider revisiting these ideas when you're ready."
+        
+        logger.info(f"Generated reflection successfully, text length: {len(generated_text)}")
+        logger.info(f"Generated text preview: {generated_text[:100]}...")
+        
+        return {
+            "generated_text": generated_text,
+            "confidence_score": result.get("confidence_score", 0.8)  # Default confidence
+        }
     except Exception as e:
         # Log the error and return a default reflection
         logger.error(f"Error generating reflection: {e}", exc_info=True)
