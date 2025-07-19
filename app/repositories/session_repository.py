@@ -257,10 +257,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             hash_original = hashlib.sha256(original_transcript.encode()).hexdigest()
             hash_encrypted = hashlib.sha256(encrypted_transcript.encode()).hexdigest()
             
-            logger.info(f"[ENCRYPTION DEBUG] Encryption successful, length: {len(encrypted_transcript)}")
-            logger.info(f"[ENCRYPTION DEBUG] Encrypted transcript: {encrypted_transcript[:50]}...")
-            logger.info(f"[SESSION FINGERPRINT] Original hash: {hash_original}")
-            logger.info(f"[SESSION FINGERPRINT] Encrypted hash: {hash_encrypted}")
+
             
             # Create Session object directly with encrypted data - NO model_dump() usage
             db_session = Session(
