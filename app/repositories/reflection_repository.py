@@ -44,12 +44,14 @@ def create_reflection(db: DbSession, reflection: ReflectionCreate, encrypt: Opti
     
     if encrypt_new_reflections and original_text:
         try:
-            logger.info(f"Encrypting reflection text for user {user_id_str}, original length: {len(original_text)}")
+            logger.info(f"[REFLECTION ENCRYPTION] Starting encryption for user {user_id_str}, original length: {len(original_text)}")
+            logger.info(f"[REFLECTION ENCRYPTION] Original text preview: {original_text[:100]}...")
             
             # Encrypt the generated text
             encrypted_text = encrypt_data(original_text, user_id_str)
             
-            logger.info(f"Successfully encrypted reflection text for user {user_id_str}, encrypted length: {len(encrypted_text)}")
+            logger.info(f"[REFLECTION ENCRYPTION] Encryption successful, encrypted length: {len(encrypted_text)}")
+            logger.info(f"[REFLECTION ENCRYPTION] Encrypted text preview: {encrypted_text[:100]}...")
             
             # Create Reflection object DIRECTLY with encrypted data (like sessions)
             db_reflection = Reflection(
@@ -63,6 +65,9 @@ def create_reflection(db: DbSession, reflection: ReflectionCreate, encrypt: Opti
                 is_viewed=False,
                 feedback=None
             )
+            
+            logger.info(f"[REFLECTION ENCRYPTION] Created Reflection object with encrypted text, final length: {len(db_reflection.generated_text)}")
+            logger.info(f"[REFLECTION ENCRYPTION] Final text preview: {db_reflection.generated_text[:100]}...")
             
         except EncryptionError as e:
             logger.error(f"[ENCRYPTION FAIL] op=encrypt_reflection user_id={user_id_str} error={e}")
