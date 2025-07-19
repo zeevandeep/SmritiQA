@@ -374,14 +374,18 @@ def mark_reflection_viewed(db: DbSession, reflection_id: UUID) -> Optional[Refle
     Returns:
         Updated Reflection object if found, None otherwise.
     """
-    # Get reflection directly from database session (not via repository to avoid detached objects)
+    # Get reflection directly from database session (attached object)
     db_reflection = db.query(Reflection).filter(Reflection.id == reflection_id).first()
     if db_reflection:
         # Use setattr to avoid direct attribute assignment LSP error
         setattr(db_reflection, 'is_reflected', True)
         db.commit()
         db.refresh(db_reflection)
-    return db_reflection
+        
+        # Return decrypted version for user display using the repository function
+        # This ensures proper encryption/decryption while avoiding session conflicts
+        return get_reflection(db, reflection_id, decrypt_for_processing=False)
+    return None
 
 
 def add_reflection_feedback(db: DbSession, reflection_id: UUID, feedback: int) -> Optional[Reflection]:
@@ -400,14 +404,18 @@ def add_reflection_feedback(db: DbSession, reflection_id: UUID, feedback: int) -
     if feedback not in [-1, 1]:
         raise ValueError("Feedback must be 1 (thumbs up) or -1 (thumbs down)")
         
-    # Get reflection directly from database session (not via repository to avoid detached objects)
+    # Get reflection directly from database session (attached object)
     db_reflection = db.query(Reflection).filter(Reflection.id == reflection_id).first()
     if db_reflection:
         # Use setattr to avoid direct attribute assignment LSP error
         setattr(db_reflection, 'feedback', feedback)
         db.commit()
         db.refresh(db_reflection)
-    return db_reflection
+        
+        # Return decrypted version for user display using the repository function
+        # This ensures proper encryption/decryption while avoiding session conflicts
+        return get_reflection(db, reflection_id, decrypt_for_processing=False)
+    return None
 
 
 def get_node_details(db: DbSession, node_ids: List[UUID]) -> List[Dict[str, Any]]:
