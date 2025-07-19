@@ -221,7 +221,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     
     # ChatGPT's poison value test to detect post-creation overwrites
     if original_transcript == "poison-test":
-        logger.info(f"[POISON TEST] Creating encrypted session, then poisoning it")
+
         # Create with encrypted data
         encrypted_transcript = encrypt_data("Original encrypted content", str(user_id))
         poison_session = Session(
@@ -233,12 +233,10 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
         )
         db.add(poison_session)
         db.commit()
-        logger.info(f"[POISON TEST] Session created with encrypted data")
         
         # Poison it post-commit
         poison_session.raw_transcript = "POISON_OVERWRITE_SHOULD_NOT_HAPPEN"
         db.commit()
-        logger.info(f"[POISON TEST] Session poisoned with plain text")
         return poison_session
     
     # Encrypt raw_transcript if it exists
@@ -271,9 +269,9 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
             logger.info(f"Session transcript encrypted for user {user_id_str}")
             
         except Exception as e:  # Catch all exceptions, not just EncryptionError
-            logger.error(f"[ENCRYPTION DEBUG] Exception during encryption: {type(e).__name__}: {e}")
+            logger.error(f"Exception during session encryption: {type(e).__name__}: {e}")
             import traceback
-            logger.error(f"[ENCRYPTION DEBUG] Traceback: {traceback.format_exc()}")
+            logger.error(f"Encryption traceback: {traceback.format_exc()}")
             
             # Create Session object with plain text if encryption fails
             db_session = Session(
