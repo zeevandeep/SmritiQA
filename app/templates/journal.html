@@ -350,16 +350,6 @@
                         <div id="statusIndicator" class="status-indicator">
                             Tap the microphone to start recording in {{ language_display_name }}
                         </div>
-                        
-                        <!-- Processing state (positioned below microphone button) -->
-                        <div id="processingState" style="display: none;">
-                            <div class="d-flex align-items-center justify-content-center my-3">
-                                <div class="spinner-border text-primary me-3" role="status">
-                                    <span class="visually-hidden">Processing...</span>
-                                </div>
-                                <span>Processing your recording...</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 
@@ -421,6 +411,16 @@
                             Save Journal Entry
                         </button>
 
+                    </div>
+                </div>
+                
+                <!-- Global Processing state (visible in both voice and text modes) -->
+                <div id="processingState" style="display: none; margin-top: 20px;">
+                    <div class="d-flex align-items-center justify-content-center my-3">
+                        <div class="spinner-border text-primary me-3" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <span>Processing your entry...</span>
                     </div>
                 </div>
             </div>
