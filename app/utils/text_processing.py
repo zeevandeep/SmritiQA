@@ -90,8 +90,9 @@ def add_paragraph_breaks(text: str, language: str = 'en') -> str:
     # Join paragraphs with double line breaks
     formatted_text = '\n\n'.join(paragraphs)
     
-    logger.info(f"Formatted text into {len(paragraphs)} paragraphs (original: {len(text)} chars, formatted: {len(formatted_text)} chars)")
-    logger.debug(f"Paragraph lengths: {[len(p.split('.')) for p in paragraphs]} sentences each")
+    # Only log if there are significant changes to avoid excessive logging
+    if len(paragraphs) > 3:
+        logger.debug(f"Formatted text into {len(paragraphs)} paragraphs")
     
     return formatted_text
 

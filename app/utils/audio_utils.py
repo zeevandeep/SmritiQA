@@ -199,8 +199,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
     Returns:
         Transcribed text or None if transcription failed
     """
-    logger.info(f"Transcribing audio data of {len(audio_data)} bytes with language: {language}")
-    
     temp_filepath = None
     try:
         # Create a temporary file
@@ -208,15 +206,12 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
             temp_filepath = temp_file.name
             temp_file.write(audio_data)
         
-        logger.info(f"Temporary audio file created at {temp_filepath}")
-        
         result_with_language = None
         result_auto = None
         
         # First attempt: with user's preferred language
         if language:
             try:
-                logger.info(f"Starting language-specific transcription for '{language}'")
                 with open(temp_filepath, "rb") as audio_file:
                     response = client.audio.transcriptions.create(
                         model="whisper-1",
@@ -225,7 +220,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                         prompt="Transcribe the following audio with proper punctuation, including periods, commas, and question marks. Format complete sentences properly."
                     )
                     result_with_language = response.text
-                    logger.info(f"Transcription with language '{language}' successful: {len(result_with_language)} characters")
             except Exception as e:
                 logger.error(f"Transcription with language '{language}' failed: {e}")
                 result_with_language = None
@@ -233,7 +227,6 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         # Second attempt: auto-detection (no language specified) - only if first attempt failed
         if not result_with_language:
             try:
-                logger.info("Starting auto-detection transcription")
                 with open(temp_filepath, "rb") as audio_file:
                     response = client.audio.transcriptions.create(
                         model="whisper-1",
@@ -241,26 +234,16 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
                         prompt="Transcribe the following audio with proper punctuation, including periods, commas, and question marks. Format complete sentences properly."
                     )
                     result_auto = response.text
-                    logger.info(f"Auto-detection transcription successful: {len(result_auto)} characters")
             except Exception as e:
                 logger.error(f"Auto-detection transcription failed: {e}")
                 result_auto = None
         else:
-            logger.info("Skipping auto-detection since language-specific transcription succeeded")
             result_auto = None
         
         # Choose the better result
         final_result = choose_better_transcription(result_with_language, result_auto, language, audio_duration)
         
         if final_result:
-            # Log which approach was used with detailed reasoning
-            if final_result == result_with_language and language:
-                logger.info(f"✓ Selected user language '{language}' transcription: '{final_result[:100]}...'")
-            elif result_auto:
-                logger.info(f"✓ Selected auto-detection transcription: '{final_result[:100]}...'")
-            else:
-                logger.info(f"✓ Selected language-specific transcription (no auto-detection attempted): '{final_result[:100]}...'")
-            
             return final_result
         else:
             logger.error("Both transcription attempts failed or produced poor quality results")
@@ -274,7 +257,7 @@ def transcribe_audio_with_language(audio_data: bytes, filename: str, language: O
         if temp_filepath and os.path.exists(temp_filepath):
             try:
                 os.unlink(temp_filepath)
-                logger.info(f"Temporary file {temp_filepath} removed")
+
             except Exception as e:
                 logger.error(f"Error removing temporary file: {e}")
 

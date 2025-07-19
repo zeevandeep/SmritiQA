@@ -1022,6 +1022,10 @@
                 // Clear the text area first
                 textAreaInput.value = '';
                 
+                // Show processing state and hide instruction text for consistency with voice mode
+                processingState.style.display = 'block';
+                instructionText.style.display = 'none';
+                
                 // Trigger the processing pipeline with detailed progress messages
                 const sessionId = data.id;
                 triggerProcessingPipeline(sessionId, userId);

@@ -49,25 +49,19 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
     Returns:
         Session object (attached or detached based on decrypt_for_processing) if found, None otherwise.
     """
-    logger.info(f"Getting session: {session_id}, decrypt_for_processing: {decrypt_for_processing}")
-    
     db_session = db.query(Session).filter(Session.id == session_id).first()
     if not db_session:
         logger.warning(f"Session not found: {session_id}")
         return None
     
-    logger.info(f"Found session {session_id}, is_encrypted: {db_session.is_encrypted}")
-    
     # If not requesting decryption, return the attached SQLAlchemy object
     if not decrypt_for_processing:
-        logger.info(f"Returning attached SQLAlchemy object for session {session_id}")
         return db_session
     
     # For OpenAI processing - return detached object with decrypted data if encrypted
     if db_session.is_encrypted and db_session.raw_transcript:
         try:
             user_id = str(db_session.user_id)
-            logger.info(f"Decrypting session {session_id} for OpenAI processing (user {user_id})")
             
             # CRITICAL FIX: Create a copy to avoid overwriting database
             # DO NOT modify db_session.raw_transcript directly as it will save back to database
@@ -89,7 +83,6 @@ def get_session(db: DbSession, session_id: UUID, decrypt_for_processing: bool = 
                 is_processed=db_session.is_processed
             )
             
-            logger.info(f"Successfully decrypted session {session_id} for processing, decrypted length: {len(decrypted_text)}")
             return decrypted_session
             
         except EncryptionError as e:
@@ -204,9 +197,7 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
     Returns:
         Created Session object.
     """
-    logger.info(f"[SESSION DEBUG] create_session called")
-    logger.info(f"[SESSION DEBUG] session user_id: {session.user_id}")
-    logger.info(f"[SESSION DEBUG] session raw_transcript length: {len(session.raw_transcript or '')}")
+
     
     # Extract values directly from session object (don't use model_dump to avoid reintroducing plain text)
     user_id = session.user_id
@@ -255,9 +246,8 @@ def create_session(db: DbSession, session: SessionCreate) -> Session:
         try:
             user_id_str = str(user_id)
             
-            logger.info(f"[ENCRYPTION DEBUG] Starting encryption for user {user_id_str}")
-            logger.info(f"[ENCRYPTION DEBUG] Original transcript length: {len(original_transcript)}")
-            logger.info(f"[ENCRYPTION DEBUG] Original transcript: {original_transcript[:50]}...")
+
+
             
             # Encrypt the transcript
             encrypted_transcript = encrypt_data(original_transcript, user_id_str)

@@ -27,25 +27,19 @@ def get_node(db: DbSession, node_id: UUID, decrypt_for_processing: bool = False)
     Returns:
         Node object (attached or detached based on decrypt_for_processing) if found, None otherwise.
     """
-    logger.info(f"Getting node: {node_id}, decrypt_for_processing: {decrypt_for_processing}")
-    
     db_node = db.query(Node).filter(Node.id == node_id).first()
     if not db_node:
         logger.warning(f"Node not found: {node_id}")
         return None
     
-    logger.info(f"Found node {node_id}, is_encrypted: {db_node.is_encrypted}")
-    
     # If not requesting decryption, return the attached SQLAlchemy object
     if not decrypt_for_processing:
-        logger.info(f"Returning attached SQLAlchemy object for node {node_id}")
         return db_node
     
     # For processing - return detached object with decrypted data if encrypted
     if db_node.is_encrypted and db_node.text:
         try:
             user_id = str(db_node.user_id)
-            logger.info(f"Decrypting node {node_id} for processing (user {user_id})")
             
             # Create a new Node object with decrypted data (not a copy)
             decrypted_text = decrypt_data(db_node.text, user_id)
@@ -64,7 +58,6 @@ def get_node(db: DbSession, node_id: UUID, decrypt_for_processing: bool = False)
                 is_encrypted=db_node.is_encrypted
             )
             
-            logger.info(f"Successfully decrypted node {node_id} for processing, decrypted length: {len(decrypted_text)}")
             return decrypted_node
             
         except EncryptionError as e:
@@ -102,7 +95,7 @@ def get_user_nodes(db: DbSession, user_id: UUID, skip: int = 0, limit: int = 100
     Returns:
         List of Node objects with decrypted text if requested.
     """
-    logger.info(f"Getting user nodes: user_id={user_id}, skip={skip}, limit={limit}, decrypt_for_processing={decrypt_for_processing}")
+
     
     db_nodes = db.query(Node)\
         .filter(Node.user_id == user_id)\
