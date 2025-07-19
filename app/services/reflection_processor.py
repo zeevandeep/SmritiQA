@@ -60,11 +60,12 @@ def build_node_chain(db: DbSession, edge: Dict[str, Any], user_id: UUID, visited
     if from_node_id and from_node_id not in visited_nodes:
         # Convert to UUID if necessary
         from_node_id_uuid = from_node_id if isinstance(from_node_id, UUID) else UUID(str(from_node_id))
-        from_node = node_repository.get_node(db, from_node_id_uuid)
+        # Get node with decrypted text for OpenAI processing
+        from_node = node_repository.get_node(db, from_node_id_uuid, decrypt_for_processing=True)
         if from_node:
             chain.append({
                 'id': str(from_node.id),
-                'text': from_node.text,
+                'text': from_node.text,  # Now contains decrypted text for OpenAI
                 'theme': from_node.theme,
                 'cognition_type': from_node.cognition_type,
                 'emotion': from_node.emotion,
@@ -77,11 +78,12 @@ def build_node_chain(db: DbSession, edge: Dict[str, Any], user_id: UUID, visited
     if to_node_id and to_node_id not in visited_nodes:
         # Convert to UUID if necessary
         to_node_id_uuid = to_node_id if isinstance(to_node_id, UUID) else UUID(str(to_node_id))
-        to_node = node_repository.get_node(db, to_node_id_uuid)
+        # Get node with decrypted text for OpenAI processing
+        to_node = node_repository.get_node(db, to_node_id_uuid, decrypt_for_processing=True)
         if to_node:
             chain.append({
                 'id': str(to_node.id),
-                'text': to_node.text,
+                'text': to_node.text,  # Now contains decrypted text for OpenAI
                 'theme': to_node.theme,
                 'cognition_type': to_node.cognition_type,
                 'emotion': to_node.emotion,
@@ -194,7 +196,8 @@ def build_node_chain(db: DbSession, edge: Dict[str, Any], user_id: UUID, visited
             break
             
         # Add the previous node to the chain
-        prev_node = node_repository.get_node(db, prev_node_id)
+        # Get node with decrypted text for OpenAI processing
+        prev_node = node_repository.get_node(db, prev_node_id, decrypt_for_processing=True)
         if prev_node:
             # Check if the node is older than MAX_NODE_AGE_DAYS
             now = datetime.now()
@@ -204,7 +207,7 @@ def build_node_chain(db: DbSession, edge: Dict[str, Any], user_id: UUID, visited
                 
             chain.insert(0, {  # Insert at the beginning to maintain chronological order
                 'id': str(prev_node.id),
-                'text': prev_node.text,
+                'text': prev_node.text,  # Now contains decrypted text for OpenAI
                 'theme': prev_node.theme,
                 'cognition_type': prev_node.cognition_type,
                 'emotion': prev_node.emotion,

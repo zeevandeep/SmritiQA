@@ -24,22 +24,33 @@ logger = logging.getLogger(__name__)
 
 def get_unprocessed_nodes(db: DbSession, batch_size: int = DEFAULT_BATCH_SIZE) -> List[Tuple[UUID, str]]:
     """
-    Get a batch of nodes that don't have embeddings.
+    Get a batch of nodes that don't have embeddings with decrypted text for OpenAI processing.
     
     Args:
         db: Database session.
         batch_size: Maximum number of nodes to fetch.
         
     Returns:
-        List of (node_id, text) tuples.
+        List of (node_id, decrypted_text) tuples.
     """
     logger.info(f"Fetching up to {batch_size} nodes without embeddings")
     
-    query = select(Node.id, Node.text).where(Node.embedding.is_(None)).limit(batch_size)
-    results = db.execute(query).fetchall()
+    # Get node IDs without embeddings
+    query = select(Node.id).where(Node.embedding.is_(None)).limit(batch_size)
+    node_ids = [row[0] for row in db.execute(query).fetchall()]
     
-    logger.info(f"Found {len(results)} nodes without embeddings")
-    return [(node_id, text) for node_id, text in results]
+    logger.info(f"Found {len(node_ids)} nodes without embeddings")
+    
+    # Get each node with decrypted text for OpenAI processing
+    from app.repositories import node_repository
+    result_tuples = []
+    for node_id in node_ids:
+        node = node_repository.get_node(db, node_id, decrypt_for_processing=True)
+        if node and node.text:
+            result_tuples.append((node_id, node.text))
+    
+    logger.info(f"Successfully retrieved {len(result_tuples)} nodes with decrypted text for embedding generation")
+    return result_tuples
 
 
 def update_node_embedding(db: DbSession, node_id: UUID, embedding: List[float]) -> bool:
