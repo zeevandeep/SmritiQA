@@ -104,36 +104,58 @@ def get_reflection(db: DbSession, reflection_id: UUID, decrypt_for_processing: b
     
     logger.info(f"Found reflection {reflection_id}, is_encrypted: {db_reflection.is_encrypted}")
     
-    # If not requesting decryption, return the attached SQLAlchemy object
-    if not decrypt_for_processing:
-        logger.info(f"Returning attached SQLAlchemy object for reflection {reflection_id}")
-        return db_reflection
+    # If requesting for processing, return attached SQLAlchemy object (may be encrypted)
+    if decrypt_for_processing:
+        if db_reflection.is_encrypted and db_reflection.generated_text:
+            # For processing - return detached object with decrypted data
+            try:
+                user_id = str(db_reflection.user_id)
+                logger.info(f"Decrypting reflection {reflection_id} for processing (user {user_id})")
+                
+                # Create a new Reflection object with decrypted data
+                decrypted_text = decrypt_data(db_reflection.generated_text, user_id)
+                
+                decrypted_reflection = Reflection(
+                    id=db_reflection.id,
+                    user_id=db_reflection.user_id,
+                    node_ids=db_reflection.node_ids,
+                    edge_ids=db_reflection.edge_ids,
+                    generated_text=decrypted_text,  # Use decrypted text
+                    is_encrypted=db_reflection.is_encrypted,
+                    generated_at=db_reflection.generated_at,
+                    is_reflected=db_reflection.is_reflected,
+                    is_viewed=db_reflection.is_viewed,
+                    feedback=db_reflection.feedback,
+                    confidence_score=db_reflection.confidence_score
+                )
+                
+                logger.info(f"Successfully decrypted reflection {reflection_id} for processing, decrypted length: {len(decrypted_text)}")
+                return decrypted_reflection
+                
+            except EncryptionError as e:
+                logger.error(f"[ENCRYPTION FAIL] op=decrypt_reflection reflection_id={reflection_id} user_id={user_id} error={e}")
+                # Return original encrypted reflection for fallback
+                logger.warning(f"Decryption failed for reflection {reflection_id}, returning encrypted reflection")
+                return db_reflection
+        else:
+            # For processing - unencrypted reflection
+            logger.info(f"Returning unencrypted reflection {reflection_id} for processing")
+            return db_reflection
     
-    # For processing - return detached object with decrypted data if encrypted
+    # For user display (default) - decrypt if encrypted
     if db_reflection.is_encrypted and db_reflection.generated_text:
         try:
             user_id = str(db_reflection.user_id)
-            logger.info(f"Decrypting reflection {reflection_id} for processing (user {user_id})")
+            logger.info(f"Decrypting reflection {reflection_id} for user display (user {user_id})")
             
-            # Create a new Reflection object with decrypted data
+            # Decrypt the text for user display
             decrypted_text = decrypt_data(db_reflection.generated_text, user_id)
             
-            decrypted_reflection = Reflection(
-                id=db_reflection.id,
-                user_id=db_reflection.user_id,
-                node_ids=db_reflection.node_ids,
-                edge_ids=db_reflection.edge_ids,
-                generated_text=decrypted_text,  # Use decrypted text
-                is_encrypted=db_reflection.is_encrypted,
-                generated_at=db_reflection.generated_at,
-                is_reflected=db_reflection.is_reflected,
-                is_viewed=db_reflection.is_viewed,
-                feedback=db_reflection.feedback,
-                confidence_score=db_reflection.confidence_score
-            )
+            # Modify the attached object for user display
+            db_reflection.generated_text = decrypted_text
             
-            logger.info(f"Successfully decrypted reflection {reflection_id} for processing, decrypted length: {len(decrypted_text)}")
-            return decrypted_reflection
+            logger.info(f"Successfully decrypted reflection {reflection_id} for user display, decrypted length: {len(decrypted_text)}")
+            return db_reflection
             
         except EncryptionError as e:
             logger.error(f"[ENCRYPTION FAIL] op=decrypt_reflection reflection_id={reflection_id} user_id={user_id} error={e}")
@@ -151,8 +173,8 @@ def get_reflection(db: DbSession, reflection_id: UUID, decrypt_for_processing: b
             logger.warning(f"Decryption failed for reflection {reflection_id}, returning encrypted reflection")
             return db_reflection
     
-    # For unencrypted reflections or processing without decryption needed
-    logger.info(f"Returning reflection {reflection_id} (encryption not needed)")
+    # For unencrypted reflections - return as-is for user display
+    logger.info(f"Returning unencrypted reflection {reflection_id} for user display")
     return db_reflection
 
 
