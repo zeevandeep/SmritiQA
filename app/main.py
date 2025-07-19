@@ -9,6 +9,10 @@ import requests
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
+# Load .env file explicitly at startup
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates

@@ -11,6 +11,10 @@ from datetime import timedelta
 from pydantic import Field, EmailStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Ensure .env file is loaded before creating settings
+from dotenv import load_dotenv
+load_dotenv()
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
