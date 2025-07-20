@@ -90,8 +90,8 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ### Frontend Architecture
 - **Templates**: Jinja2 templating system for web interface
-- **Proxy Layer**: Flask application acts as reverse proxy to FastAPI
-- **Static Assets**: Served through Flask for web interface components
+- **WSGI Layer**: WsgiAdapter provides WSGI compatibility for FastAPI
+- **Static Assets**: Served through FastAPI for web interface components
 
 ## Key Components
 
@@ -203,6 +203,8 @@ Smriti is an AI-powered journaling assistant that helps users gain insights from
 
 ## Changelog
 
+- July 20, 2025: Legacy Flask code removal complete - deleted flask_proxy.py and app.py (697 lines) as these were unused legacy files from old proxy architecture, improving code clarity without functionality impact
+- July 20, 2025: Performance logging optimization complete - reduced excessive debug logging from ~510 to 400 statements for improved performance
 - July 19, 2025: Multilingual intelligent journal entry paragraph formatting complete - implemented smart semantic transition detection with full language support (English, Hindi, Spanish, French, German, Japanese, Arabic) preserving coherent thought chains while improving readability
 - July 19, 2025: Generate reflections page UI enhancement complete - improved text width, adopted successful layout from main reflections page, added text justification for professional appearance
 - July 19, 2025: Reflection feedback system fix complete - resolved SQLAlchemy session detachment issues, implemented hybrid database update approach with full encryption support
