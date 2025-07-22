@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column, ForeignKey, Integer, String, Text, 
-    Boolean, Float, Date, DateTime, ARRAY, CheckConstraint
+    Boolean, Float, Date, DateTime, ARRAY, CheckConstraint, Index
 )
 from sqlalchemy.dialects.postgresql import UUID, BYTEA  # Using BYTEA for embeddings
 from sqlalchemy.sql import func
@@ -48,7 +48,8 @@ class UserProfile(Base):
     language = Column(Text, default='en')
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
+    tour_completed = Column(Boolean, default=False)
+
     # Relationships
     user = relationship("User", back_populates="profile")
 
@@ -197,14 +198,38 @@ class Feedback(Base):
     # Relationships
     user = relationship("User", back_populates="feedback")
 
-
 class MigrationError(Base):
-    """Track encryption migration errors for manual review."""
     __tablename__ = "migration_errors"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     session_id = Column(UUID(as_uuid=True), nullable=False)
     error_type = Column(String(100), nullable=False)
     error_message = Column(Text, nullable=False)
     created_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        Index('idx_migration_errors_created_at', 'created_at'),
+        Index('idx_migration_errors_session_id', 'session_id'),
+        Index('idx_migration_errors_user_id', 'user_id'),
+    )
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    token = Column(Text, nullable=False, unique=True)
+    expires_at = Column(DateTime, nullable=False)
+    issued_at = Column(DateTime, default=func.now())
+    is_valid = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User")
+
+    __table_args__ = (
+        Index('idx_refresh_tokens_user_id', 'user_id'),
+        Index('idx_refresh_tokens_token', 'token'),
+        Index('idx_refresh_tokens_expires_at', 'expires_at'),
+        {'extend_existing': True},
+    )
