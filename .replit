@@ -2,14 +2,13 @@ modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cargo", "freetype", "imagemagick", "jq", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "postgresql", "rustc", "tcl", "tk", "zlib", "nano"]
+packages = ["cargo", "freetype", "imagemagick", "jq", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "nano", "openjpeg", "openssl", "pkg-config", "postgresql", "psmisc", "rustc", "tcl", "tk", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
-runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
